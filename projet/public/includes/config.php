@@ -13,4 +13,4 @@ try {
     ]);
 } catch (PDOException $e) {
     die('Connexion à la base impossible : ' . $e->getMessage());
-} 
+}
