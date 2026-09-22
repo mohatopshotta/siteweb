@@ -51,3 +51,77 @@ $entreprises = $pdo->query('SELECT id_entreprise, nom FROM entreprise ORDER BY n
 
 </body>
 </html>
+<div id="champs-etudiant" style="display:none;">
+    <h3>Étudiant</h3>
+    <label>Formation</label>
+    <input type="text" name="formation"><br>
+
+    <label>CV (facultatif)</label>
+    <input type="file" name="cv"><br>
+
+    <label>Établissement</label>
+    <select name="id_etablissement" onchange="afficherNouvelEtablissement(this)">
+        <option value="">-- choisir --</option>
+        <?php foreach ($etablissements as $etab): ?>
+            <option value="<?= $etab['id_etablissement'] ?>"><?= htmlspecialchars($etab['nom']) ?></option>
+        <?php endforeach; ?>
+        <option value="nouveau">+ Nouvel établissement</option>
+    </select><br>
+</div>
+
+<div id="champs-medecin" style="display:none;">
+    <h3>Médecin</h3>
+    <label>Spécialité</label>
+    <select name="id_specialite">
+        <option value="">-- choisir --</option>
+        <?php foreach ($specialites as $spe): ?>
+            <option value="<?= $spe['id_specialite'] ?>"><?= htmlspecialchars($spe['libelle']) ?></option>
+        <?php endforeach; ?>
+    </select><br>
+
+    <label>Hôpital de rattachement</label>
+    <select name="id_hopital">
+        <option value="">-- choisir --</option>
+        <?php foreach ($hopitaux as $hop): ?>
+            <option value="<?= $hop['id_hopital'] ?>"><?= htmlspecialchars($hop['nom']) ?></option>
+        <?php endforeach; ?>
+    </select><br>
+
+    <label>Établissement d'enseignement (facultatif)</label>
+    <select name="id_etablissement_medecin" onchange="afficherNouvelEtablissement(this)">
+        <option value="">-- aucun --</option>
+        <?php foreach ($etablissements as $etab): ?>
+            <option value="<?= $etab['id_etablissement'] ?>"><?= htmlspecialchars($etab['nom']) ?></option>
+        <?php endforeach; ?>
+        <option value="nouveau">+ Nouvel établissement</option>
+    </select><br>
+</div>
+
+<div id="champs-partenaire" style="display:none;">
+    <h3>Partenaire</h3>
+    <label>Poste occupé</label>
+    <input type="text" name="poste"><br>
+
+    <label>Entreprise</label>
+    <select name="id_entreprise" onchange="afficherNouvelleEntreprise(this)">
+        <option value="">-- choisir --</option>
+        <?php foreach ($entreprises as $ent): ?>
+            <option value="<?= $ent['id_entreprise'] ?>"><?= htmlspecialchars($ent['nom']) ?></option>
+        <?php endforeach; ?>
+        <option value="nouveau">+ Nouvelle entreprise</option>
+    </select><br>
+</div>
+
+<div id="champs-nouvel-etablissement" style="display:none;">
+    <h4>Nouvel établissement</h4>
+    <input type="text" name="nouvel_etablissement_nom" placeholder="Nom"><br>
+    <input type="text" name="nouvel_etablissement_adresse" placeholder="Adresse"><br>
+    <input type="text" name="nouvel_etablissement_site" placeholder="Site web"><br>
+</div>
+
+<div id="champs-nouvelle-entreprise" style="display:none;">
+    <h4>Nouvelle entreprise</h4>
+    <input type="text" name="nouvelle_entreprise_nom" placeholder="Nom"><br>
+    <input type="text" name="nouvelle_entreprise_adresse" placeholder="Adresse"><br>
+    <input type="text" name="nouvelle_entreprise_site" placeholder="Site web"><br>
+</div>
