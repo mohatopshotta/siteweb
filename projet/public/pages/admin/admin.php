@@ -122,6 +122,8 @@ foreach ($comptesEnAttente as $i => $compte) {
                     <th>Prénom</th>
                     <th>Email</th>
                     <th>Rôle</th>
+                    <th>Rôle</th>
+                    <th>Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -131,6 +133,21 @@ foreach ($comptesEnAttente as $i => $compte) {
                         <td><?= htmlspecialchars($compte['prenom']) ?></td>
                         <td><?= htmlspecialchars($compte['email']) ?></td>
                         <td><?= htmlspecialchars($compte['role']) ?></td>
+                        <td class="admin-actions">
+                            <!-- Chaque bouton envoie un POST vers valider_compte.php -->
+                            <form action="valider_compte.php" method="POST" class="form-inline">
+                                <input type="hidden" name="id" value="<?= $compte['id_utilisateur'] ?>">
+                                <input type="hidden" name="action" value="valider">
+                                <button type="submit" class="btn btn-valider">Valider</button>
+                            </form>
+
+                            <form action="valider_compte.php" method="POST" class="form-inline"
+                                  onsubmit="return confirm('Refuser et supprimer ce compte ?');">
+                                <input type="hidden" name="id" value="<?= $compte['id_utilisateur'] ?>">
+                                <input type="hidden" name="action" value="refuser">
+                                <button type="submit" class="btn btn-refuser">Refuser</button>
+                            </form>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>
