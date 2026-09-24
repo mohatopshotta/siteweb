@@ -70,6 +70,16 @@ foreach ($comptesEnAttente as $i => $compte) {
     // Si aucune des 3 tables ne correspond, c'est un gestionnaire
     $comptesEnAttente[$i]['role'] = 'Gestionnaire';
 }
+
+// Message de confirmation après validation/refus
+$message = '';
+if (isset($_GET['msg'])) {
+    if ($_GET['msg'] === 'valide') {
+        $message = "Le compte a été validé.";
+    } elseif ($_GET['msg'] === 'refuse') {
+        $message = "Le compte a été refusé et supprimé.";
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -83,6 +93,10 @@ foreach ($comptesEnAttente as $i => $compte) {
 <div class="admin-container">
     <h1>Tableau de bord - Administration</h1>
 
+    <?php if ($message): ?>
+        <div class="alerte alerte-succes"><?= htmlspecialchars($message) ?></div>
+    <?php endif; ?>
+    
     <section class="admin-section">
         <h2>Vue d'ensemble</h2>
 
