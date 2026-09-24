@@ -1,5 +1,5 @@
 <?php
-session_start();
+
 require_once '../../includes/config.php';
 
 $type = $_GET['type'] ?? '';
