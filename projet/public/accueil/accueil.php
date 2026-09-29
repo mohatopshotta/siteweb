@@ -103,14 +103,14 @@ $offres = $stmt->fetchAll();
                         <?php if (!$connecte): ?>
                             <a href="../pages/connexion.php">Connectez-vous pour vous inscrire</a>
                         <?php elseif ($role !== 'gestionnaire'): ?>
-                            <a href="../pages/admin/evenement/detail.php?id=<?= $evenement['id_evenement'] ?>">Voir le détail</a>
+                            <a href="../pages/evenement/detail.php?id=<?= $evenement['id_evenement'] ?>">Voir le détail</a>
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>
 
             <?php if ($connecte && $role !== 'gestionnaire'): ?>
-                <a href="../pages/admin/evenement/liste.php">Voir tous les événements</a>
+                <a href="../pages/evenement/liste.php">Voir tous les événements</a>
             <?php endif; ?>
         <?php endif; ?>
     </section>
