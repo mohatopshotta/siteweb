@@ -1,0 +1,25 @@
+<?php
+require_once __DIR__ . '/../includes/config.php';
+?>
+<header>
+    <nav>
+        <a href="/accueil/accueil.php">Accueil</a>
+
+        <?php if (!isset($_SESSION['id_utilisateur'])): ?>
+            <a href="/pages/inscription.php">Inscription</a>
+            <a href="/pages/connexion.php">Connexion</a>
+
+        <?php elseif ($_SESSION['role'] === 'gestionnaire'): ?>
+            <a href="/pages/admin/admin.php">Administration</a>
+            <a href="/pages/admin/valider_compte.php">Valider les comptes</a>
+            <a href="/pages/deconnexion.php">Déconnexion</a>
+
+        <?php else: ?>
+            <a href="/pages/Offres/index.php">Offres</a>
+            <a href="/pages/admin/evenement/liste.php">Événements</a>
+            <a href="/pages/forum.php">Forum</a>
+            <a href="/pages/profil.php">Mon profil</a>
+            <a href="/pages/deconnexion.php">Déconnexion</a>
+        <?php endif; ?>
+    </nav>
+</header>
