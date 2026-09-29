@@ -2,6 +2,33 @@
 require __DIR__ . '/../includes/config.php';
 
 $erreurs = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    $nom = trim($_POST['nom'] ?? '');
+    $prenom = trim($_POST['prenom'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $mot_de_passe = $_POST['mot_de_passe'] ?? '';
+    $role = $_POST['role'] ?? '';
+
+    if ($nom === '' || $prenom === '' || $email === '' || $mot_de_passe === '') {
+        $erreurs[] = 'Tous les champs sont obligatoires.';
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $erreurs[] = 'Email invalide.';
+    }
+    if (!in_array($role, ['etudiant', 'medecin', 'partenaire'], true)) {
+        $erreurs[] = 'Rôle invalide.';
+    }
+
+    if (empty($erreurs)) {
+        $req = $pdo->prepare('SELECT id_utilisateur FROM utilisateur WHERE email = ?');
+        $req->execute([$email]);
+        if ($req->fetch()) {
+            $erreurs[] = 'Cet email est déjà utilisé.';
+        }
+    }
+
+}
 
 $hopitaux = $pdo->query('SELECT id_hopital, nom FROM hopital ORDER BY nom')->fetchAll();
 $specialites = $pdo->query('SELECT id_specialite, libelle FROM specialite ORDER BY libelle')->fetchAll();
