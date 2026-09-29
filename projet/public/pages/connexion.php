@@ -55,6 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 
+<?php require __DIR__ . '/../includes/header.php'; ?>
+
 <h1>Connexion</h1>
 
 <?php if (isset($_GET['inscription'])): ?>
