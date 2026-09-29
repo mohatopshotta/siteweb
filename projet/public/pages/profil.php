@@ -64,3 +64,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon profil</title>
+</head>
+<body>
+
+<h1>Mon profil</h1>
+
+<?php if ($message): ?>
+    <p style="color:green;"><?= htmlspecialchars($message) ?></p>
+<?php endif; ?>
+
+<form method="post">
+    <label>Nom</label>
+    <input type="text" name="nom" value="<?= htmlspecialchars($utilisateur['nom']) ?>"><br>
+
+    <label>Prénom</label>
+    <input type="text" name="prenom" value="<?= htmlspecialchars($utilisateur['prenom']) ?>"><br>
+
+    <label>Email</label>
+    <input type="text" value="<?= htmlspecialchars($utilisateur['email']) ?>" disabled><br>
+
+    <label>Rôle</label>
+    <input type="text" value="<?= htmlspecialchars($role) ?>" disabled><br>
+
+    <?php if ($role === 'etudiant'): ?>
+        <p>Formation : <?= htmlspecialchars($infos_role['formation']) ?></p>
+        <p>Établissement : <?= htmlspecialchars($infos_role['nom_etablissement']) ?></p>
+    <?php elseif ($role === 'medecin'): ?>
+        <p>Spécialité : <?= htmlspecialchars($infos_role['specialite']) ?></p>
+        <p>Hôpital : <?= htmlspecialchars($infos_role['hopital']) ?></p>
+        <p>Établissement d'enseignement : <?= htmlspecialchars($infos_role['nom_etablissement'] ?? '—') ?></p>
+    <?php elseif ($role === 'partenaire'): ?>
+        <p>Poste : <?= htmlspecialchars($infos_role['poste']) ?></p>
+        <p>Entreprise : <?= htmlspecialchars($infos_role['nom_entreprise']) ?></p>
+    <?php endif; ?>
+
+    <button type="submit">Enregistrer</button>
+</form>
+
+<p><a href="deconnexion.php">Se déconnecter</a></p>
+
+</body>
+</html>
