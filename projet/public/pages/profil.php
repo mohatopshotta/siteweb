@@ -72,6 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 
+<?php require __DIR__ . '/../includes/header.php'; ?>
+
 <h1>Mon profil</h1>
 
 <?php if ($message): ?>
