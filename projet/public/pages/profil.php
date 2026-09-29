@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/../includes/config.php';
 
+// accès refusé si pas connecté
 if (!isset($_SESSION['id_utilisateur'])) {
     header('Location: connexion.php');
     exit;
@@ -9,10 +10,12 @@ if (!isset($_SESSION['id_utilisateur'])) {
 $id_utilisateur = $_SESSION['id_utilisateur'];
 $role = $_SESSION['role'];
 
+// infos de base communes à tous les rôles
 $req = $pdo->prepare('SELECT * FROM utilisateur WHERE id_utilisateur = ?');
 $req->execute([$id_utilisateur]);
 $utilisateur = $req->fetch();
 
+// infos spécifiques selon le rôle
 $infos_role = null;
 if ($role === 'etudiant') {
     $req = $pdo->prepare('
@@ -43,6 +46,7 @@ if ($role === 'etudiant') {
     $infos_role = $req->fetch();
 }
 
+// modification nom/prénom
 $message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nom = trim($_POST['nom'] ?? '');
@@ -51,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($nom !== '' && $prenom !== '') {
         $req = $pdo->prepare('UPDATE utilisateur SET nom = ?, prenom = ? WHERE id_utilisateur = ?');
         $req->execute([$nom, $prenom, $id_utilisateur]);
+        // on met à jour la session pour que le changement soit visible tout de suite
         $_SESSION['nom'] = $nom;
         $_SESSION['prenom'] = $prenom;
         $utilisateur['nom'] = $nom;
@@ -66,6 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Mon profil</title>
 </head>
 <body>
+
+<?php require __DIR__ . '/../includes/header.php'; ?>
 
 <h1>Mon profil</h1>
 

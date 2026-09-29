@@ -1,5 +1,5 @@
 <?php
-session_start();
+
 require '../includes/config.php';
 
 // ------------------------------------------------------------
@@ -24,18 +24,7 @@ $evenements = $stmt->fetchAll();
 </head>
 <body>
 
-<header>
-    <h1>La Générale des Hôpitaux (GDH)</h1>
-    <nav>
-        <?php if (isset($_SESSION['id_utilisateur'])): ?>
-            <a href="../pages/profil.php">Mon profil</a>
-            <a href="../pages/deconnexion.php">Déconnexion</a>
-        <?php else: ?>
-            <a href="../pages/connexion.php">Connexion</a>
-            <a href="../pages/inscription.php">Inscription</a>
-        <?php endif; ?>
-    </nav>
-</header>
+<?php require __DIR__ . '/../includes/header.php'; ?>
 
 <section class="presentation">
     <h2>Bienvenue sur la plateforme GDH</h2>
