@@ -199,6 +199,8 @@ $entreprises = $pdo->query('SELECT id_entreprise, nom FROM entreprise ORDER BY n
 </head>
 <body>
 
+<?php require __DIR__ . '/../includes/header.php'; ?>
+
 <h1>Inscription</h1>
 
 <?php foreach ($erreurs as $erreur): ?>
