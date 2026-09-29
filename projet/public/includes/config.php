@@ -1,5 +1,6 @@
 <?php
 
+// démarre la session
 session_start();
 
 $dsn = 'mysql:host=localhost;dbname=hsp_gdh;charset=utf8mb4';
@@ -8,7 +9,9 @@ $bdd_mot_de_passe = '';
 
 try {
     $pdo = new PDO($dsn, $bdd_utilisateur, $bdd_mot_de_passe, [
+        // lève une exception si une requête échoue
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        // résultats en tableaux associatifs
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     ]);
 } catch (PDOException $e) {
