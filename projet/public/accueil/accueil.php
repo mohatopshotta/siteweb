@@ -2,6 +2,7 @@
 // Page d'accueil : à placer dans projet/public/accueil/accueil.php
 $racine = '../';
 require $racine .'includes/config.php';
+/** @var PDO $pdo */
 
 $connecte = isset($_SESSION['id_utilisateur']);
 $profil   = $_SESSION['profil'] ?? '';

@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../../includes/auth_admin.php';
 require_once __DIR__ . '/../../includes/config.php';
+/** @var PDO $pdo */
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: admin.php');
