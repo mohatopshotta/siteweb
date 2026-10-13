@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../includes/config.php';
+/** @var PDO $pdo */
 
 // message d'erreur affiché si connexion échoue
 $erreur = '';

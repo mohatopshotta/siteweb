@@ -1,9 +1,11 @@
 <?php
-
-require '../includes/config.php';
+// Page d'accueil : à placer dans projet/public/accueil/accueil.php
+$racine = '../';
+require $racine .'includes/config.php';
+/** @var PDO $pdo */
 
 $connecte = isset($_SESSION['id_utilisateur']);
-$role = $_SESSION['role'] ?? null;
+$profil   = $_SESSION['profil'] ?? '';
 
 // ------------------------------------------------------------
 // Événements à la une (les 3 plus récents)
@@ -22,11 +24,10 @@ $evenements = $stmt->fetchAll();
 // Dernières offres ouvertes (les 3 plus récentes)
 // ------------------------------------------------------------
 $stmt = $pdo->query(
-    "SELECT o.id_offre, o.titre, o.type_offre, e.nom AS entreprise
-     FROM offre o
-     JOIN entreprise e ON e.id_entreprise = o.id_entreprise
-     WHERE o.etat = 'ouvert'
-     ORDER BY o.date_publication DESC
+    "SELECT id_offre, titre, type_offre
+     FROM offre
+     WHERE etat = 'ouverte'
+     ORDER BY date_publication DESC
      LIMIT 3"
 );
 $offres = $stmt->fetchAll();
@@ -37,21 +38,25 @@ $offres = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>GDH — Hôpital Sud Paris</title>
-    <link rel="stylesheet" href="../assets/css/css.css">
+    <link rel="stylesheet" href="<?= $racine ?>assets/css/css.css">
 </head>
 <body>
 
+<<<<<<< HEAD
+<header>
+    <h1>La Générale des Hôpitaux (GDH)</h1>
+    <p>Hôpital Sud Paris (HSP)</p>
+</header>
+
+<?php require $racine . 'includes/header.php'; ?>
+=======
 <?php $racine = '../'; require __DIR__ . '/../includes/header.php'; ?>
+>>>>>>> 0bf18af3025613363570b37c544d953b076c683d
 
 <main>
 
     <section class="presentation">
-        <?php if ($connecte): ?>
-            <h1>Bonjour <?= htmlspecialchars($_SESSION['prenom']) ?></h1>
-        <?php else: ?>
-            <h1>Bienvenue sur la plateforme GDH</h1>
-        <?php endif; ?>
-
+        <h2>Bienvenue sur la plateforme GDH</h2>
         <p>
             Créée en 1954, La Générale des Hôpitaux (GDH) est le premier groupe de
             cliniques et hôpitaux privés en France, composé de neuf hôpitaux
@@ -66,15 +71,11 @@ $offres = $stmt->fetchAll();
         </p>
 
         <?php if (!$connecte): ?>
-            <div class="boutons">
-                <a class="bouton" href="../pages/inscription.php">Créer un compte</a>
-                <a class="bouton bouton-secondaire" href="../pages/connexion.php">Se connecter</a>
-            </div>
-        <?php elseif ($role === 'gestionnaire'): ?>
-            <div class="boutons">
-                <a class="bouton" href="../pages/admin/admin.php">Aller à l'administration</a>
-                <a class="bouton bouton-secondaire" href="../pages/admin/valider_compte.php">Valider les comptes</a>
-            </div>
+            <p>
+                <a href="<?= $racine ?>pages/connexion.php">Se connecter</a> ou
+                <a href="<?= $racine ?>pages/inscription.php">créer un compte</a>
+                pour accéder aux offres, aux événements et au forum.
+            </p>
         <?php endif; ?>
     </section>
 
@@ -99,39 +100,38 @@ $offres = $stmt->fetchAll();
                                 Complet
                             <?php endif; ?>
                         </p>
-
-                        <?php if (!$connecte): ?>
-                            <a href="../pages/connexion.php">Connectez-vous pour vous inscrire</a>
-                        <?php elseif ($role !== 'gestionnaire'): ?>
-                            <a href="../pages/evenement/detail.php?id=<?= $evenement['id_evenement'] ?>">Voir le détail</a>
+                        <?php if ($connecte && $profil !== 'gestionnaire'): ?>
+                            <a href="<?= $racine ?>pages/evenement/detail.php?id=<?= (int)$evenement['id_evenement'] ?>">Voir le détail</a>
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>
-
-            <?php if ($connecte && $role !== 'gestionnaire'): ?>
-                <a href="../pages/evenement/liste.php">Voir tous les événements</a>
+            <?php if ($connecte && $profil !== 'gestionnaire'): ?>
+                <a href="<?= $racine ?>pages/evenement/liste.php">Voir tous les événements &rarr;</a>
             <?php endif; ?>
         <?php endif; ?>
     </section>
 
-    <section class="dernieres-offres">
+    <section class="actualites">
         <h2>Dernières offres</h2>
 
         <?php if (empty($offres)): ?>
             <p>Aucune offre ouverte pour le moment.</p>
         <?php else: ?>
-            <div class="liste-offres">
+            <ul>
                 <?php foreach ($offres as $offre): ?>
-                    <div class="carte-offre">
-                        <h3><?= htmlspecialchars($offre['titre']) ?></h3>
-                        <p><?= htmlspecialchars($offre['entreprise']) ?></p>
-                        <p><?= strtoupper(htmlspecialchars($offre['type_offre'])) ?></p>
-                        <a href="../pages/offres/detail.php?id=<?= $offre['id_offre'] ?>">Voir l'offre</a>
-                    </div>
+                    <li>
+                        <?= htmlspecialchars($offre['titre']) ?>
+                        (<?= htmlspecialchars($offre['type_offre']) ?>)
+                        <?php if ($connecte && $profil !== 'gestionnaire'): ?>
+                            — <a href="<?= $racine ?>pages/offres/detail.php?id=<?= (int)$offre['id_offre'] ?>">Voir</a>
+                        <?php endif; ?>
+                    </li>
                 <?php endforeach; ?>
-            </div>
-            <a href="../pages/offres/index.php">Voir toutes les offres</a>
+            </ul>
+            <?php if ($connecte && $profil !== 'gestionnaire'): ?>
+                <a href="<?= $racine ?>pages/offres/index.php">Voir toutes les offres &rarr;</a>
+            <?php endif; ?>
         <?php endif; ?>
     </section>
 

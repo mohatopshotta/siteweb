@@ -1,5 +1,5 @@
 <?php
-require '../../includes/config.php';
+require /** @var PDO $pdo */ '../../includes/config.php';
 
 if (!isset($_SESSION['id_utilisateur']) || $_SESSION['profil'] === 'gestionnaire') {
     header('Location: ../connexion.php');

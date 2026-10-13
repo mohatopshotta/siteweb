@@ -1,5 +1,5 @@
 <?php
-require_once '../../includes/config.php'; // session_start() est déjà dedans
+require_once /** @var PDO $pdo */'../../includes/config.php'; // session_start() est déjà dedans
 
 $id = (int)($_GET['id'] ?? 0);
 $idUser = $_SESSION['id_utilisateur'] ?? null;

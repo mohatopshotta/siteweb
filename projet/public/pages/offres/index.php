@@ -1,5 +1,6 @@
 <?php
 require_once '../../includes/config.php';
+/** @var PDO $pdo */
 
 $type = $_GET['type'] ?? '';
 $erreur = '';

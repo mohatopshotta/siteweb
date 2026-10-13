@@ -1,5 +1,5 @@
 <?php
-require '../../includes/config.php';
+require /** @var PDO $pdo */ '../../includes/config.php';
 
 // ------------------------------------------------------------
 // Accès réservé aux médecins et partenaires

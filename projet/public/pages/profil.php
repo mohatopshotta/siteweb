@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../includes/config.php';
+/** @var PDO $pdo */
 
 // accès refusé si pas connecté
 if (!isset($_SESSION['id_utilisateur'])) {
