@@ -6,6 +6,7 @@
 
 // On protège la page : seul un gestionnaire connecté peut y accéder
 require_once __DIR__ . '/../../includes/auth_admin.php';
+/** @var PDO $pdo */
 
 // Connexion à la base de données ($pdo)
 require_once __DIR__ . '/../../includes/config.php';

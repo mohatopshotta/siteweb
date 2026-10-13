@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../includes/config.php';
+/** @var PDO $pdo */
 
 // accès refusé si pas connecté
 if (!isset($_SESSION['id_utilisateur'])) {
@@ -72,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 
-<?php require __DIR__ . '/../includes/header.php'; ?>
+<?php $racine = '../'; require __DIR__ . '/../includes/header.php'; ?>
 
 <h1>Mon profil</h1>
 

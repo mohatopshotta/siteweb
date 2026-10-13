@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../../includes/config.php';
+require_once /** @var PDO $pdo */'../../includes/config.php';
 
 $id = (int)($_GET['id'] ?? 0);
 $stmt = $pdo->prepare("SELECT o.*, e.nom AS entreprise
