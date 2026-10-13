@@ -19,7 +19,7 @@ require_once __DIR__ . '/../includes/config.php';
         <?php else: ?>
             <!-- étudiant, médecin ou partenaire connecté -->
             <a href="/pages/offres/index.php">Offres</a>
-            <a href="/pages/admin/evenement/liste.php">Événements</a>
+            <a href="/pages/evenement/liste.php">Événements</a>
             <a href="/pages/forum.php">Forum</a>
             <a href="/pages/profil.php">Mon profil</a>
             <a href="/pages/deconnexion.php">Déconnexion</a>

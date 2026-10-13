@@ -7,7 +7,7 @@ require '../../includes/config.php';
 // ------------------------------------------------------------
 // Accès réservé aux médecins et partenaires
 // ------------------------------------------------------------
-if (!isset($_SESSION['id_utilisateur']) || !in_array($_SESSION['profil'], ['medecin', 'partenaire'])) {
+if (!isset($_SESSION['id_utilisateur']) || !in_array($_SESSION['role'], ['medecin', 'partenaire'])) {
     header('Location: ../connexion.php');
     exit;
 }
