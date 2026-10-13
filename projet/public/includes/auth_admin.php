@@ -9,10 +9,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Convention attendue du module Authentification :
-// $_SESSION['user_id'] et $_SESSION['role'] posés à la connexion
+// Variables posées à la connexion (pages/connexion.php) :
+// $_SESSION['id_utilisateur'] et $_SESSION['role']
 // role = 'gestionnaire' pour un admin (table gestionnaire)
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'gestionnaire') {
+if (!isset($_SESSION['id_utilisateur']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'gestionnaire') {
     header('Location: /pages/connexion.php');
     exit;
 }
