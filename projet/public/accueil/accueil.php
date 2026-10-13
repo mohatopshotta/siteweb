@@ -41,7 +41,7 @@ $offres = $stmt->fetchAll();
 </head>
 <body>
 
-<?php require __DIR__ . '/../includes/header.php'; ?>
+<?php $racine = '../'; require __DIR__ . '/../includes/header.php'; ?>
 
 <main>
 
