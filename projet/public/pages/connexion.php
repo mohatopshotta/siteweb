@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['nom'] = $utilisateur['nom'];
         $_SESSION['prenom'] = $utilisateur['prenom'];
         $_SESSION['role'] = $role;
+        $_SESSION['profil'] = $role;
 
         // redirection vers l'accueil une fois connecté
         header('Location: ../accueil/accueil.php');
@@ -55,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 
-<?php require __DIR__ . '/../includes/header.php'; ?>
+<?php $racine = '../'; require __DIR__ . '/../includes/header.php'; ?>
 
 <h1>Connexion</h1>
 

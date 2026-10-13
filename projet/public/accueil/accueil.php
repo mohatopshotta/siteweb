@@ -41,12 +41,16 @@ $offres = $stmt->fetchAll();
 </head>
 <body>
 
+<<<<<<< HEAD
 <header>
     <h1>La Générale des Hôpitaux (GDH)</h1>
     <p>Hôpital Sud Paris (HSP)</p>
 </header>
 
 <?php require $racine . 'includes/header.php'; ?>
+=======
+<?php $racine = '../'; require __DIR__ . '/../includes/header.php'; ?>
+>>>>>>> 0bf18af3025613363570b37c544d953b076c683d
 
 <main>
 
