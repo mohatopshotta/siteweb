@@ -5,7 +5,7 @@ require '../../includes/config.php';
 // ------------------------------------------------------------
 // Accès réservé aux utilisateurs connectés (sauf gestionnaires)
 // ------------------------------------------------------------
-if (!isset($_SESSION['id_utilisateur']) || $_SESSION['profil'] === 'gestionnaire') {
+if (!isset($_SESSION['id_utilisateur']) || $_SESSION['role'] === 'gestionnaire') {
     header('Location: ../connexion.php');
     exit;
 }
