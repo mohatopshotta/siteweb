@@ -24,7 +24,7 @@ if ($action === 'valider') {
         SET valide = 1, id_validateur = ?
         WHERE id_utilisateur = ? AND valide = 0
     ");
-    $stmt->execute([$_SESSION['id_utilisateur'], $id]);
+    $stmt->execute([$_SESSION['user_id'], $id]);
     header('Location: admin.php?msg=valide');
     exit;
 }

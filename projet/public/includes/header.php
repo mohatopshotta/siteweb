@@ -15,7 +15,7 @@ $profil   = $_SESSION['profil'] ?? '';
     <?php if ($connecte && $profil !== 'gestionnaire'): ?>
         <a href="<?= $racine ?>pages/offres/index.php">Offres</a>
         <a href="<?= $racine ?>pages/evenement/liste.php">Événements</a>
-        <a href="<?= $racine ?>pages/forum.php">Forum</a>
+        <a href="<?= $racine ?>pages/forum/liste.php">Forum</a>
         <a href="<?= $racine ?>pages/profil.php">Mon profil</a>
     <?php endif; ?>
 
