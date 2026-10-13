@@ -1,28 +1,32 @@
 <?php
-require_once __DIR__ . '/../includes/config.php';
+// Menu commun du site HSP.
+// Avant de l'inclure, la page définit $racine = chemin relatif vers /public/
+//   - page dans public/            -> $racine = '';
+//   - page dans public/pages/      -> $racine = '../';
+//   - page dans public/pages/xxx/  -> $racine = '../../';
+$racine = $racine ?? '';
+
+$connecte = isset($_SESSION['id_utilisateur']);
+$profil   = $_SESSION['profil'] ?? '';
 ?>
-<header>
-    <nav>
-        <a href="/accueil/accueil.php">Accueil</a>
+<nav class="menu">
+    <a href="<?= $racine ?>accueil.php">Accueil</a>
 
-        <?php if (!isset($_SESSION['id_utilisateur'])): ?>
-            <!-- pas connecté : inscription et connexion -->
-            <a href="/pages/inscription.php">Inscription</a>
-            <a href="/pages/connexion.php">Connexion</a>
+    <?php if ($connecte && $profil !== 'gestionnaire'): ?>
+        <a href="<?= $racine ?>pages/offres/index.php">Offres</a>
+        <a href="<?= $racine ?>pages/evenement/liste.php">Événements</a>
+        <a href="<?= $racine ?>pages/forum/liste.php">Forum</a>
+        <a href="<?= $racine ?>pages/profil.php">Mon profil</a>
+    <?php endif; ?>
 
-        <?php elseif ($_SESSION['role'] === 'gestionnaire'): ?>
-            <!-- gestionnaire : accès à l'administration -->
-            <a href="/pages/admin/admin.php">Administration</a>
-            <a href="/pages/admin/valider_compte.php">Valider les comptes</a>
-            <a href="/pages/deconnexion.php">Déconnexion</a>
+    <?php if ($profil === 'gestionnaire'): ?>
+        <a href="<?= $racine ?>pages/admin/admin.php">Administration</a>
+    <?php endif; ?>
 
-        <?php else: ?>
-            <!-- étudiant, médecin ou partenaire connecté -->
-            <a href="/pages/offres/index.php">Offres</a>
-            <a href="/pages/evenement/liste.php">Événements</a>
-            <a href="/pages/forum.php">Forum</a>
-            <a href="/pages/profil.php">Mon profil</a>
-            <a href="/pages/deconnexion.php">Déconnexion</a>
-        <?php endif; ?>
-    </nav>
-</header>
+    <?php if ($connecte): ?>
+        <a href="<?= $racine ?>pages/deconnexion.php">Déconnexion</a>
+    <?php else: ?>
+        <a href="<?= $racine ?>pages/connexion.php">Connexion</a>
+        <a href="<?= $racine ?>pages/inscription.php">Inscription</a>
+    <?php endif; ?>
+</nav>

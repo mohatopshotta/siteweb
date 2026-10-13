@@ -1,8 +1,7 @@
 <?php
-session_start();
 require '../../includes/config.php';
 
-if (!isset($_SESSION['id_utilisateur']) || $_SESSION['role'] === 'gestionnaire') {
+if (!isset($_SESSION['id_utilisateur']) || $_SESSION['profil'] === 'gestionnaire') {
     header('Location: ../connexion.php');
     exit;
 }
@@ -30,7 +29,7 @@ $evenements = $stmt->fetchAll();
 
 <h1>Événements</h1>
 
-<?php if (in_array($_SESSION['role'], ['medecin', 'partenaire'])): ?>
+<?php if (in_array($_SESSION['profil'], ['medecin', 'partenaire'])): ?>
     <a href="creer.php">+ Créer un événement</a>
 <?php endif; ?>
 
