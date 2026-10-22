@@ -4,12 +4,11 @@ require_once '../../includes/config.php';
 
 $type = $_GET['type'] ?? '';
 $erreur = '';
-$succes = '';
 
 $sql = "SELECT o.id_offre, o.titre, o.type_offre, o.salaire,
-               o.date_publication, e.nom AS entreprise
+               o.date_publication, COALESCE(e.nom, 'Groupe GDH') AS entreprise
         FROM offre o
-        JOIN entreprise e ON e.id_entreprise = o.id_entreprise
+        LEFT JOIN entreprise e ON e.id_entreprise = o.id_entreprise
         WHERE o.etat = 'ouvert'";
 
 $params = [];
@@ -25,36 +24,22 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $offres = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Traitement de la candidature
+// Choix d'une offre dans la liste : on redirige vers sa fiche détaillée,
+// où se trouve le vrai formulaire de candidature (avec lettre de motivation).
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_offre = filter_input(INPUT_POST, 'id_offre', FILTER_VALIDATE_INT);
 
     if (!$id_offre) {
-        $erreur = "Veuillez sélectionner une offre avant d'envoyer votre candidature.";
+        $erreur = "Veuillez sélectionner une offre avant de continuer.";
     } else {
-        // Vérifier que l'offre existe et est toujours ouverte
-        $verification = $pdo->prepare(
-            "SELECT id_offre FROM offre
-             WHERE id_offre = ? AND etat = 'ouvert'"
-        );
-        $verification->execute([$id_offre]);
-
-        if ($verification->fetch()) {
-            /*
-             * À compléter :
-             * enregistrer la candidature dans la base de données
-             * lorsque la table et les champs de candidature seront connus.
-             */
-            $succes = "Nous avons reçu votre candidature !";
-        } else {
-            $erreur = "Cette offre n'est plus disponible.";
-        }
+        header("Location: detail.php?id=$id_offre");
+        exit;
     }
 }
 ?>
 
 <!DOCTYPE html>
-<html lang="f
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -200,12 +185,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border: 1px solid #f5bcbc;
         }
 
-        .succes {
-            color: #176534;
-            background: #e5f8eb;
-            border: 1px solid #a9e3b9;
-        }
-
         .vide {
             padding: 30px;
             text-align: center;
@@ -232,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h1>Découvrez toutes nos offres !</h1>
         <p>
             Vous êtes à la recherche d'un stage, d'une alternance
-            ou d'un emploi ? Consultez toutes nos opportunités et
+            ou d'un emploi dans nos etablissements partenaire ? Consultez toutes nos opportunités et
             choisissez l'offre qui correspond à votre projet professionnel.
         </p>
         <p>Votre prochaine opportunité commence ici !</p>
@@ -241,12 +220,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php if ($erreur): ?>
         <div class="message erreur" role="alert">
             <?= htmlspecialchars($erreur) ?>
-        </div>
-    <?php endif; ?>
-
-    <?php if ($succes): ?>
-        <div class="message succes" role="status">
-            <?= htmlspecialchars($succes) ?>
         </div>
     <?php endif; ?>
 
@@ -260,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php foreach (['stage', 'alternance', 'cdd', 'cdi'] as $t): ?>
                     <option
                             value="<?= htmlspecialchars($t) ?>"
-                        <?= $type === $t ? 'selected' : '' ?>
+                            <?= $type === $t ? 'selected' : '' ?>
                     >
                         <?= strtoupper($t) ?>
                     </option>
@@ -294,7 +267,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </h2>
 
                         <p class="entreprise">
-                             <?= htmlspecialchars($o['entreprise']) ?>
+                            <?= htmlspecialchars($o['entreprise']) ?>
                         </p>
 
                         <span class="badge">
@@ -303,13 +276,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         <?php if ($o['salaire'] !== null && $o['salaire'] !== ''): ?>
                             <p>
-                                 Salaire :
+                                Salaire :
                                 <?= htmlspecialchars((string) $o['salaire']) ?> €
                             </p>
                         <?php endif; ?>
 
                         <p>
-                             Publiée le
+                            Publiée le
                             <?= date('d/m/Y', strtotime($o['date_publication'])) ?>
                         </p>
 
@@ -333,7 +306,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <button type="submit" class="bouton">
-                Envoyer ma candidature
+                Postuler à l'offre sélectionnée
             </button>
         </form>
 
