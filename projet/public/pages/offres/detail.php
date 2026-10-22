@@ -1,5 +1,6 @@
 <?php
-require_once /** @var PDO $pdo */'../../includes/config.php'; // session_start() est déjà dedans
+/** @var PDO $pdo */
+require_once '../../includes/config.php'; // session_start() est déjà dedans
 
 $id = (int)($_GET['id'] ?? 0);
 $idUser = $_SESSION['id_utilisateur'] ?? null;
@@ -7,9 +8,9 @@ $idUser = $_SESSION['id_utilisateur'] ?? null;
 // --- Traitement des actions de l'auteur (clôturer / rouvrir / cacher une candidature) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $idUser) {
 
-    if (isset($_POST['toggle_etat'])) {t
+    if (isset($_POST['toggle_etat'])) {
         $pdo->prepare("UPDATE offre SET etat = ? WHERE id_offre = ? AND id_auteur = ?")
-            ->execute([$_POST['toggle_etat'] === 'cloture' ? 'cloture' : 'ouvert', $id, $idUser]);
+                ->execute([$_POST['toggle_etat'] === 'cloture' ? 'cloture' : 'ouvert', $id, $idUser]);
     }
 
     if (isset($_POST['refuser_candidat'])) {
@@ -20,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $idUser) {
         $check->execute([$id, $idUser]);
         if ($check->fetch()) {
             $pdo->prepare("UPDATE candidature SET statut = 'non_retenue' WHERE id_utilisateur = ? AND id_offre = ?")
-                ->execute([$idCandidat, $id]);
+                    ->execute([$idCandidat, $id]);
 
             $mail = $pdo->prepare("SELECT email FROM utilisateur WHERE id_utilisateur = ?");
             $mail->execute([$idCandidat]);
@@ -36,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $idUser) {
 
 // --- Chargement de l'offre (LEFT JOIN : une offre du groupe n'a pas d'entreprise) ---
 $stmt = $pdo->prepare(
-    "SELECT o.*, COALESCE(e.nom, 'Groupe GDH') AS entreprise, u.nom AS auteur_nom, u.prenom AS auteur_prenom
+        "SELECT o.*, COALESCE(e.nom, 'Groupe GDH') AS entreprise, u.nom AS auteur_nom, u.prenom AS auteur_prenom
      FROM offre o
      LEFT JOIN entreprise e ON e.id_entreprise = o.id_entreprise
      JOIN utilisateur u ON u.id_utilisateur = o.id_auteur
@@ -60,7 +61,7 @@ if ($idUser) {
 $candidats = [];
 if ($estAuteur) {
     $s = $pdo->prepare(
-        "SELECT c.*, u.nom, u.prenom, u.email
+            "SELECT c.*, u.nom, u.prenom, u.email
          FROM candidature c
          JOIN utilisateur u ON u.id_utilisateur = c.id_utilisateur
          WHERE c.id_offre = ? AND c.statut != 'non_retenue'
