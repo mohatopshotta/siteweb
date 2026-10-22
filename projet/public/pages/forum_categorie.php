@@ -1,104 +1,109 @@
 <?php
-require_once __DIR__ . '/../..//.php';
+require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/forum_acces.php';
 
-$pdo = getDB();
-$user = currentUser();
-$code = $_GET['code'] ?? '';
+if (!isset($_SESSION['id_utilisateur'])) {
+    header('Location: connexion.php');
+    exit;
+}
 
-$stmt = $pdo->prepare('SELECT * FROM forum_categories WHERE code = ?');
-$stmt->execute([$code]);
-$categorie = $stmt->fetch();
-if (!$categorie) {
+$id_utilisateur = $_SESSION['id_utilisateur'];
+$role = $_SESSION['role'];
+$id_section = (int)($_GET['id'] ?? 0);
+
+$req = $pdo->prepare('SELECT * FROM section_forum WHERE id_section = ?');
+$req->execute([$id_section]);
+$section = $req->fetch();
+
+if (!$section) {
     http_response_code(404);
     die('Section de forum introuvable.');
 }
 
-$peutLire = true;
-$peutCreerPost = false;
-if ($user) {
-    if ($categorie['code'] === 'generale') {
-        $peutCreerPost = true;
-    } elseif ($categorie['code'] === 'medecins') {
-        $peutLire = in_array($user['role'], ['medecin', 'partenaire', 'gestionnaire'], true);
-        $peutCreerPost = in_array($user['role'], ['medecin', 'partenaire'], true);
-    } elseif ($categorie['code'] === 'etudiants') {
-        $peutLire = in_array($user['role'], ['etudiant', 'medecin', 'gestionnaire'], true);
-        $peutCreerPost = $user['role'] === 'etudiant';
-    }
-} else {
-    $peutLire = $categorie['code'] === 'generale';
-}
-
-if (!$peutLire) {
+$droits = forum_droits($id_section, $role);
+if (!$droits['lire']) {
     http_response_code(403);
     die('Cette section du forum ne vous est pas accessible.');
 }
 
-$erreurs = [];
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['creer_post'])) {
-    requireLogin();
-    if (!$peutCreerPost) {
+$erreur = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!$droits['creer']) {
         http_response_code(403);
-        die('Vous n\'êtes pas autorisé à créer une discussion dans cette section.');
+        die("Vous n'êtes pas autorisé à créer une discussion dans cette section.");
     }
-    if (!checkCsrf()) {
-        $erreurs[] = 'Jeton de sécurité invalide.';
+
+    $titre = trim($_POST['titre'] ?? '');
+    $contenu = trim($_POST['contenu'] ?? '');
+
+    if ($titre === '' || $contenu === '') {
+        $erreur = 'Merci de renseigner un titre et un contenu.';
+    } elseif (mb_strlen($titre) > 150) {
+        $erreur = 'Le titre ne doit pas dépasser 150 caractères.';
     } else {
-        $titre = trim($_POST['titre'] ?? '');
-        $contenu = trim($_POST['contenu'] ?? '');
-        if ($titre === '' || $contenu === '') {
-            $erreurs[] = 'Merci de renseigner un titre et un contenu.';
-        } else {
-            $stmt = $pdo->prepare('INSERT INTO forum_posts (id_categorie, id_auteur, titre, contenu) VALUES (?, ?, ?, ?)');
-            $stmt->execute([$categorie['id_categorie'], $user['id'], $titre, $contenu]);
-        }
+        $req = $pdo->prepare('INSERT INTO post (id_section, id_auteur, titre, contenu) VALUES (?, ?, ?, ?)');
+        $req->execute([$id_section, $id_utilisateur, $titre, $contenu]);
+        header('Location: forum_categorie.php?id=' . $id_section);
+        exit;
     }
 }
 
-$stmt = $pdo->prepare(
-    "SELECT p.*, u.nom, u.prenom,
-     (SELECT COUNT(*) FROM forum_reponses r WHERE r.id_post = p.id_post) AS nb_reponses
-     FROM forum_posts p JOIN utilisateurs u ON u.id_utilisateur = p.id_auteur
-     WHERE p.id_categorie = ? ORDER BY p.date_creation DESC"
+$req = $pdo->prepare(
+    'SELECT p.id_post, p.titre, p.date_heure, u.nom, u.prenom,
+            (SELECT COUNT(*) FROM reponse r WHERE r.id_post = p.id_post) AS nb_reponses
+     FROM post p
+     JOIN utilisateur u ON u.id_utilisateur = p.id_auteur
+     WHERE p.id_section = ?
+     ORDER BY p.date_heure DESC'
 );
-$stmt->execute([$categorie['id_categorie']]);
-$posts = $stmt->fetchAll();
+$req->execute([$id_section]);
+$posts = $req->fetchAll();
 ?>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title><?= htmlspecialchars($section['nom']) ?></title>
+    <link rel="stylesheet" href="../assets/css/css.css">
+</head>
+<body>
 
-<h1><?= h($categorie['nom']) ?></h1>
+<?php $racine = '../'; require __DIR__ . '/../includes/header.php'; ?>
 
-<?php foreach ($erreurs as $err): ?><p class="alert alert-error"><?= h($err) ?></p><?php endforeach; ?>
+<h1><?= htmlspecialchars($section['nom']) ?></h1>
 
-<?php if ($peutCreerPost): ?>
-    <details class="form-collapsible">
+<?php if ($erreur): ?>
+    <p style="color:red;"><?= htmlspecialchars($erreur) ?></p>
+<?php endif; ?>
+
+<?php if ($droits['creer']): ?>
+    <details>
         <summary>Nouvelle discussion</summary>
-        <form method="post" class="form">
-            <input type="hidden" name="csrf_token" value="<?= h(csrfToken()) ?>">
-            <input type="hidden" name="creer_post" value="1">
-            <label>Titre <input type="text" name="titre" required></label>
-            <label>Message <textarea name="contenu" required></textarea></label>
+        <form method="post">
+            <label>Titre</label>
+            <input type="text" name="titre" maxlength="150" required><br>
+            <label>Message</label>
+            <textarea name="contenu" required></textarea><br>
             <button type="submit">Publier</button>
         </form>
     </details>
-<?php elseif (!$user): ?>
-    <p><a href="<?= SITE_URL ?>/pages/connexion.php">Connectez-vous</a> pour participer.</p>
 <?php endif; ?>
 
-<div class="post-list">
-    <?php if (empty($posts)): ?>
-        <p>Aucune discussion pour le moment.</p>
-    <?php endif; ?>
-    <?php foreach ($posts as $p): ?>
-        <article class="post-summary">
-            <h3><a href="<?= SITE_URL ?>/pages/forum_post.php?id=<?= (int)$p['id_post'] ?>"><?= h($p['titre']) ?></a></h3>
-            <p class="meta">
-                Par <?= h($p['prenom'] . ' ' . $p['nom']) ?> le <?= formatDate($p['date_creation']) ?>
-                - <?= (int)$p['nb_reponses'] ?> réponse(s)
-            </p>
-        </article>
-    <?php endforeach; ?>
-</div>
+<?php if (empty($posts)): ?>
+    <p>Aucune discussion pour le moment.</p>
+<?php endif; ?>
 
-<p><a href="<?= SITE_URL ?>/pages/forum.php">&larr; Retour au forum</a></p>
+<?php foreach ($posts as $p): ?>
+    <div class="carte-forum">
+        <h3><a href="forum_post.php?id=<?= (int)$p['id_post'] ?>"><?= htmlspecialchars($p['titre']) ?></a></h3>
+        <p>
+            Par <?= htmlspecialchars($p['prenom'] . ' ' . $p['nom']) ?> le <?= forum_date($p['date_heure']) ?>
+            - <?= (int)$p['nb_reponses'] ?> réponse(s)
+        </p>
+    </div>
+<?php endforeach; ?>
 
-<?php require_once __DIR__ . '/../..//.php'; ?>
+<p><a href="forum.php">Retour au forum</a></p>
+
+</body>
+</html>

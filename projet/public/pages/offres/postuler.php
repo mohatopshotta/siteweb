@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../../includes/config.php';
+/** @var PDO $pdo */
 
 if (!isset($_SESSION['id_utilisateur']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: index.php'); exit;

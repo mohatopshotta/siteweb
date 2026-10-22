@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../includes/config.php';
+/** @var PDO $pdo */
 
 $erreurs = [];
 
@@ -199,7 +200,7 @@ $entreprises = $pdo->query('SELECT id_entreprise, nom FROM entreprise ORDER BY n
 </head>
 <body>
 
-<?php require __DIR__ . '/../includes/header.php'; ?>
+<?php $racine = '../'; require __DIR__ . '/../includes/header.php'; ?>
 
 <h1>Inscription</h1>
 

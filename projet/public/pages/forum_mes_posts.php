@@ -1,59 +1,78 @@
 <?php
-require_once __DIR__ . '/../..//.php';
-requireLogin();
+require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/forum_acces.php';
 
-$pdo = getDB();
-$user = currentUser();
+if (!isset($_SESSION['id_utilisateur']) || $_SESSION['profil'] === 'gestionnaire') {
+    header('Location: connexion.php');
+    exit;
+}
 
-$stmt = $pdo->prepare(
-    'SELECT p.id_post, p.titre, p.date_creation, c.nom AS categorie_nom
-     FROM forum_posts p JOIN forum_categories c ON c.id_categorie = p.id_categorie
-     WHERE p.id_auteur = ? ORDER BY p.date_creation DESC'
+$id_utilisateur = $_SESSION['id_utilisateur'];
+
+$req = $pdo->prepare(
+    'SELECT p.id_post, p.titre, p.date_heure, s.nom AS section_nom
+     FROM post p
+     JOIN section_forum s ON s.id_section = p.id_section
+     WHERE p.id_auteur = ?
+     ORDER BY p.date_heure DESC'
 );
-$stmt->execute([$user['id']]);
-$mesPosts = $stmt->fetchAll();
+$req->execute([$id_utilisateur]);
+$mes_posts = $req->fetchAll();
 
-$stmt = $pdo->prepare(
-    'SELECT DISTINCT p.id_post, p.titre, c.nom AS categorie_nom, MAX(r.date_creation) AS derniere_reponse
-     FROM forum_reponses r
-     JOIN forum_posts p ON p.id_post = r.id_post
-     JOIN forum_categories c ON c.id_categorie = p.id_categorie
+$req = $pdo->prepare(
+    'SELECT p.id_post, p.titre, s.nom AS section_nom, MAX(r.date_heure) AS derniere_reponse
+     FROM reponse r
+     JOIN post p ON p.id_post = r.id_post
+     JOIN section_forum s ON s.id_section = p.id_section
      WHERE r.id_auteur = ?
-     GROUP BY p.id_post, p.titre, c.nom
+     GROUP BY p.id_post, p.titre, s.nom
      ORDER BY derniere_reponse DESC'
 );
-$stmt->execute([$user['id']]);
-$mesReponses = $stmt->fetchAll();
+$req->execute([$id_utilisateur]);
+$mes_reponses = $req->fetchAll();
 ?>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes discussions</title>
+    <link rel="stylesheet" href="../assets/css/css.css">
+</head>
+<body>
+
+<?php $racine = '../'; require __DIR__ . '/../includes/header.php'; ?>
 
 <h1>Mes discussions</h1>
 
 <h2>Discussions que j'ai créées</h2>
-<?php if (empty($mesPosts)): ?>
+<?php if (empty($mes_posts)): ?>
     <p>Vous n'avez encore créé aucune discussion.</p>
 <?php else: ?>
     <ul>
-        <?php foreach ($mesPosts as $p): ?>
+        <?php foreach ($mes_posts as $p): ?>
             <li>
-                <a href="<?= SITE_URL ?>/pages/forum_post.php?id=<?= (int)$p['id_post'] ?>"><?= h($p['titre']) ?></a>
-                (<?= h($p['categorie_nom']) ?>) - <?= formatDate($p['date_creation']) ?>
+                <a href="forum_post.php?id=<?= (int)$p['id_post'] ?>"><?= htmlspecialchars($p['titre']) ?></a>
+                (<?= htmlspecialchars($p['section_nom']) ?>) - <?= forum_date($p['date_heure']) ?>
             </li>
         <?php endforeach; ?>
     </ul>
 <?php endif; ?>
 
 <h2>Discussions où j'ai répondu</h2>
-<?php if (empty($mesReponses)): ?>
+<?php if (empty($mes_reponses)): ?>
     <p>Vous n'avez encore répondu à aucune discussion.</p>
 <?php else: ?>
     <ul>
-        <?php foreach ($mesReponses as $p): ?>
+        <?php foreach ($mes_reponses as $p): ?>
             <li>
-                <a href="<?= SITE_URL ?>/pages/forum_post.php?id=<?= (int)$p['id_post'] ?>"><?= h($p['titre']) ?></a>
-                (<?= h($p['categorie_nom']) ?>)
+                <a href="forum_post.php?id=<?= (int)$p['id_post'] ?>"><?= htmlspecialchars($p['titre']) ?></a>
+                (<?= htmlspecialchars($p['section_nom']) ?>)
             </li>
         <?php endforeach; ?>
     </ul>
 <?php endif; ?>
 
-<?php require_once __DIR__ . '/../../.php'; ?>
+<p><a href="forum.php">Retour au forum</a></p>
+
+</body>
+</html>
