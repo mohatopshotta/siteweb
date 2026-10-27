@@ -1,21 +1,45 @@
 <?php
-require_once __DIR__ . '/../../includes/config.php';
+require_once '../../includes/config.php';
+/** @var PDO $pdo */
 
-// réservé aux membres (pas au gestionnaire)
-Session::exigerMembre('../../');
+$racine = '../../';
 
-$offreManager = new OffreManager();
-
-// filtre par type de contrat (stage, alternance, cdd, cdi)
 $type = $_GET['type'] ?? '';
-$offres = $offreManager->listerOuvertes($type);
+$erreur = '';
 
-// un partenaire voit aussi ses propres offres (ouvertes ou clôturées)
-$mes_offres = [];
-if (Session::aLeRole(['partenaire'])) {
-    $mes_offres = $offreManager->listerParAuteur(Session::getIdUtilisateur());
+$sql = "SELECT o.id_offre, o.titre, o.type_offre, o.salaire,
+               o.date_publication, COALESCE(e.nom, 'Groupe GDH') AS entreprise
+        FROM offre o
+        LEFT JOIN entreprise e ON e.id_entreprise = o.id_entreprise
+        WHERE o.etat = 'ouvert'";
+
+$params = [];
+
+if (in_array($type, ['stage', 'alternance', 'cdd', 'cdi'], true)) {
+    $sql .= " AND o.type_offre = ?";
+    $params[] = $type;
+}
+
+$sql .= " ORDER BY o.date_publication DESC";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
+$offres = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Choix d'une offre dans la liste : on redirige vers sa fiche détaillée,
+// où se trouve le vrai formulaire de candidature (avec lettre de motivation).
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $id_offre = filter_input(INPUT_POST, 'id_offre', FILTER_VALIDATE_INT);
+
+    if (!$id_offre) {
+        $erreur = "Veuillez sélectionner une offre avant de continuer.";
+    } else {
+        header("Location: detail.php?id=$id_offre");
+        exit;
+    }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -119,10 +143,24 @@ if (Session::aLeRole(['partenaire'])) {
             font-weight: bold;
         }
 
+        .choix {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 18px;
+            cursor: pointer;
+        }
+
+        .choix input {
+            width: 17px;
+            height: 17px;
+            accent-color: #2457c5;
+        }
+
         .bouton {
             display: inline-block;
-            margin-top: 10px;
-            text-decoration: none;
+            width: 100%;
+            margin-top: 20px;
             padding: 12px;
             color: white;
             background: #2457c5;
@@ -149,12 +187,6 @@ if (Session::aLeRole(['partenaire'])) {
             border: 1px solid #f5bcbc;
         }
 
-        .succes {
-            color: #176534;
-            background: #e5f8eb;
-            border: 1px solid #a9e3b9;
-        }
-
         .vide {
             padding: 30px;
             text-align: center;
@@ -175,39 +207,23 @@ if (Session::aLeRole(['partenaire'])) {
 </head>
 
 <body>
-
-<?php $racine = '../../'; require __DIR__ . '/../../includes/header.php'; ?>
-
+<?php require $racine . 'includes/header.php'; ?>
 <div class="container">
 
     <header class="entete">
         <h1>Découvrez toutes nos offres !</h1>
         <p>
             Vous êtes à la recherche d'un stage, d'une alternance
-            ou d'un emploi ? Consultez toutes nos opportunités et
+            ou d'un emploi dans nos etablissements partenaire ? Consultez toutes nos opportunités et
             choisissez l'offre qui correspond à votre projet professionnel.
         </p>
         <p>Votre prochaine opportunité commence ici !</p>
     </header>
 
-    <?php if (Session::aLeRole(['partenaire'])): ?>
-        <section class="filtre">
-            <h2>Mes offres publiées</h2>
-            <?php if (empty($mes_offres)): ?>
-                <p>Tu n'as encore publié aucune offre.</p>
-            <?php else: ?>
-                <ul>
-                    <?php foreach ($mes_offres as $o): ?>
-                        <li>
-                            <?= htmlspecialchars($o->getTitre()) ?>
-                            (<?= $o->estOuverte() ? 'ouverte' : 'clôturée' ?>)
-                            — <a href="gerer.php?id=<?= $o->getIdOffre() ?>">Gérer</a>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-            <?php endif; ?>
-            <a class="bouton" href="creer.php">+ Créer une offre</a>
-        </section>
+    <?php if ($erreur): ?>
+        <div class="message erreur" role="alert">
+            <?= htmlspecialchars($erreur) ?>
+        </div>
     <?php endif; ?>
 
     <section class="filtre">
@@ -217,8 +233,11 @@ if (Session::aLeRole(['partenaire'])) {
             <select name="type" onchange="this.form.submit()">
                 <option value="">Tous les types de contrats</option>
 
-                <?php foreach (Offre::TYPES as $t): ?>
-                    <option value="<?= $t ?>" <?= $type === $t ? 'selected' : '' ?>>
+                <?php foreach (['stage', 'alternance', 'cdd', 'cdi'] as $t): ?>
+                    <option
+                            value="<?= htmlspecialchars($t) ?>"
+                            <?= $type === $t ? 'selected' : '' ?>
+                    >
                         <?= strtoupper($t) ?>
                     </option>
                 <?php endforeach; ?>
@@ -238,31 +257,61 @@ if (Session::aLeRole(['partenaire'])) {
 
     <?php else: ?>
 
-        <div class="offres">
-            <?php foreach ($offres as $o): ?>
-                <article class="offre">
+        <form method="post">
+            <div class="offres">
 
-                    <h2>
-                        <a href="detail.php?id=<?= $o->getIdOffre() ?>">
-                            <?= htmlspecialchars($o->getTitre()) ?>
+                <?php foreach ($offres as $o): ?>
+                    <article class="offre">
+
+                        <h2>
+                            <a href="detail.php?id=<?= (int) $o['id_offre'] ?>">
+                                <?= htmlspecialchars($o['titre']) ?>
+                            </a>
+                        </h2>
+
+                        <p class="entreprise">
+                            <?= htmlspecialchars($o['entreprise']) ?>
+                        </p>
+
+                        <span class="badge">
+                            <?= strtoupper(htmlspecialchars($o['type_offre'])) ?>
+                        </span>
+
+                        <?php if ($o['salaire'] !== null && $o['salaire'] !== ''): ?>
+                            <p>
+                                Salaire :
+                                <?= htmlspecialchars((string) $o['salaire']) ?> €
+                            </p>
+                        <?php endif; ?>
+
+                        <p>
+                            Publiée le
+                            <?= date('d/m/Y', strtotime($o['date_publication'])) ?>
+                        </p>
+
+                        <label class="choix">
+                            <input
+                                    type="radio"
+                                    name="id_offre"
+                                    value="<?= (int) $o['id_offre'] ?>"
+                                    required
+                            >
+                            <span>Je choisis cette offre</span>
+                        </label>
+
+                        <a href="detail.php?id=<?= (int) $o['id_offre'] ?>">
+                            Voir les détails
                         </a>
-                    </h2>
 
-                    <p class="entreprise"><?= htmlspecialchars($o->getEntreprise()) ?></p>
+                    </article>
+                <?php endforeach; ?>
 
-                    <span class="badge"><?= strtoupper(htmlspecialchars($o->getTypeOffre())) ?></span>
+            </div>
 
-                    <?php if ($o->getSalaire() !== null): ?>
-                        <p>Salaire : <?= number_format($o->getSalaire(), 2, ',', ' ') ?> €</p>
-                    <?php endif; ?>
-
-                    <p>Publiée le <?= date('d/m/Y', strtotime($o->getDatePublication())) ?></p>
-
-                    <a href="detail.php?id=<?= $o->getIdOffre() ?>">Voir les détails et postuler</a>
-
-                </article>
-            <?php endforeach; ?>
-        </div>
+            <button type="submit" class="bouton">
+                Postuler à l'offre sélectionnée
+            </button>
+        </form>
 
     <?php endif; ?>
 
