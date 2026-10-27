@@ -4,14 +4,12 @@ require __DIR__ . '/../includes/config.php';
 $erreurs = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
     $nom = trim($_POST['nom'] ?? '');
     $prenom = trim($_POST['prenom'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $mot_de_passe = $_POST['mot_de_passe'] ?? '';
     $role = $_POST['role'] ?? '';
 
-    // champs obligatoires communs à tous les rôles
     if ($nom === '' || $prenom === '' || $email === '' || $mot_de_passe === '') {
         $erreurs[] = 'Tous les champs sont obligatoires.';
     }
@@ -24,12 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $utilisateurManager = new UtilisateurManager();
 
-    // on vérifie que l'email n'est pas déjà pris
     if (empty($erreurs) && $utilisateurManager->emailExiste($email)) {
         $erreurs[] = 'Cet email est déjà utilisé.';
     }
 
-    // établissement ou entreprise à créer si l'utilisateur a choisi "+ Nouveau"
     $nouvel_etablissement = null;
     $nouvelle_entreprise = null;
     $infos_etablissement = [
@@ -38,10 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'site_web' => trim($_POST['nouvel_etablissement_site'] ?? ''),
     ];
 
-    // l'objet créé dépend du rôle choisi : Etudiant, Medecin ou Partenaire
     $utilisateur = null;
 
-    // validation spécifique étudiant
     if (empty($erreurs) && $role === 'etudiant') {
         $formation = trim($_POST['formation'] ?? '');
         $id_etablissement = $_POST['id_etablissement'] ?? '';
@@ -57,7 +51,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $erreurs[] = 'Choisis un établissement.';
         }
 
-        // CV facultatif : PDF uniquement, 2 Mo maximum
         if (!empty($_FILES['cv']['name'])) {
             $extension = strtolower(pathinfo($_FILES['cv']['name'], PATHINFO_EXTENSION));
             if ($_FILES['cv']['error'] !== UPLOAD_ERR_OK) {
@@ -75,7 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
     }
 
-    // validation spécifique médecin
     if (empty($erreurs) && $role === 'medecin') {
         $id_specialite = $_POST['id_specialite'] ?? '';
         $id_hopital = $_POST['id_hopital'] ?? '';
@@ -93,12 +85,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $utilisateur = new Medecin([
             'id_specialite'    => (int)$id_specialite,
             'id_hopital'       => (int)$id_hopital,
-            // établissement d'enseignement facultatif
             'id_etablissement' => ctype_digit($id_etablissement_medecin) ? (int)$id_etablissement_medecin : null,
         ]);
     }
 
-    // validation spécifique partenaire
     if (empty($erreurs) && $role === 'partenaire') {
         $poste = trim($_POST['poste'] ?? '');
         $id_entreprise = $_POST['id_entreprise'] ?? '';
@@ -125,18 +115,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
     }
 
-    // tout est valide : on enregistre
     if (empty($erreurs) && $utilisateur !== null) {
         $utilisateur->hydrater(['nom' => $nom, 'prenom' => $prenom, 'email' => $email]);
 
-        // upload du CV si fourni
         $fichier_cv = null;
         if ($utilisateur instanceof Etudiant && !empty($_FILES['cv']['name'])) {
             $dossier_cv = __DIR__ . '/../uploads/cv/';
             if (!is_dir($dossier_cv)) {
                 mkdir($dossier_cv, 0755, true);
             }
-            // nom aléatoire : on ne garde pas le nom choisi par l'utilisateur
+
             $nom_fichier = bin2hex(random_bytes(16)) . '.pdf';
             $fichier_cv = $dossier_cv . $nom_fichier;
             move_uploaded_file($_FILES['cv']['tmp_name'], $fichier_cv);
@@ -146,10 +134,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $utilisateurManager->inscrire($utilisateur, $mot_de_passe, $nouvel_etablissement, $nouvelle_entreprise);
 
-            // redirection vers la connexion avec un message de succès
             Session::rediriger('connexion.php?inscription=ok');
         } catch (Exception $e) {
-            // l'inscription a échoué : on supprime le CV envoyé
             if ($fichier_cv !== null && is_file($fichier_cv)) {
                 unlink($fichier_cv);
             }
@@ -158,7 +144,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// listes pour remplir les menus déroulants du formulaire
 $hopitaux = (new HopitalManager())->listerTous();
 $specialites = (new SpecialiteManager())->listerTous();
 $etablissements = (new EtablissementManager())->listerTous();

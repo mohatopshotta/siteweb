@@ -1,12 +1,10 @@
 <?php
 
-/** Médecin du groupe GDH (table medecin). */
 class Medecin extends Utilisateur
 {
     private ?int $idSpecialite = null;
     private ?int $idHopital = null;
     private ?int $idEtablissement = null;
-    // remplis par jointure (specialite, hopital, etablissement)
     private ?string $specialite = null;
     private ?string $hopital = null;
     private ?string $nomEtablissement = null;

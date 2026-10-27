@@ -1,6 +1,5 @@
 <?php
 
-/** Entreprise partenaire (table entreprise). */
 class Entreprise extends Entite
 {
     private ?int $idEntreprise = null;

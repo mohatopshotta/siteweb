@@ -1,9 +1,7 @@
 <?php
 
-/** Requêtes sur les sections du forum (table section_forum). */
 class SectionForumManager extends Manager
 {
-    /** @return SectionForum[] avec le nombre de discussions de chaque section */
     public function listerAvecNbPosts(): array
     {
         $lignes = $this->pdo->query(

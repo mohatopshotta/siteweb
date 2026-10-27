@@ -1,7 +1,6 @@
 <?php
 require __DIR__ . '/../../includes/config.php';
 
-// réservé aux membres (pas au gestionnaire)
 Session::exigerMembre('../../');
 
 $manager = new EvenementManager();
@@ -15,9 +14,6 @@ if ($evenement === null) {
 
 $erreur = '';
 
-// ------------------------------------------------------------
-// Inscription / désinscription
-// ------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['inscrire'])) {
         $erreur = $manager->inscrire($id_utilisateur, $evenement);
@@ -30,7 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// null = pas inscrit ; sinon participant ou organisateur
 $inscription = $manager->trouverInscription($id_utilisateur, $id_evenement);
 ?>
 <!DOCTYPE html>

@@ -1,24 +1,19 @@
 <?php
 require __DIR__ . '/../includes/config.php';
 
-// message d'erreur affiché si la connexion échoue
 $erreur = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $mot_de_passe = $_POST['mot_de_passe'] ?? '';
 
-    // on cherche l'utilisateur par son email (objet Etudiant, Medecin, Partenaire ou Gestionnaire)
     $utilisateur = (new UtilisateurManager())->trouverParEmail($email);
 
     if ($utilisateur === null || !$utilisateur->verifierMotDePasse($mot_de_passe)) {
-        // email inexistant ou mot de passe incorrect
         $erreur = 'Email ou mot de passe incorrect.';
     } elseif (!$utilisateur->isValide()) {
-        // compte pas encore validé par un gestionnaire
         $erreur = 'Ton compte est en attente de validation par un gestionnaire.';
     } else {
-        // on ouvre la session puis on redirige vers l'accueil
         Session::connecter($utilisateur);
         Session::rediriger('../accueil/accueil.php');
     }

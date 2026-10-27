@@ -1,29 +1,18 @@
 <?php
-// ============================================================
-// pages/admin/admin.php
-// Tableau de bord du module Administration
-// ============================================================
-
 require_once __DIR__ . '/../../includes/config.php';
 
-// On protège la page : seul un gestionnaire connecté peut y accéder
 Session::exigerRole(['gestionnaire'], '../../');
 
 $manager = new UtilisateurManager();
 
-// VUE D'ENSEMBLE : quelques compteurs simples
 $nbValides     = $manager->compterValides();
 $nbEtudiants   = $manager->compterParRole('etudiant');
 $nbMedecins    = $manager->compterParRole('medecin');
 $nbPartenaires = $manager->compterParRole('partenaire');
 $nbEnAttente   = $manager->compterEnAttente();
 
-// LISTE DES COMPTES EN ATTENTE
-// Chaque compte est un objet Etudiant, Medecin, Partenaire ou Gestionnaire :
-// getLibelleRole() donne directement son rôle.
 $comptesEnAttente = $manager->listerEnAttente();
 
-// Message de confirmation après validation/refus
 $message = '';
 if (isset($_GET['msg'])) {
     if ($_GET['msg'] === 'valide') {
@@ -50,7 +39,7 @@ if (isset($_GET['msg'])) {
     <?php if ($message): ?>
         <div class="alerte alerte-succes"><?= htmlspecialchars($message) ?></div>
     <?php endif; ?>
-    
+
     <section class="admin-section">
         <h2>Vue d'ensemble</h2>
 
@@ -101,7 +90,6 @@ if (isset($_GET['msg'])) {
                         <td><?= htmlspecialchars($compte->getEmail()) ?></td>
                         <td><?= htmlspecialchars($compte->getLibelleRole()) ?></td>
                         <td class="admin-actions">
-                            <!-- Chaque bouton envoie un POST vers valider_compte.php -->
                             <form action="valider_compte.php" method="POST" class="form-inline">
                                 <input type="hidden" name="id" value="<?= $compte->getIdUtilisateur() ?>">
                                 <input type="hidden" name="action" value="valider">
@@ -121,7 +109,6 @@ if (isset($_GET['msg'])) {
             </table>
         <?php endif; ?>
     </section>
-
 
 </div>
 </body>

@@ -1,9 +1,7 @@
 <?php
 
-/** Requêtes sur les événements (tables evenement et inscription_evenement). */
 class EvenementManager extends Manager
 {
-    // événement + nombre de participants (les organisateurs ne prennent pas de place)
     private const SELECT_AVEC_PLACES = "
         SELECT e.*, COUNT(ie.id_utilisateur) AS places_prises
         FROM evenement e
@@ -11,10 +9,6 @@ class EvenementManager extends Manager
                ON ie.id_evenement = e.id_evenement AND ie.organiser = 0
     ";
 
-    /**
-     * @param int|null $limite nombre max d'événements (null = tous)
-     * @return Evenement[] du plus récent au plus ancien
-     */
     public function listerTous(?int $limite = null): array
     {
         $sql = self::SELECT_AVEC_PLACES . ' GROUP BY e.id_evenement ORDER BY e.id_evenement DESC';
@@ -33,10 +27,6 @@ class EvenementManager extends Manager
         return $ligne ? new Evenement($ligne) : null;
     }
 
-    /**
-     * Crée l'événement ; son créateur en devient organisateur.
-     * @return int id du nouvel événement
-     */
     public function creer(Evenement $evenement, int $idOrganisateur): int
     {
         $this->pdo->beginTransaction();
@@ -86,11 +76,6 @@ class EvenementManager extends Manager
         ]);
     }
 
-    // ============================================================
-    // Inscriptions
-    // ============================================================
-
-    /** Renvoie l'inscription de l'utilisateur à l'événement, ou null s'il n'est pas inscrit. */
     public function trouverInscription(int $idUtilisateur, int $idEvenement): ?InscriptionEvenement
     {
         $req = $this->pdo->prepare('SELECT * FROM inscription_evenement WHERE id_utilisateur = ? AND id_evenement = ?');
@@ -105,10 +90,6 @@ class EvenementManager extends Manager
         return $inscription !== null && $inscription->estOrganisateur();
     }
 
-    /**
-     * Inscrit un participant s'il reste de la place.
-     * @return string message d'erreur ('' si l'inscription a réussi)
-     */
     public function inscrire(int $idUtilisateur, Evenement $evenement): string
     {
         if ($this->trouverInscription($idUtilisateur, $evenement->getIdEvenement()) !== null) {
@@ -122,7 +103,6 @@ class EvenementManager extends Manager
         return '';
     }
 
-    /** Retire un participant (jamais un organisateur). */
     public function retirerParticipant(int $idUtilisateur, int $idEvenement): void
     {
         $req = $this->pdo->prepare(
@@ -131,7 +111,6 @@ class EvenementManager extends Manager
         $req->execute([$idUtilisateur, $idEvenement]);
     }
 
-    /** @return InscriptionEvenement[] organisateurs puis participants */
     public function listerInscrits(int $idEvenement): array
     {
         $req = $this->pdo->prepare(

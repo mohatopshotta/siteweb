@@ -1,10 +1,8 @@
 <?php
 require __DIR__ . '/../../includes/config.php';
 
-// réservé aux membres (pas au gestionnaire)
 Session::exigerMembre('../../');
 
-// tous les événements avec leurs places restantes
 $evenements = (new EvenementManager())->listerTous();
 ?>
 <!DOCTYPE html>

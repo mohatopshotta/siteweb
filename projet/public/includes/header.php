@@ -1,9 +1,4 @@
 <?php
-// Menu commun du site HSP.
-// Avant de l'inclure, la page définit $racine = chemin relatif vers /public/
-//   - page dans public/            -> $racine = '';
-//   - page dans public/pages/      -> $racine = '../';
-//   - page dans public/pages/xxx/  -> $racine = '../../';
 $racine = $racine ?? '';
 
 $connecte = Session::estConnecte();

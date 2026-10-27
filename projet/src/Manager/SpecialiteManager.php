@@ -2,7 +2,6 @@
 
 class SpecialiteManager extends Manager
 {
-    /** @return Specialite[] */
     public function listerTous(): array
     {
         $lignes = $this->pdo->query('SELECT * FROM specialite ORDER BY libelle')->fetchAll();

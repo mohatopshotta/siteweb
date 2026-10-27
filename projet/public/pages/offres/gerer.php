@@ -1,7 +1,6 @@
 <?php
 require __DIR__ . '/../../includes/config.php';
 
-// Seuls les partenaires connectés ont le droit d'être ici
 Session::exigerRole(['partenaire'], '../../');
 
 $id_utilisateur = Session::getIdUtilisateur();
@@ -15,36 +14,27 @@ if ($offre === null) {
     die("Offre introuvable.");
 }
 
-// Seul l'auteur de l'offre peut la gérer
 if ($offre->getIdAuteur() !== $id_utilisateur) {
     die("Tu n'es pas l'auteur de cette offre.");
 }
 
-// ------------------------------------------------------------
-// Actions : clic sur un des boutons de la page
-// ------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
     $action      = $_POST['action'] ?? '';
     $id_candidat = (int)($_POST['id_candidat'] ?? 0);
 
     if ($action === 'bloquer') {
-        // Offre bloquée : plus personne ne peut postuler
         $offreManager->changerEtat($id_offre, Offre::CLOTURE, $id_utilisateur);
     } elseif ($action === 'rouvrir') {
         $offreManager->changerEtat($id_offre, Offre::OUVERT, $id_utilisateur);
     } elseif ($action === 'retenir') {
         $candidatureManager->retenir($id_offre, $id_candidat);
     } elseif ($action === 'refuser') {
-        // refuse la candidature et envoie l'email de refus au candidat
         $candidatureManager->refuser($offre, $id_candidat);
     }
 
-    // On recharge la page (évite de renvoyer le formulaire avec F5)
     Session::rediriger('gerer.php?id=' . $id_offre);
 }
 
-// Liste des candidats de l'offre
 $candidats = $candidatureManager->listerParOffre($id_offre);
 ?>
 <!DOCTYPE html>
@@ -65,7 +55,6 @@ $candidats = $candidatureManager->listerParOffre($id_offre);
     <a href="detail.php?id=<?= $id_offre ?>">voir l'offre</a>
 </p>
 
-<!-- Bouton bloquer / rouvrir selon l'état actuel -->
 <form method="post">
     <?php if ($offre->estOuverte()): ?>
         <button type="submit" name="action" value="bloquer">Bloquer l'offre</button>

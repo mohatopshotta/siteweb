@@ -1,10 +1,8 @@
 <?php
 require __DIR__ . '/../../includes/config.php';
 
-// Seuls les partenaires connectés ont le droit d'être ici
 Session::exigerRole(['partenaire'], '../../');
 
-// le partenaire connecté (objet Partenaire) : on a besoin de son entreprise
 $partenaire = (new UtilisateurManager())->trouverParId(Session::getIdUtilisateur());
 
 if (!$partenaire instanceof Partenaire || !$partenaire->getIdEntreprise()) {
@@ -13,28 +11,23 @@ if (!$partenaire instanceof Partenaire || !$partenaire->getIdEntreprise()) {
 
 $erreur = '';
 
-// Ce bloc s'exécute quand le formulaire est envoyé
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    // Vérifications (méthode de la classe Offre)
     $erreur = Offre::validerFormulaire($_POST);
 
     if ($erreur === '') {
         $salaire = trim($_POST['salaire'] ?? '');
 
-        // Tout est bon : on enregistre l'offre (elle est "ouverte" par défaut)
         $offre = new Offre([
             'id_auteur'     => $partenaire->getIdUtilisateur(),
             'id_entreprise' => $partenaire->getIdEntreprise(),
             'titre'         => trim($_POST['titre']),
             'description'   => trim($_POST['description']),
             'missions'      => trim($_POST['missions']),
-            'salaire'       => $salaire !== '' ? (float)$salaire : null,   // salaire vide = NULL
+            'salaire'       => $salaire !== '' ? (float)$salaire : null,
             'type_offre'    => $_POST['type_offre'],
         ]);
         $id_offre = (new OffreManager())->creer($offre);
 
-        // On va directement sur la page de gestion de la nouvelle offre
         Session::rediriger('gerer.php?id=' . $id_offre);
     }
 }

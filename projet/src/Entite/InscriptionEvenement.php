@@ -1,13 +1,11 @@
 <?php
 
-/** Inscription d'un utilisateur à un événement, comme participant ou organisateur (table inscription_evenement). */
 class InscriptionEvenement extends Entite
 {
     private ?int $idUtilisateur = null;
     private ?int $idEvenement = null;
     private ?string $dateInscription = null;
     private bool $organiser = false;
-    // remplis par jointure avec utilisateur
     private ?string $nom = null;
     private ?string $prenom = null;
     private ?string $email = null;

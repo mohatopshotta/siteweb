@@ -1,15 +1,12 @@
 <?php
-// Page d'accueil : projet/public/accueil/accueil.php
 $racine = '../';
 require $racine . 'includes/config.php';
 
 $connecte = Session::estConnecte();
 $role     = Session::getRole();
 
-// Événements à la une (les 3 plus récents)
 $evenements = (new EvenementManager())->listerTous(3);
 
-// Dernières offres ouvertes (les 3 plus récentes)
 $offres = (new OffreManager())->listerOuvertes(null, 3);
 ?>
 <!DOCTYPE html>

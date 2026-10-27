@@ -1,9 +1,7 @@
 <?php
 
-/** Requêtes sur les réponses du forum (table reponse). */
 class ReponseManager extends Manager
 {
-    /** @return Reponse[] réponses d'une discussion, de la plus ancienne à la plus récente */
     public function listerParPost(int $idPost): array
     {
         $req = $this->pdo->prepare(

@@ -1,6 +1,5 @@
 <?php
 
-/** Événement organisé par un médecin ou un partenaire (table evenement). */
 class Evenement extends Entite
 {
     private ?int $idEvenement = null;
@@ -10,7 +9,6 @@ class Evenement extends Entite
     private string $lieu = '';
     private ?string $elementsRequis = null;
     private int $nombrePlaces = 0;
-    // calculé par la requête : nombre de participants inscrits (hors organisateurs)
     private int $placesPrises = 0;
 
     public function getPlacesRestantes(): int
@@ -41,10 +39,6 @@ class Evenement extends Entite
     public function setNombrePlaces(int $nombre): void { $this->nombrePlaces = $nombre; }
     public function setPlacesPrises(int $nombre): void { $this->placesPrises = $nombre; }
 
-    /**
-     * Vérifie les champs saisis dans le formulaire.
-     * @return string[] liste des erreurs (vide si tout est bon)
-     */
     public static function validerFormulaire(array $post): array
     {
         $erreurs = [];
@@ -59,7 +53,6 @@ class Evenement extends Entite
         return $erreurs;
     }
 
-    /** Crée un objet Evenement à partir du formulaire (champs déjà validés). */
     public static function depuisFormulaire(array $post, ?int $idEvenement = null): self
     {
         return new self([

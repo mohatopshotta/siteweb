@@ -1,6 +1,5 @@
 <?php
 
-/** Candidature d'un étudiant ou d'un médecin à une offre (table candidature). */
 class Candidature extends Entite
 {
     public const EN_ATTENTE = 'en_attente';
@@ -12,7 +11,6 @@ class Candidature extends Entite
     private string $motivation = '';
     private ?string $dateCandidature = null;
     private string $statut = self::EN_ATTENTE;
-    // remplis par jointure avec utilisateur (le candidat)
     private ?string $nom = null;
     private ?string $prenom = null;
     private ?string $email = null;
@@ -22,7 +20,6 @@ class Candidature extends Entite
         return trim($this->prenom . ' ' . $this->nom);
     }
 
-    /** 'non_retenue' -> 'non retenue' */
     public function getLibelleStatut(): string
     {
         return str_replace('_', ' ', $this->statut);

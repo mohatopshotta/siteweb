@@ -1,13 +1,11 @@
 <?php
 require __DIR__ . '/../includes/config.php';
 
-// accès refusé si pas connecté
 Session::exigerConnexion('../');
 
 $manager = new UtilisateurManager();
 $id_utilisateur = Session::getIdUtilisateur();
 
-// modification nom/prénom
 $message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nom = trim($_POST['nom'] ?? '');
@@ -15,13 +13,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($nom !== '' && $prenom !== '') {
         $manager->modifierNomPrenom($id_utilisateur, $nom, $prenom);
-        // on met à jour la session pour que le changement soit visible tout de suite
+
         Session::majIdentite($nom, $prenom);
         $message = 'Profil mis à jour.';
     }
 }
 
-// objet Etudiant, Medecin, Partenaire ou Gestionnaire avec toutes ses infos
 $utilisateur = $manager->trouverParId($id_utilisateur);
 ?>
 <!DOCTYPE html>

@@ -1,6 +1,5 @@
 <?php
 
-/** Discussion du forum (table post). */
 class Post extends Entite
 {
     private ?int $idPost = null;
@@ -9,10 +8,9 @@ class Post extends Entite
     private string $titre = '';
     private string $contenu = '';
     private ?string $dateHeure = null;
-    // remplis par jointure
     private ?string $sectionNom = null;
-    private ?string $nom = null;      // nom de l'auteur
-    private ?string $prenom = null;   // prénom de l'auteur
+    private ?string $nom = null;
+    private ?string $prenom = null;
     private int $nbReponses = 0;
     private ?string $derniereReponse = null;
 
@@ -21,7 +19,6 @@ class Post extends Entite
         return trim($this->prenom . ' ' . $this->nom);
     }
 
-    /** Date au format 25/10/2026 14:30 */
     public function getDateFormatee(): string
     {
         return $this->dateHeure ? date('d/m/Y H:i', strtotime($this->dateHeure)) : '';

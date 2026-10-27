@@ -1,9 +1,7 @@
 <?php
 
-/** Requêtes sur les discussions du forum (table post). */
 class PostManager extends Manager
 {
-    /** @return Post[] discussions d'une section, avec auteur et nombre de réponses */
     public function listerParSection(int $idSection): array
     {
         $req = $this->pdo->prepare(
@@ -32,7 +30,6 @@ class PostManager extends Manager
         return $ligne ? new Post($ligne) : null;
     }
 
-    /** @return int id de la nouvelle discussion */
     public function creer(Post $post): int
     {
         $req = $this->pdo->prepare('INSERT INTO post (id_section, id_auteur, titre, contenu) VALUES (?, ?, ?, ?)');
@@ -40,7 +37,6 @@ class PostManager extends Manager
         return (int)$this->pdo->lastInsertId();
     }
 
-    /** @return Post[] discussions créées par l'utilisateur */
     public function listerParAuteur(int $idAuteur): array
     {
         $req = $this->pdo->prepare(
@@ -54,7 +50,6 @@ class PostManager extends Manager
         return $this->hydraterListe($req->fetchAll(), Post::class);
     }
 
-    /** @return Post[] discussions où l'utilisateur a répondu */
     public function listerOuUtilisateurARepondu(int $idUtilisateur): array
     {
         $req = $this->pdo->prepare(

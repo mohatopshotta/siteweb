@@ -1,8 +1,6 @@
 <?php
-// Traitement du formulaire "Postuler" de detail.php
 require __DIR__ . '/../../includes/config.php';
 
-// seuls les étudiants et les médecins peuvent postuler
 Session::exigerRole(['etudiant', 'medecin'], '../../');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -22,7 +20,6 @@ $candidature = new Candidature([
     'motivation'     => trim($_POST['motivation'] ?? ''),
 ]);
 
-// postuler() vérifie l'offre, enregistre la candidature et prévient l'auteur par email
 $erreur = (new CandidatureManager())->postuler($candidature, $offre);
 
 if ($erreur !== '') {

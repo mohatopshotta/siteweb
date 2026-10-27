@@ -1,6 +1,5 @@
 <?php
 
-/** Spécialité médicale (table specialite). */
 class Specialite extends Entite
 {
     private ?int $idSpecialite = null;

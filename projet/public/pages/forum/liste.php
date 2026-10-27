@@ -3,7 +3,6 @@ require_once __DIR__ . '/../../includes/config.php';
 
 Session::exigerMembre('../../');
 
-// sections du forum avec leur nombre de discussions
 $sections = (new SectionForumManager())->listerAvecNbPosts();
 ?>
 <!DOCTYPE html>

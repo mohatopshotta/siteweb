@@ -1,6 +1,5 @@
 <?php
 
-/** Établissement d'enseignement (table etablissement). */
 class Etablissement extends Entite
 {
     private ?int $idEtablissement = null;

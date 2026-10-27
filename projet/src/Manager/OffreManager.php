@@ -1,9 +1,7 @@
 <?php
 
-/** Requêtes sur les offres (table offre). */
 class OffreManager extends Manager
 {
-    // offre + nom de l'entreprise + auteur
     private const SELECT_COMPLET = "
         SELECT o.*, e.nom AS entreprise,
                u.nom AS auteur_nom, u.prenom AS auteur_prenom, u.email AS auteur_email
@@ -12,10 +10,6 @@ class OffreManager extends Manager
         JOIN utilisateur u ON u.id_utilisateur = o.id_auteur
     ";
 
-    /**
-     * Offres ouvertes, filtrées par type si besoin.
-     * @return Offre[] de la plus récente à la plus ancienne
-     */
     public function listerOuvertes(?string $type = null, ?int $limite = null): array
     {
         $sql = self::SELECT_COMPLET . ' WHERE o.etat = ?';
@@ -35,11 +29,10 @@ class OffreManager extends Manager
         return $this->hydraterListe($req->fetchAll(), Offre::class);
     }
 
-    /** @return Offre[] toutes les offres publiées par un partenaire (ouvertes et clôturées) */
-    public function listerParAuteur(int $idAuteur): array
+    public function listerParEntreprise(int $idEntreprise): array
     {
-        $req = $this->pdo->prepare(self::SELECT_COMPLET . ' WHERE o.id_auteur = ? ORDER BY o.date_publication DESC');
-        $req->execute([$idAuteur]);
+        $req = $this->pdo->prepare(self::SELECT_COMPLET . ' WHERE o.id_entreprise = ? ORDER BY o.date_publication DESC');
+        $req->execute([$idEntreprise]);
         return $this->hydraterListe($req->fetchAll(), Offre::class);
     }
 
@@ -51,7 +44,6 @@ class OffreManager extends Manager
         return $ligne ? new Offre($ligne) : null;
     }
 
-    /** @return int id de la nouvelle offre */
     public function creer(Offre $offre): int
     {
         $req = $this->pdo->prepare(
@@ -70,7 +62,6 @@ class OffreManager extends Manager
         return (int)$this->pdo->lastInsertId();
     }
 
-    /** Ouvre ou clôture une offre (seulement si $idAuteur en est bien l'auteur). */
     public function changerEtat(int $idOffre, string $etat, int $idAuteur): void
     {
         if (!in_array($etat, [Offre::OUVERT, Offre::CLOTURE], true)) {

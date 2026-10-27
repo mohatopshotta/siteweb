@@ -13,7 +13,6 @@ if ($post === null) {
     die('Discussion introuvable.');
 }
 
-// on vérifie que l'utilisateur a le droit de lire la section de cette discussion
 $section = (new SectionForumManager())->trouverParId($post->getIdSection());
 if (!$section->peutLire($role)) {
     http_response_code(403);

@@ -13,7 +13,6 @@ if ($section === null) {
     die('Section de forum introuvable.');
 }
 
-// les droits d'accès sont gérés par la classe SectionForum
 if (!$section->peutLire($role)) {
     http_response_code(403);
     die('Cette section du forum ne vous est pas accessible.');

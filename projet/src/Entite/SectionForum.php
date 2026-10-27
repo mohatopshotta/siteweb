@@ -1,9 +1,5 @@
 <?php
 
-/**
- * Section du forum (table section_forum).
- * Contient aussi les règles d'accès (avant : fonction forum_droits() dans forum_acces.php).
- */
 class SectionForum extends Entite
 {
     public const GENERALE = 1;
@@ -12,10 +8,8 @@ class SectionForum extends Entite
 
     private ?int $idSection = null;
     private string $nom = '';
-    // calculé par la requête
     private int $nbPosts = 0;
 
-    /** Le rôle donné peut-il lire les discussions de cette section ? */
     public function peutLire(?string $role): bool
     {
         return match ($this->idSection) {
@@ -26,7 +20,6 @@ class SectionForum extends Entite
         };
     }
 
-    /** Le rôle donné peut-il créer une discussion dans cette section ? */
     public function peutCreer(?string $role): bool
     {
         return match ($this->idSection) {

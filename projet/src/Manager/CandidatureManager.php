@@ -1,6 +1,5 @@
 <?php
 
-/** Requêtes sur les candidatures (table candidature). */
 class CandidatureManager extends Manager
 {
     public function aDejaPostule(int $idUtilisateur, int $idOffre): bool
@@ -10,10 +9,6 @@ class CandidatureManager extends Manager
         return (bool)$req->fetchColumn();
     }
 
-    /**
-     * Enregistre une candidature puis prévient l'auteur de l'offre par email.
-     * @return string message d'erreur ('' si la candidature est enregistrée)
-     */
     public function postuler(Candidature $candidature, Offre $offre): string
     {
         if (!$offre->estOuverte()) {
@@ -39,28 +34,25 @@ class CandidatureManager extends Manager
         return '';
     }
 
-    /** @return Candidature[] candidatures d'une offre avec les infos du candidat */
     public function listerParOffre(int $idOffre): array
     {
         $req = $this->pdo->prepare(
             'SELECT c.*, u.nom, u.prenom, u.email
              FROM candidature c
              JOIN utilisateur u ON u.id_utilisateur = c.id_utilisateur
-             WHERE c.id_offre = ?
+             WHERE c.id_offre = ? AND c.statut != ?
              ORDER BY c.date_candidature DESC'
         );
-        $req->execute([$idOffre]);
+        $req->execute([$idOffre, Candidature::NON_RETENUE]);
         return $this->hydraterListe($req->fetchAll(), Candidature::class);
     }
 
-    /** Candidature retenue. */
     public function retenir(int $idOffre, int $idCandidat): void
     {
         $req = $this->pdo->prepare('UPDATE candidature SET statut = ? WHERE id_offre = ? AND id_utilisateur = ?');
         $req->execute([Candidature::RETENUE, $idOffre, $idCandidat]);
     }
 
-    /** Candidature refusée : le candidat est prévenu par email. */
     public function refuser(Offre $offre, int $idCandidat): void
     {
         $req = $this->pdo->prepare(
@@ -68,7 +60,6 @@ class CandidatureManager extends Manager
         );
         $req->execute([Candidature::NON_RETENUE, $offre->getIdOffre(), $idCandidat, Candidature::NON_RETENUE]);
 
-        // rowCount() > 0 : la candidature vient vraiment d'être refusée -> email
         if ($req->rowCount() > 0) {
             $candidat = (new UtilisateurManager())->trouverParId($idCandidat);
             if ($candidat !== null) {

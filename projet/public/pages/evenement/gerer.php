@@ -12,16 +12,12 @@ if ($evenement === null) {
     die("Événement introuvable.");
 }
 
-// Seuls les organisateurs de cet événement peuvent le gérer
 if (!$manager->estOrganisateur($id_utilisateur, $id_evenement)) {
     die("Accès réservé aux organisateurs de cet événement.");
 }
 
 $erreurs = [];
 
-// ------------------------------------------------------------
-// Modification de la fiche événement
-// ------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
     $erreurs = Evenement::validerFormulaire($_POST);
 
@@ -31,16 +27,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
     }
 }
 
-// ------------------------------------------------------------
-// Retirer un inscrit (refus d'inscription)
-// ------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['retirer_id'])) {
-    // retirerParticipant() ne supprime jamais un organisateur
     $manager->retirerParticipant((int)$_POST['retirer_id'], $id_evenement);
     Session::rediriger('gerer.php?id=' . $id_evenement);
 }
 
-// Liste des inscrits (organisateurs et participants)
 $inscrits = $manager->listerInscrits($id_evenement);
 ?>
 <!DOCTYPE html>

@@ -1,6 +1,5 @@
 <?php
 
-/** Offre de stage / alternance / CDD / CDI publiée par un partenaire (table offre). */
 class Offre extends Entite
 {
     public const TYPES = ['stage', 'alternance', 'cdd', 'cdi'];
@@ -17,7 +16,6 @@ class Offre extends Entite
     private string $typeOffre = 'stage';
     private string $etat = self::OUVERT;
     private ?string $datePublication = null;
-    // remplis par jointure
     private ?string $entreprise = null;
     private ?string $auteurNom = null;
     private ?string $auteurPrenom = null;
@@ -61,10 +59,6 @@ class Offre extends Entite
     public function setAuteurPrenom(?string $prenom): void { $this->auteurPrenom = $prenom; }
     public function setAuteurEmail(?string $email): void { $this->auteurEmail = $email; }
 
-    /**
-     * Vérifie le formulaire de création d'offre.
-     * @return string message d'erreur ('' si tout est bon)
-     */
     public static function validerFormulaire(array $post): string
     {
         $titre = trim($post['titre'] ?? '');

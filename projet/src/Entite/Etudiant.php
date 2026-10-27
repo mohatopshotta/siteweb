@@ -1,12 +1,10 @@
 <?php
 
-/** Étudiant en médecine (table etudiant). */
 class Etudiant extends Utilisateur
 {
     private ?int $idEtablissement = null;
     private ?string $cv = null;
     private string $formation = '';
-    // rempli par jointure avec la table etablissement
     private ?string $nomEtablissement = null;
 
     public function getRole(): string { return 'etudiant'; }

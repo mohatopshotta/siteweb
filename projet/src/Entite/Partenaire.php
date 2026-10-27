@@ -1,11 +1,9 @@
 <?php
 
-/** Partenaire d'une entreprise (table partenaire). */
 class Partenaire extends Utilisateur
 {
     private ?int $idEntreprise = null;
     private string $poste = '';
-    // rempli par jointure avec la table entreprise
     private ?string $nomEntreprise = null;
 
     public function getRole(): string { return 'partenaire'; }

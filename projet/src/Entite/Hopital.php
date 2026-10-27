@@ -1,6 +1,5 @@
 <?php
 
-/** Hôpital du groupe GDH (table hopital). */
 class Hopital extends Entite
 {
     private ?int $idHopital = null;

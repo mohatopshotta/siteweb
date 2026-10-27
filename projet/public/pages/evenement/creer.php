@@ -1,17 +1,13 @@
 <?php
 require __DIR__ . '/../../includes/config.php';
 
-// Accès réservé aux médecins et partenaires
 Session::exigerRole(['medecin', 'partenaire'], '../../');
 
 $erreurs = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    // vérification des champs (méthode de la classe Evenement)
     $erreurs = Evenement::validerFormulaire($_POST);
 
-    // Si tout est bon, on enregistre : le créateur devient organisateur
     if (empty($erreurs)) {
         try {
             $evenement = Evenement::depuisFormulaire($_POST);

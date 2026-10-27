@@ -1,6 +1,5 @@
 <?php
 
-/** Réponse à une discussion du forum (table reponse). */
 class Reponse extends Entite
 {
     private ?int $idReponse = null;
@@ -8,7 +7,6 @@ class Reponse extends Entite
     private ?int $idAuteur = null;
     private string $contenu = '';
     private ?string $dateHeure = null;
-    // remplis par jointure avec utilisateur (l'auteur)
     private ?string $nom = null;
     private ?string $prenom = null;
 
