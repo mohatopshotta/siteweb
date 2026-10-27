@@ -58,7 +58,8 @@ $inscrits = $manager->listerInscrits($id_evenement);
 <?php endif; ?>
 
 <h2>Modifier la fiche</h2>
-<form method="post" action="gerer.php?id=<?= $id_evenement ?>">
+<form method="post" action="gerer.php?id=<?= $id_evenement ?>
+    <?= Session::champCsrf() ?>">
 
     <label for="type_evenement">Type d'événement</label>
     <input type="text" id="type_evenement" name="type_evenement"
@@ -104,7 +105,8 @@ $inscrits = $manager->listerInscrits($id_evenement);
             <td><?= $personne->estOrganisateur() ? 'Organisateur' : 'Participant' ?></td>
             <td>
                 <?php if (!$personne->estOrganisateur()): ?>
-                    <form method="post" action="gerer.php?id=<?= $id_evenement ?>" style="display:inline">
+                    <form method="post" action="gerer.php?id=<?= $id_evenement ?>
+                        <?= Session::champCsrf() ?>" style="display:inline">
                         <input type="hidden" name="retirer_id" value="<?= $personne->getIdUtilisateur() ?>">
                         <button type="submit" onclick="return confirm('Retirer cette personne ?');">Retirer</button>
                     </form>

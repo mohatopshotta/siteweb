@@ -336,10 +336,39 @@ CREATE TABLE IF NOT EXISTS `utilisateur` (
     `valide` tinyint(1) NOT NULL DEFAULT '0',
     `id_validateur` int UNSIGNED DEFAULT NULL,
     `date_inscription` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `date_derniere_connexion` datetime DEFAULT NULL,
     PRIMARY KEY (`id_utilisateur`),
     UNIQUE KEY `uq_utilisateur_email` (`email`),
     KEY `fk_utilisateur_validateur` (`id_validateur`),
     KEY `idx_utilisateur_valide` (`valide`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Compte gestionnaire DE TEST : admin@test.com / admin1234
+-- À SUPPRIMER ou à changer avant la mise en ligne (le dépôt Git est public).
+--
+
+INSERT INTO `utilisateur` (`id_utilisateur`, `nom`, `prenom`, `email`, `mot_de_passe`, `valide`, `id_validateur`) VALUES
+(1, 'Test', 'Admin', 'admin@test.com', '$2y$10$81q.hxEmnvwigDVCHaGjF.m8RFNOohmjnJcOHidQGKDgC.PYCbFhm', 1, NULL);
+
+INSERT INTO `gestionnaire` (`id_utilisateur`) VALUES (1);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `reinitialisation_mdp` (mot de passe oublié)
+-- On stocke l'empreinte SHA-256 du jeton, jamais le jeton lui-même.
+--
+
+DROP TABLE IF EXISTS `reinitialisation_mdp`;
+CREATE TABLE IF NOT EXISTS `reinitialisation_mdp` (
+    `id_reinitialisation` int UNSIGNED NOT NULL AUTO_INCREMENT,
+    `id_utilisateur` int UNSIGNED NOT NULL,
+    `jeton_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `date_expiration` datetime NOT NULL,
+    PRIMARY KEY (`id_reinitialisation`),
+    UNIQUE KEY `uq_reinitialisation_jeton` (`jeton_hash`),
+    KEY `fk_reinitialisation_utilisateur` (`id_utilisateur`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -409,6 +438,12 @@ ALTER TABLE `post`
 ALTER TABLE `reponse`
     ADD CONSTRAINT `fk_reponse_auteur` FOREIGN KEY (`id_auteur`) REFERENCES `utilisateur` (`id_utilisateur`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_reponse_post` FOREIGN KEY (`id_post`) REFERENCES `post` (`id_post`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `reinitialisation_mdp`
+--
+ALTER TABLE `reinitialisation_mdp`
+    ADD CONSTRAINT `fk_reinitialisation_utilisateur` FOREIGN KEY (`id_utilisateur`) REFERENCES `utilisateur` (`id_utilisateur`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Contraintes pour la table `utilisateur`

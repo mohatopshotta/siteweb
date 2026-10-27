@@ -56,6 +56,7 @@ $candidats = $candidatureManager->listerParOffre($id_offre);
 </p>
 
 <form method="post">
+    <?= Session::champCsrf() ?>
     <?php if ($offre->estOuverte()): ?>
         <button type="submit" name="action" value="bloquer">Bloquer l'offre</button>
     <?php else: ?>
@@ -84,6 +85,7 @@ $candidats = $candidatureManager->listerParOffre($id_offre);
                 <td><?= htmlspecialchars($c->getLibelleStatut()) ?></td>
                 <td>
                     <form method="post">
+                        <?= Session::champCsrf() ?>
                         <input type="hidden" name="id_candidat" value="<?= $c->getIdUtilisateur() ?>">
                         <button type="submit" name="action" value="retenir">Retenir</button>
                         <button type="submit" name="action" value="refuser">Refuser</button>

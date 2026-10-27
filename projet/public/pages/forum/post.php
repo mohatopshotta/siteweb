@@ -62,6 +62,7 @@ $reponses = $reponseManager->listerParPost($id_post);
 
 <?php if ($role !== 'gestionnaire'): ?>
     <form method="post">
+        <?= Session::champCsrf() ?>
         <label>Votre réponse</label><br>
         <textarea name="contenu" required></textarea><br>
         <button type="submit">Répondre</button>

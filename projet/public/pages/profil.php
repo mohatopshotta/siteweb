@@ -38,6 +38,7 @@ $utilisateur = $manager->trouverParId($id_utilisateur);
 <?php endif; ?>
 
 <form method="post">
+    <?= Session::champCsrf() ?>
     <label>Nom</label>
     <input type="text" name="nom" value="<?= htmlspecialchars($utilisateur->getNom()) ?>"><br>
 

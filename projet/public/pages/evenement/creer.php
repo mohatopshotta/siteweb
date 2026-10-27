@@ -14,7 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id_evenement = (new EvenementManager())->creer($evenement, Session::getIdUtilisateur());
             Session::rediriger('detail.php?id=' . $id_evenement);
         } catch (PDOException $e) {
-            $erreurs[] = "Erreur lors de l'enregistrement : " . $e->getMessage();
+            error_log('Création événement : ' . $e->getMessage());
+            $erreurs[] = "L'événement n'a pas pu être enregistré. Réessaie plus tard.";
         }
     }
 }
@@ -41,6 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php endif; ?>
 
 <form method="post" action="creer.php">
+    <?= Session::champCsrf() ?>
 
     <label for="type_evenement">Type d'événement</label>
     <input type="text" id="type_evenement" name="type_evenement"
