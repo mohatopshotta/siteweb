@@ -42,7 +42,7 @@ $offres = $stmt->fetchAll();
 </head>
 <body>
 
-<<<<<<< HEAD
+
 <header>
     <h1>La Générale des Hôpitaux (GDH)</h1>
     <p>Hôpital Sud Paris (HSP)</p>

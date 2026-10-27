@@ -1,6 +1,5 @@
 <?php
-session_start();
-require /** @var PDO $pdo */'../../includes/config.php';
+require '../../includes/config.php';
 
 if (!isset($_SESSION['id_utilisateur'])) {
     header('Location: ../connexion.php');
@@ -60,6 +59,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
     if ($lieu === '') $erreurs[] = "Le lieu est obligatoire.";
     if (!ctype_digit((string)$nombre_places) || (int)$nombre_places < 1) {
         $erreurs[] = "Le nombre de places doit être un entier positif.";
+    }
+
+    // Interdire de descendre sous le nombre d'inscrits actuel
+    if (empty($erreurs)) {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM inscription_evenement WHERE id_evenement = :id");
+        $stmt->execute([':id' => $id_evenement]);
+        $nb_inscrits = (int)$stmt->fetchColumn();
+
+        if ((int)$nombre_places < $nb_inscrits) {
+            $erreurs[] = "Il y a déjà $nb_inscrits inscrits : le nombre de places ne peut pas être inférieur.";
+        }
     }
 
     if (empty($erreurs)) {
@@ -133,6 +143,8 @@ $inscrits = $stmt->fetchAll();
     <link rel="stylesheet" href="../../assets/css/css.css">
 </head>
 <body>
+
+<?php $racine = '../../'; require $racine . 'includes/header.php'; ?>
 
 <a href="detail.php?id=<?= $id_evenement ?>">&larr; Retour à l'événement</a>
 
