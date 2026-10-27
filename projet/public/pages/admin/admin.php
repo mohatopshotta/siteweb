@@ -4,73 +4,24 @@
 // Tableau de bord du module Administration
 // ============================================================
 
-// On protège la page : seul un gestionnaire connecté peut y accéder
-require_once __DIR__ . '/../../includes/auth_admin.php';
-/** @var PDO $pdo */
-
-// Connexion à la base de données ($pdo)
 require_once __DIR__ . '/../../includes/config.php';
-// ------------------------------------------------------------
-// A savoir : la table "utilisateur" n'a pas de colonne "role".
-// Le rôle d'un compte, on le devine en regardant dans quelle table
-// fille (etudiant / medecin / partenaire) il a une ligne.
-// ------------------------------------------------------------
+
+// On protège la page : seul un gestionnaire connecté peut y accéder
+Session::exigerRole(['gestionnaire'], '../../');
+
+$manager = new UtilisateurManager();
 
 // VUE D'ENSEMBLE : quelques compteurs simples
+$nbValides     = $manager->compterValides();
+$nbEtudiants   = $manager->compterParRole('etudiant');
+$nbMedecins    = $manager->compterParRole('medecin');
+$nbPartenaires = $manager->compterParRole('partenaire');
+$nbEnAttente   = $manager->compterEnAttente();
 
-// Nombre total de comptes déjà validés
-$nbValides = $pdo->query("SELECT COUNT(*) FROM utilisateur WHERE valide = 1")->fetchColumn();
-
-// Nombre d'étudiants
-$nbEtudiants = $pdo->query("SELECT COUNT(*) FROM etudiant")->fetchColumn();
-
-// Nombre de médecins
-$nbMedecins = $pdo->query("SELECT COUNT(*) FROM medecin")->fetchColumn();
-
-// Nombre de partenaires
-$nbPartenaires = $pdo->query("SELECT COUNT(*) FROM partenaire")->fetchColumn();
-
-// Nombre de comptes en attente de validation
-$nbEnAttente = $pdo->query("SELECT COUNT(*) FROM utilisateur WHERE valide = 0")->fetchColumn();
 // LISTE DES COMPTES EN ATTENTE
-// On récupère juste les infos de base de la table utilisateur.
-$stmt = $pdo->query("
-    SELECT id_utilisateur, nom, prenom, email
-    FROM utilisateur
-    WHERE valide = 0
-    ORDER BY id_utilisateur DESC
-");
-$comptesEnAttente = $stmt->fetchAll();
-
-// Pour chaque compte en attente, on cherche son rôle avec 3 petites requêtes.
-// C'est moins optimisé qu'un gros JOIN, mais beaucoup plus simple à lire.
-foreach ($comptesEnAttente as $i => $compte) {
-    $id = $compte['id_utilisateur'];
-
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM etudiant WHERE id_utilisateur = ?");
-    $stmt->execute([$id]);
-    if ($stmt->fetchColumn() > 0) {
-        $comptesEnAttente[$i]['role'] = 'Étudiant';
-        continue; // on passe au compte suivant
-    }
-
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM medecin WHERE id_utilisateur = ?");
-    $stmt->execute([$id]);
-    if ($stmt->fetchColumn() > 0) {
-        $comptesEnAttente[$i]['role'] = 'Médecin';
-        continue;
-    }
-
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM partenaire WHERE id_utilisateur = ?");
-    $stmt->execute([$id]);
-    if ($stmt->fetchColumn() > 0) {
-        $comptesEnAttente[$i]['role'] = 'Partenaire';
-        continue;
-    }
-
-    // Si aucune des 3 tables ne correspond, c'est un gestionnaire
-    $comptesEnAttente[$i]['role'] = 'Gestionnaire';
-}
+// Chaque compte est un objet Etudiant, Medecin, Partenaire ou Gestionnaire :
+// getLibelleRole() donne directement son rôle.
+$comptesEnAttente = $manager->listerEnAttente();
 
 // Message de confirmation après validation/refus
 $message = '';
@@ -87,9 +38,11 @@ if (isset($_GET['msg'])) {
 <head>
     <meta charset="UTF-8">
     <title>Administration - HSP GDH</title>
-    <link rel="stylesheet" href="../../css/admin.css">
+    <link rel="stylesheet" href="admin.css">
 </head>
 <body>
+
+<?php $racine = '../../'; require __DIR__ . '/../../includes/header.php'; ?>
 
 <div class="admin-container">
     <h1>Tableau de bord - Administration</h1>
@@ -137,28 +90,27 @@ if (isset($_GET['msg'])) {
                     <th>Prénom</th>
                     <th>Email</th>
                     <th>Rôle</th>
-                    <th>Rôle</th>
                     <th>Actions</th>
                 </tr>
                 </thead>
                 <tbody>
                 <?php foreach ($comptesEnAttente as $compte): ?>
                     <tr>
-                        <td><?= htmlspecialchars($compte['nom']) ?></td>
-                        <td><?= htmlspecialchars($compte['prenom']) ?></td>
-                        <td><?= htmlspecialchars($compte['email']) ?></td>
-                        <td><?= htmlspecialchars($compte['role']) ?></td>
+                        <td><?= htmlspecialchars($compte->getNom()) ?></td>
+                        <td><?= htmlspecialchars($compte->getPrenom()) ?></td>
+                        <td><?= htmlspecialchars($compte->getEmail()) ?></td>
+                        <td><?= htmlspecialchars($compte->getLibelleRole()) ?></td>
                         <td class="admin-actions">
                             <!-- Chaque bouton envoie un POST vers valider_compte.php -->
                             <form action="valider_compte.php" method="POST" class="form-inline">
-                                <input type="hidden" name="id" value="<?= $compte['id_utilisateur'] ?>">
+                                <input type="hidden" name="id" value="<?= $compte->getIdUtilisateur() ?>">
                                 <input type="hidden" name="action" value="valider">
                                 <button type="submit" class="btn btn-valider">Valider</button>
                             </form>
 
                             <form action="valider_compte.php" method="POST" class="form-inline"
                                   onsubmit="return confirm('Refuser et supprimer ce compte ?');">
-                                <input type="hidden" name="id" value="<?= $compte['id_utilisateur'] ?>">
+                                <input type="hidden" name="id" value="<?= $compte->getIdUtilisateur() ?>">
                                 <input type="hidden" name="action" value="refuser">
                                 <button type="submit" class="btn btn-refuser">Refuser</button>
                             </form>

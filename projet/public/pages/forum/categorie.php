@@ -1,34 +1,29 @@
 <?php
 require_once __DIR__ . '/../../includes/config.php';
-require_once __DIR__ . '/../../includes/forum_acces.php';
 
-if (!isset($_SESSION['id_utilisateur'])) {
-    header('Location: ../connexion.php');
-    exit;
-}
+Session::exigerConnexion('../../');
 
-$id_utilisateur = $_SESSION['id_utilisateur'];
-$role = $_SESSION['role'];
+$id_utilisateur = Session::getIdUtilisateur();
+$role = Session::getRole();
 $id_section = (int)($_GET['id'] ?? 0);
 
-$req = $pdo->prepare('SELECT * FROM section_forum WHERE id_section = ?');
-$req->execute([$id_section]);
-$section = $req->fetch();
-
-if (!$section) {
+$section = (new SectionForumManager())->trouverParId($id_section);
+if ($section === null) {
     http_response_code(404);
     die('Section de forum introuvable.');
 }
 
-$droits = forum_droits($id_section, $role);
-if (!$droits['lire']) {
+// les droits d'accès sont gérés par la classe SectionForum
+if (!$section->peutLire($role)) {
     http_response_code(403);
     die('Cette section du forum ne vous est pas accessible.');
 }
 
+$postManager = new PostManager();
+
 $erreur = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!$droits['creer']) {
+    if (!$section->peutCreer($role)) {
         http_response_code(403);
         die("Vous n'êtes pas autorisé à créer une discussion dans cette section.");
     }
@@ -41,42 +36,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (mb_strlen($titre) > 150) {
         $erreur = 'Le titre ne doit pas dépasser 150 caractères.';
     } else {
-        $req = $pdo->prepare('INSERT INTO post (id_section, id_auteur, titre, contenu) VALUES (?, ?, ?, ?)');
-        $req->execute([$id_section, $id_utilisateur, $titre, $contenu]);
-        header('Location: categorie.php?id=' . $id_section);
-        exit;
+        $postManager->creer(new Post([
+            'id_section' => $id_section,
+            'id_auteur'  => $id_utilisateur,
+            'titre'      => $titre,
+            'contenu'    => $contenu,
+        ]));
+        Session::rediriger('categorie.php?id=' . $id_section);
     }
 }
 
-$req = $pdo->prepare(
-    'SELECT p.id_post, p.titre, p.date_heure, u.nom, u.prenom,
-            (SELECT COUNT(*) FROM reponse r WHERE r.id_post = p.id_post) AS nb_reponses
-     FROM post p
-     JOIN utilisateur u ON u.id_utilisateur = p.id_auteur
-     WHERE p.id_section = ?
-     ORDER BY p.date_heure DESC'
-);
-$req->execute([$id_section]);
-$posts = $req->fetchAll();
+$posts = $postManager->listerParSection($id_section);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title><?= htmlspecialchars($section['nom']) ?></title>
+    <title><?= htmlspecialchars($section->getNom()) ?></title>
     <link rel="stylesheet" href="../../assets/css/css.css">
 </head>
 <body>
 
 <?php $racine = '../../'; require __DIR__ . '/../../includes/header.php'; ?>
 
-<h1><?= htmlspecialchars($section['nom']) ?></h1>
+<h1><?= htmlspecialchars($section->getNom()) ?></h1>
 
 <?php if ($erreur): ?>
     <p style="color:red;"><?= htmlspecialchars($erreur) ?></p>
 <?php endif; ?>
 
-<?php if ($droits['creer']): ?>
+<?php if ($section->peutCreer($role)): ?>
     <details>
         <summary>Nouvelle discussion</summary>
         <form method="post">
@@ -95,10 +84,10 @@ $posts = $req->fetchAll();
 
 <?php foreach ($posts as $p): ?>
     <div class="carte-forum">
-        <h3><a href="post.php?id=<?= (int)$p['id_post'] ?>"><?= htmlspecialchars($p['titre']) ?></a></h3>
+        <h3><a href="post.php?id=<?= $p->getIdPost() ?>"><?= htmlspecialchars($p->getTitre()) ?></a></h3>
         <p>
-            Par <?= htmlspecialchars($p['prenom'] . ' ' . $p['nom']) ?> le <?= forum_date($p['date_heure']) ?>
-            - <?= (int)$p['nb_reponses'] ?> réponse(s)
+            Par <?= htmlspecialchars($p->getNomAuteur()) ?> le <?= $p->getDateFormatee() ?>
+            - <?= $p->getNbReponses() ?> réponse(s)
         </p>
     </div>
 <?php endforeach; ?>

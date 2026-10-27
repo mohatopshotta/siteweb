@@ -1,0 +1,147 @@
+<?php
+
+/** Requêtes sur les événements (tables evenement et inscription_evenement). */
+class EvenementManager extends Manager
+{
+    // événement + nombre de participants (les organisateurs ne prennent pas de place)
+    private const SELECT_AVEC_PLACES = "
+        SELECT e.*, COUNT(ie.id_utilisateur) AS places_prises
+        FROM evenement e
+        LEFT JOIN inscription_evenement ie
+               ON ie.id_evenement = e.id_evenement AND ie.organiser = 0
+    ";
+
+    /**
+     * @param int|null $limite nombre max d'événements (null = tous)
+     * @return Evenement[] du plus récent au plus ancien
+     */
+    public function listerTous(?int $limite = null): array
+    {
+        $sql = self::SELECT_AVEC_PLACES . ' GROUP BY e.id_evenement ORDER BY e.id_evenement DESC';
+        if ($limite !== null) {
+            $sql .= ' LIMIT ' . (int)$limite;
+        }
+        $lignes = $this->pdo->query($sql)->fetchAll();
+        return $this->hydraterListe($lignes, Evenement::class);
+    }
+
+    public function trouverParId(int $idEvenement): ?Evenement
+    {
+        $req = $this->pdo->prepare(self::SELECT_AVEC_PLACES . ' WHERE e.id_evenement = ? GROUP BY e.id_evenement');
+        $req->execute([$idEvenement]);
+        $ligne = $req->fetch();
+        return $ligne ? new Evenement($ligne) : null;
+    }
+
+    /**
+     * Crée l'événement ; son créateur en devient organisateur.
+     * @return int id du nouvel événement
+     */
+    public function creer(Evenement $evenement, int $idOrganisateur): int
+    {
+        $this->pdo->beginTransaction();
+        try {
+            $req = $this->pdo->prepare(
+                'INSERT INTO evenement (type_evenement, titre, description, lieu, elements_requis, nombre_places)
+                 VALUES (?, ?, ?, ?, ?, ?)'
+            );
+            $req->execute([
+                $evenement->getTypeEvenement(),
+                $evenement->getTitre(),
+                $evenement->getDescription(),
+                $evenement->getLieu(),
+                $evenement->getElementsRequis(),
+                $evenement->getNombrePlaces(),
+            ]);
+            $id = (int)$this->pdo->lastInsertId();
+
+            $req = $this->pdo->prepare(
+                'INSERT INTO inscription_evenement (id_utilisateur, id_evenement, organiser) VALUES (?, ?, 1)'
+            );
+            $req->execute([$idOrganisateur, $id]);
+
+            $this->pdo->commit();
+            return $id;
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    public function modifier(Evenement $evenement): void
+    {
+        $req = $this->pdo->prepare(
+            'UPDATE evenement
+             SET type_evenement = ?, titre = ?, description = ?, lieu = ?, elements_requis = ?, nombre_places = ?
+             WHERE id_evenement = ?'
+        );
+        $req->execute([
+            $evenement->getTypeEvenement(),
+            $evenement->getTitre(),
+            $evenement->getDescription(),
+            $evenement->getLieu(),
+            $evenement->getElementsRequis(),
+            $evenement->getNombrePlaces(),
+            $evenement->getIdEvenement(),
+        ]);
+    }
+
+    // ============================================================
+    // Inscriptions
+    // ============================================================
+
+    /** Renvoie l'inscription de l'utilisateur à l'événement, ou null s'il n'est pas inscrit. */
+    public function trouverInscription(int $idUtilisateur, int $idEvenement): ?InscriptionEvenement
+    {
+        $req = $this->pdo->prepare('SELECT * FROM inscription_evenement WHERE id_utilisateur = ? AND id_evenement = ?');
+        $req->execute([$idUtilisateur, $idEvenement]);
+        $ligne = $req->fetch();
+        return $ligne ? new InscriptionEvenement($ligne) : null;
+    }
+
+    public function estOrganisateur(int $idUtilisateur, int $idEvenement): bool
+    {
+        $inscription = $this->trouverInscription($idUtilisateur, $idEvenement);
+        return $inscription !== null && $inscription->estOrganisateur();
+    }
+
+    /**
+     * Inscrit un participant s'il reste de la place.
+     * @return string message d'erreur ('' si l'inscription a réussi)
+     */
+    public function inscrire(int $idUtilisateur, Evenement $evenement): string
+    {
+        if ($this->trouverInscription($idUtilisateur, $evenement->getIdEvenement()) !== null) {
+            return 'Tu es déjà inscrit(e) à cet événement.';
+        }
+        if ($evenement->estComplet()) {
+            return 'Cet événement est complet.';
+        }
+        $req = $this->pdo->prepare('INSERT INTO inscription_evenement (id_utilisateur, id_evenement, organiser) VALUES (?, ?, 0)');
+        $req->execute([$idUtilisateur, $evenement->getIdEvenement()]);
+        return '';
+    }
+
+    /** Retire un participant (jamais un organisateur). */
+    public function retirerParticipant(int $idUtilisateur, int $idEvenement): void
+    {
+        $req = $this->pdo->prepare(
+            'DELETE FROM inscription_evenement WHERE id_utilisateur = ? AND id_evenement = ? AND organiser = 0'
+        );
+        $req->execute([$idUtilisateur, $idEvenement]);
+    }
+
+    /** @return InscriptionEvenement[] organisateurs puis participants */
+    public function listerInscrits(int $idEvenement): array
+    {
+        $req = $this->pdo->prepare(
+            'SELECT ie.*, u.nom, u.prenom, u.email
+             FROM inscription_evenement ie
+             JOIN utilisateur u ON u.id_utilisateur = ie.id_utilisateur
+             WHERE ie.id_evenement = ?
+             ORDER BY ie.organiser DESC, u.nom'
+        );
+        $req->execute([$idEvenement]);
+        return $this->hydraterListe($req->fetchAll(), InscriptionEvenement::class);
+    }
+}

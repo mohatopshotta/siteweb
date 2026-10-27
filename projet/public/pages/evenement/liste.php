@@ -1,22 +1,11 @@
 <?php
-require /** @var PDO $pdo */ '../../includes/config.php';
+require __DIR__ . '/../../includes/config.php';
 
-if (!isset($_SESSION['id_utilisateur']) || $_SESSION['profil'] === 'gestionnaire') {
-    header('Location: ../connexion.php');
-    exit;
-}
+// réservé aux membres (pas au gestionnaire)
+Session::exigerMembre('../../');
 
-// ------------------------------------------------------------
-// Récupération de tous les événements + places restantes
-// ------------------------------------------------------------
-$stmt = $pdo->query(
-    "SELECT e.*, COUNT(ie.id_utilisateur) AS places_prises
-     FROM evenement e
-     LEFT JOIN inscription_evenement ie ON ie.id_evenement = e.id_evenement
-     GROUP BY e.id_evenement
-     ORDER BY e.id_evenement DESC"
-);
-$evenements = $stmt->fetchAll();
+// tous les événements avec leurs places restantes
+$evenements = (new EvenementManager())->listerTous();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -27,9 +16,11 @@ $evenements = $stmt->fetchAll();
 </head>
 <body>
 
+<?php $racine = '../../'; require __DIR__ . '/../../includes/header.php'; ?>
+
 <h1>Événements</h1>
 
-<?php if (in_array($_SESSION['profil'], ['medecin', 'partenaire'])): ?>
+<?php if (Session::aLeRole(['medecin', 'partenaire'])): ?>
     <a href="creer.php">+ Créer un événement</a>
 <?php endif; ?>
 
@@ -37,21 +28,19 @@ $evenements = $stmt->fetchAll();
     <p>Aucun événement pour le moment.</p>
 <?php else: ?>
     <div class="liste-evenements">
-        <?php foreach ($evenements as $evenement):
-            $places_restantes = $evenement['nombre_places'] - $evenement['places_prises'];
-            ?>
+        <?php foreach ($evenements as $evenement): ?>
             <div class="carte-evenement">
-                <h2><?= htmlspecialchars($evenement['titre']) ?></h2>
-                <p><em><?= htmlspecialchars($evenement['type_evenement']) ?></em></p>
-                <p><?= htmlspecialchars($evenement['lieu']) ?></p>
+                <h2><?= htmlspecialchars($evenement->getTitre()) ?></h2>
+                <p><em><?= htmlspecialchars($evenement->getTypeEvenement()) ?></em></p>
+                <p><?= htmlspecialchars($evenement->getLieu()) ?></p>
                 <p>
-                    <?php if ($places_restantes > 0): ?>
-                        <?= $places_restantes ?> place(s) restante(s)
+                    <?php if (!$evenement->estComplet()): ?>
+                        <?= $evenement->getPlacesRestantes() ?> place(s) restante(s)
                     <?php else: ?>
                         Complet
                     <?php endif; ?>
                 </p>
-                <a href="detail.php?id=<?= $evenement['id_evenement'] ?>">Voir le détail</a>
+                <a href="detail.php?id=<?= $evenement->getIdEvenement() ?>">Voir le détail</a>
             </div>
         <?php endforeach; ?>
     </div>

@@ -1,6 +1,5 @@
 <?php
 require __DIR__ . '/../includes/config.php';
-/** @var PDO $pdo */
 
 $erreurs = [];
 
@@ -23,17 +22,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $erreurs[] = 'Rôle invalide.';
     }
 
+    $utilisateurManager = new UtilisateurManager();
+
     // on vérifie que l'email n'est pas déjà pris
-    if (empty($erreurs)) {
-        $req = $pdo->prepare('SELECT id_utilisateur FROM utilisateur WHERE email = ?');
-        $req->execute([$email]);
-        if ($req->fetch()) {
-            $erreurs[] = 'Cet email est déjà utilisé.';
-        }
+    if (empty($erreurs) && $utilisateurManager->emailExiste($email)) {
+        $erreurs[] = 'Cet email est déjà utilisé.';
     }
 
+    // établissement ou entreprise à créer si l'utilisateur a choisi "+ Nouveau"
+    $nouvel_etablissement = null;
+    $nouvelle_entreprise = null;
+    $infos_etablissement = [
+        'nom'      => trim($_POST['nouvel_etablissement_nom'] ?? ''),
+        'adresse'  => trim($_POST['nouvel_etablissement_adresse'] ?? ''),
+        'site_web' => trim($_POST['nouvel_etablissement_site'] ?? ''),
+    ];
+
+    // l'objet créé dépend du rôle choisi : Etudiant, Medecin ou Partenaire
+    $utilisateur = null;
+
     // validation spécifique étudiant
-    $formation = $id_etablissement = $cv_path = null;
     if (empty($erreurs) && $role === 'etudiant') {
         $formation = trim($_POST['formation'] ?? '');
         $id_etablissement = $_POST['id_etablissement'] ?? '';
@@ -41,39 +49,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $erreurs[] = 'La formation est obligatoire.';
         }
         if ($id_etablissement === 'nouveau') {
-            // création d'un nouvel établissement
-            $nom_etab = trim($_POST['nouvel_etablissement_nom'] ?? '');
-            $adresse_etab = trim($_POST['nouvel_etablissement_adresse'] ?? '');
-            $site_etab = trim($_POST['nouvel_etablissement_site'] ?? '');
-            if ($nom_etab === '' || $adresse_etab === '' || $site_etab === '') {
+            if (in_array('', $infos_etablissement, true)) {
                 $erreurs[] = 'Les informations du nouvel établissement sont incomplètes.';
             }
-        } elseif ($id_etablissement === '') {
+            $nouvel_etablissement = new Etablissement($infos_etablissement);
+        } elseif (!ctype_digit($id_etablissement)) {
             $erreurs[] = 'Choisis un établissement.';
         }
+
+        // CV facultatif : PDF uniquement, 2 Mo maximum
+        if (!empty($_FILES['cv']['name'])) {
+            $extension = strtolower(pathinfo($_FILES['cv']['name'], PATHINFO_EXTENSION));
+            if ($_FILES['cv']['error'] !== UPLOAD_ERR_OK) {
+                $erreurs[] = "Erreur lors de l'envoi du CV.";
+            } elseif ($extension !== 'pdf' || mime_content_type($_FILES['cv']['tmp_name']) !== 'application/pdf') {
+                $erreurs[] = 'Le CV doit être un fichier PDF.';
+            } elseif ($_FILES['cv']['size'] > 2 * 1024 * 1024) {
+                $erreurs[] = 'Le CV ne doit pas dépasser 2 Mo.';
+            }
+        }
+
+        $utilisateur = new Etudiant([
+            'formation'        => $formation,
+            'id_etablissement' => ctype_digit($id_etablissement) ? (int)$id_etablissement : null,
+        ]);
     }
 
     // validation spécifique médecin
-    $id_specialite = $id_hopital = $id_etablissement_medecin = null;
     if (empty($erreurs) && $role === 'medecin') {
         $id_specialite = $_POST['id_specialite'] ?? '';
         $id_hopital = $_POST['id_hopital'] ?? '';
-        if ($id_specialite === '' || $id_hopital === '') {
+        $id_etablissement_medecin = $_POST['id_etablissement_medecin'] ?? '';
+        if (!ctype_digit($id_specialite) || !ctype_digit($id_hopital)) {
             $erreurs[] = 'Spécialité et hôpital sont obligatoires.';
         }
-        $id_etablissement_medecin = $_POST['id_etablissement_medecin'] ?? '';
         if ($id_etablissement_medecin === 'nouveau') {
-            $nom_etab = trim($_POST['nouvel_etablissement_nom'] ?? '');
-            $adresse_etab = trim($_POST['nouvel_etablissement_adresse'] ?? '');
-            $site_etab = trim($_POST['nouvel_etablissement_site'] ?? '');
-            if ($nom_etab === '' || $adresse_etab === '' || $site_etab === '') {
+            if (in_array('', $infos_etablissement, true)) {
                 $erreurs[] = 'Les informations du nouvel établissement sont incomplètes.';
             }
+            $nouvel_etablissement = new Etablissement($infos_etablissement);
         }
+
+        $utilisateur = new Medecin([
+            'id_specialite'    => (int)$id_specialite,
+            'id_hopital'       => (int)$id_hopital,
+            // établissement d'enseignement facultatif
+            'id_etablissement' => ctype_digit($id_etablissement_medecin) ? (int)$id_etablissement_medecin : null,
+        ]);
     }
 
     // validation spécifique partenaire
-    $poste = $id_entreprise = null;
     if (empty($erreurs) && $role === 'partenaire') {
         $poste = trim($_POST['poste'] ?? '');
         $id_entreprise = $_POST['id_entreprise'] ?? '';
@@ -81,116 +106,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $erreurs[] = 'Le poste est obligatoire.';
         }
         if ($id_entreprise === 'nouveau') {
-            $nom_ent = trim($_POST['nouvelle_entreprise_nom'] ?? '');
-            $adresse_ent = trim($_POST['nouvelle_entreprise_adresse'] ?? '');
-            $site_ent = trim($_POST['nouvelle_entreprise_site'] ?? '');
-            if ($nom_ent === '' || $adresse_ent === '' || $site_ent === '') {
+            $infos_entreprise = [
+                'nom'      => trim($_POST['nouvelle_entreprise_nom'] ?? ''),
+                'adresse'  => trim($_POST['nouvelle_entreprise_adresse'] ?? ''),
+                'site_web' => trim($_POST['nouvelle_entreprise_site'] ?? ''),
+            ];
+            if (in_array('', $infos_entreprise, true)) {
                 $erreurs[] = "Les informations de la nouvelle entreprise sont incomplètes.";
             }
-        } elseif ($id_entreprise === '') {
+            $nouvelle_entreprise = new Entreprise($infos_entreprise);
+        } elseif (!ctype_digit($id_entreprise)) {
             $erreurs[] = 'Choisis une entreprise.';
         }
+
+        $utilisateur = new Partenaire([
+            'poste'         => $poste,
+            'id_entreprise' => ctype_digit($id_entreprise) ? (int)$id_entreprise : null,
+        ]);
     }
 
-    // tout est valide : on insère en base
-    if (empty($erreurs)) {
+    // tout est valide : on enregistre
+    if (empty($erreurs) && $utilisateur !== null) {
+        $utilisateur->hydrater(['nom' => $nom, 'prenom' => $prenom, 'email' => $email]);
+
+        // upload du CV si fourni
+        $fichier_cv = null;
+        if ($utilisateur instanceof Etudiant && !empty($_FILES['cv']['name'])) {
+            $dossier_cv = __DIR__ . '/../uploads/cv/';
+            if (!is_dir($dossier_cv)) {
+                mkdir($dossier_cv, 0755, true);
+            }
+            // nom aléatoire : on ne garde pas le nom choisi par l'utilisateur
+            $nom_fichier = bin2hex(random_bytes(16)) . '.pdf';
+            $fichier_cv = $dossier_cv . $nom_fichier;
+            move_uploaded_file($_FILES['cv']['tmp_name'], $fichier_cv);
+            $utilisateur->setCv('uploads/cv/' . $nom_fichier);
+        }
+
         try {
-            // transaction : si une insertion échoue, tout est annulé
-            $pdo->beginTransaction();
-
-            // création de l'utilisateur commun (pas encore validé par un gestionnaire)
-            $req = $pdo->prepare('INSERT INTO utilisateur (nom, prenom, email, mot_de_passe) VALUES (?, ?, ?, ?)');
-            $req->execute([$nom, $prenom, $email, password_hash($mot_de_passe, PASSWORD_DEFAULT)]);
-            $id_utilisateur = $pdo->lastInsertId();
-
-            if ($role === 'etudiant') {
-                if ($id_etablissement === 'nouveau') {
-                    // on vérifie si un établissement avec ce site web existe déjà (anti-doublon)
-                    $req = $pdo->prepare('SELECT id_etablissement FROM etablissement WHERE site_web = ?');
-                    $req->execute([$site_etab]);
-                    $existant = $req->fetch();
-                    if ($existant) {
-                        $id_etablissement = $existant['id_etablissement'];
-                    } else {
-                        $req = $pdo->prepare('INSERT INTO etablissement (nom, adresse, site_web) VALUES (?, ?, ?)');
-                        $req->execute([$nom_etab, $adresse_etab, $site_etab]);
-                        $id_etablissement = $pdo->lastInsertId();
-                    }
-                }
-
-                // upload du CV si fourni
-                if (!empty($_FILES['cv']['name'])) {
-                    $dossier_cv = __DIR__ . '/../uploads/cv/';
-                    if (!is_dir($dossier_cv)) {
-                        mkdir($dossier_cv, 0755, true);
-                    }
-                    $nom_fichier = uniqid() . '_' . basename($_FILES['cv']['name']);
-                    move_uploaded_file($_FILES['cv']['tmp_name'], $dossier_cv . $nom_fichier);
-                    $cv_path = 'uploads/cv/' . $nom_fichier;
-                }
-
-                $req = $pdo->prepare('INSERT INTO etudiant (id_utilisateur, id_etablissement, cv, formation) VALUES (?, ?, ?, ?)');
-                $req->execute([$id_utilisateur, $id_etablissement, $cv_path, $formation]);
-            }
-
-            if ($role === 'medecin') {
-                $id_etablissement_final = null;
-                if ($id_etablissement_medecin === 'nouveau') {
-                    // même logique anti-doublon que pour l'étudiant
-                    $req = $pdo->prepare('SELECT id_etablissement FROM etablissement WHERE site_web = ?');
-                    $req->execute([$site_etab]);
-                    $existant = $req->fetch();
-                    if ($existant) {
-                        $id_etablissement_final = $existant['id_etablissement'];
-                    } else {
-                        $req = $pdo->prepare('INSERT INTO etablissement (nom, adresse, site_web) VALUES (?, ?, ?)');
-                        $req->execute([$nom_etab, $adresse_etab, $site_etab]);
-                        $id_etablissement_final = $pdo->lastInsertId();
-                    }
-                } elseif ($id_etablissement_medecin !== '') {
-                    $id_etablissement_final = $id_etablissement_medecin;
-                }
-                $req = $pdo->prepare('INSERT INTO medecin (id_utilisateur, id_specialite, id_hopital, id_etablissement) VALUES (?, ?, ?, ?)');
-                $req->execute([$id_utilisateur, $id_specialite, $id_hopital, $id_etablissement_final]);
-            }
-
-            if ($role === 'partenaire') {
-                if ($id_entreprise === 'nouveau') {
-                    // anti-doublon sur les entreprises
-                    $req = $pdo->prepare('SELECT id_entreprise FROM entreprise WHERE site_web = ?');
-                    $req->execute([$site_ent]);
-                    $existant = $req->fetch();
-                    if ($existant) {
-                        $id_entreprise = $existant['id_entreprise'];
-                    } else {
-                        $req = $pdo->prepare('INSERT INTO entreprise (nom, adresse, site_web) VALUES (?, ?, ?)');
-                        $req->execute([$nom_ent, $adresse_ent, $site_ent]);
-                        $id_entreprise = $pdo->lastInsertId();
-                    }
-                }
-                $req = $pdo->prepare('INSERT INTO partenaire (id_utilisateur, id_entreprise, poste) VALUES (?, ?, ?)');
-                $req->execute([$id_utilisateur, $id_entreprise, $poste]);
-            }
-
-            $pdo->commit();
+            $utilisateurManager->inscrire($utilisateur, $mot_de_passe, $nouvel_etablissement, $nouvelle_entreprise);
 
             // redirection vers la connexion avec un message de succès
-            header('Location: connexion.php?inscription=ok');
-            exit;
-
+            Session::rediriger('connexion.php?inscription=ok');
         } catch (Exception $e) {
-            // annule toutes les insertions en cas d'erreur
-            $pdo->rollBack();
+            // l'inscription a échoué : on supprime le CV envoyé
+            if ($fichier_cv !== null && is_file($fichier_cv)) {
+                unlink($fichier_cv);
+            }
             $erreurs[] = "Erreur lors de l'inscription : " . $e->getMessage();
         }
     }
 }
 
 // listes pour remplir les menus déroulants du formulaire
-$hopitaux = $pdo->query('SELECT id_hopital, nom FROM hopital ORDER BY nom')->fetchAll();
-$specialites = $pdo->query('SELECT id_specialite, libelle FROM specialite ORDER BY libelle')->fetchAll();
-$etablissements = $pdo->query('SELECT id_etablissement, nom FROM etablissement ORDER BY nom')->fetchAll();
-$entreprises = $pdo->query('SELECT id_entreprise, nom FROM entreprise ORDER BY nom')->fetchAll();
+$hopitaux = (new HopitalManager())->listerTous();
+$specialites = (new SpecialiteManager())->listerTous();
+$etablissements = (new EtablissementManager())->listerTous();
+$entreprises = (new EntrepriseManager())->listerTous();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -235,14 +207,14 @@ $entreprises = $pdo->query('SELECT id_entreprise, nom FROM entreprise ORDER BY n
         <label>Formation</label>
         <input type="text" name="formation"><br>
 
-        <label>CV (facultatif)</label>
-        <input type="file" name="cv"><br>
+        <label>CV en PDF (facultatif, 2 Mo max)</label>
+        <input type="file" name="cv" accept="application/pdf"><br>
 
         <label>Établissement</label>
         <select name="id_etablissement" onchange="afficherNouvelEtablissement(this)">
             <option value="">-- choisir --</option>
             <?php foreach ($etablissements as $etab): ?>
-                <option value="<?= $etab['id_etablissement'] ?>"><?= htmlspecialchars($etab['nom']) ?></option>
+                <option value="<?= $etab->getIdEtablissement() ?>"><?= htmlspecialchars($etab->getNom()) ?></option>
             <?php endforeach; ?>
             <option value="nouveau">+ Nouvel établissement</option>
         </select><br>
@@ -254,7 +226,7 @@ $entreprises = $pdo->query('SELECT id_entreprise, nom FROM entreprise ORDER BY n
         <select name="id_specialite">
             <option value="">-- choisir --</option>
             <?php foreach ($specialites as $spe): ?>
-                <option value="<?= $spe['id_specialite'] ?>"><?= htmlspecialchars($spe['libelle']) ?></option>
+                <option value="<?= $spe->getIdSpecialite() ?>"><?= htmlspecialchars($spe->getLibelle()) ?></option>
             <?php endforeach; ?>
         </select><br>
 
@@ -262,7 +234,7 @@ $entreprises = $pdo->query('SELECT id_entreprise, nom FROM entreprise ORDER BY n
         <select name="id_hopital">
             <option value="">-- choisir --</option>
             <?php foreach ($hopitaux as $hop): ?>
-                <option value="<?= $hop['id_hopital'] ?>"><?= htmlspecialchars($hop['nom']) ?></option>
+                <option value="<?= $hop->getIdHopital() ?>"><?= htmlspecialchars($hop->getNom()) ?></option>
             <?php endforeach; ?>
         </select><br>
 
@@ -270,7 +242,7 @@ $entreprises = $pdo->query('SELECT id_entreprise, nom FROM entreprise ORDER BY n
         <select name="id_etablissement_medecin" onchange="afficherNouvelEtablissement(this)">
             <option value="">-- aucun --</option>
             <?php foreach ($etablissements as $etab): ?>
-                <option value="<?= $etab['id_etablissement'] ?>"><?= htmlspecialchars($etab['nom']) ?></option>
+                <option value="<?= $etab->getIdEtablissement() ?>"><?= htmlspecialchars($etab->getNom()) ?></option>
             <?php endforeach; ?>
             <option value="nouveau">+ Nouvel établissement</option>
         </select><br>
@@ -285,7 +257,7 @@ $entreprises = $pdo->query('SELECT id_entreprise, nom FROM entreprise ORDER BY n
         <select name="id_entreprise" onchange="afficherNouvelleEntreprise(this)">
             <option value="">-- choisir --</option>
             <?php foreach ($entreprises as $ent): ?>
-                <option value="<?= $ent['id_entreprise'] ?>"><?= htmlspecialchars($ent['nom']) ?></option>
+                <option value="<?= $ent->getIdEntreprise() ?>"><?= htmlspecialchars($ent->getNom()) ?></option>
             <?php endforeach; ?>
             <option value="nouveau">+ Nouvelle entreprise</option>
         </select><br>

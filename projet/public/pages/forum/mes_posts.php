@@ -1,35 +1,13 @@
 <?php
 require_once __DIR__ . '/../../includes/config.php';
-require_once __DIR__ . '/../../includes/forum_acces.php';
 
-if (!isset($_SESSION['id_utilisateur']) || $_SESSION['profil'] === 'gestionnaire') {
-    header('Location: ../connexion.php');
-    exit;
-}
+Session::exigerMembre('../../');
 
-$id_utilisateur = $_SESSION['id_utilisateur'];
+$id_utilisateur = Session::getIdUtilisateur();
+$postManager = new PostManager();
 
-$req = $pdo->prepare(
-    'SELECT p.id_post, p.titre, p.date_heure, s.nom AS section_nom
-     FROM post p
-     JOIN section_forum s ON s.id_section = p.id_section
-     WHERE p.id_auteur = ?
-     ORDER BY p.date_heure DESC'
-);
-$req->execute([$id_utilisateur]);
-$mes_posts = $req->fetchAll();
-
-$req = $pdo->prepare(
-    'SELECT p.id_post, p.titre, s.nom AS section_nom, MAX(r.date_heure) AS derniere_reponse
-     FROM reponse r
-     JOIN post p ON p.id_post = r.id_post
-     JOIN section_forum s ON s.id_section = p.id_section
-     WHERE r.id_auteur = ?
-     GROUP BY p.id_post, p.titre, s.nom
-     ORDER BY derniere_reponse DESC'
-);
-$req->execute([$id_utilisateur]);
-$mes_reponses = $req->fetchAll();
+$mes_posts = $postManager->listerParAuteur($id_utilisateur);
+$mes_reponses = $postManager->listerOuUtilisateurARepondu($id_utilisateur);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -51,8 +29,8 @@ $mes_reponses = $req->fetchAll();
     <ul>
         <?php foreach ($mes_posts as $p): ?>
             <li>
-                <a href="post.php?id=<?= (int)$p['id_post'] ?>"><?= htmlspecialchars($p['titre']) ?></a>
-                (<?= htmlspecialchars($p['section_nom']) ?>) - <?= forum_date($p['date_heure']) ?>
+                <a href="post.php?id=<?= $p->getIdPost() ?>"><?= htmlspecialchars($p->getTitre()) ?></a>
+                (<?= htmlspecialchars($p->getSectionNom()) ?>) - <?= $p->getDateFormatee() ?>
             </li>
         <?php endforeach; ?>
     </ul>
@@ -65,8 +43,8 @@ $mes_reponses = $req->fetchAll();
     <ul>
         <?php foreach ($mes_reponses as $p): ?>
             <li>
-                <a href="post.php?id=<?= (int)$p['id_post'] ?>"><?= htmlspecialchars($p['titre']) ?></a>
-                (<?= htmlspecialchars($p['section_nom']) ?>)
+                <a href="post.php?id=<?= $p->getIdPost() ?>"><?= htmlspecialchars($p->getTitre()) ?></a>
+                (<?= htmlspecialchars($p->getSectionNom()) ?>)
             </li>
         <?php endforeach; ?>
     </ul>

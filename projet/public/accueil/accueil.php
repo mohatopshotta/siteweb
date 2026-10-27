@@ -1,36 +1,16 @@
 <?php
-// Page d'accueil : à placer dans projet/public/accueil/accueil.php
+// Page d'accueil : projet/public/accueil/accueil.php
 $racine = '../';
-require $racine .'includes/config.php';
-/** @var PDO $pdo */
+require $racine . 'includes/config.php';
 
-$connecte = isset($_SESSION['id_utilisateur']);
-$profil   = $_SESSION['profil'] ?? '';
+$connecte = Session::estConnecte();
+$role     = Session::getRole();
 
-// ------------------------------------------------------------
 // Événements à la une (les 3 plus récents)
-// ------------------------------------------------------------
-$stmt = $pdo->query(
-    "SELECT e.*, COUNT(ie.id_utilisateur) AS places_prises
-     FROM evenement e
-     LEFT JOIN inscription_evenement ie ON ie.id_evenement = e.id_evenement
-     GROUP BY e.id_evenement
-     ORDER BY e.id_evenement DESC
-     LIMIT 3"
-);
-$evenements = $stmt->fetchAll();
+$evenements = (new EvenementManager())->listerTous(3);
 
-// ------------------------------------------------------------
 // Dernières offres ouvertes (les 3 plus récentes)
-// ------------------------------------------------------------
-$stmt = $pdo->query(
-    "SELECT id_offre, titre, type_offre
-     FROM offre
-     WHERE etat = 'ouverte'
-     ORDER BY date_publication DESC
-     LIMIT 3"
-);
-$offres = $stmt->fetchAll();
+$offres = (new OffreManager())->listerOuvertes(null, 3);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -42,16 +22,12 @@ $offres = $stmt->fetchAll();
 </head>
 <body>
 
-<<<<<<< HEAD
 <header>
     <h1>La Générale des Hôpitaux (GDH)</h1>
     <p>Hôpital Sud Paris (HSP)</p>
 </header>
 
 <?php require $racine . 'includes/header.php'; ?>
-=======
-<?php $racine = '../'; require __DIR__ . '/../includes/header.php'; ?>
->>>>>>> 0bf18af3025613363570b37c544d953b076c683d
 
 <main>
 
@@ -86,27 +62,25 @@ $offres = $stmt->fetchAll();
             <p>Aucun événement pour le moment.</p>
         <?php else: ?>
             <div class="liste-evenements">
-                <?php foreach ($evenements as $evenement):
-                    $places_restantes = $evenement['nombre_places'] - $evenement['places_prises'];
-                    ?>
+                <?php foreach ($evenements as $evenement): ?>
                     <div class="carte-evenement">
-                        <h3><?= htmlspecialchars($evenement['titre']) ?></h3>
-                        <p><em><?= htmlspecialchars($evenement['type_evenement']) ?></em></p>
-                        <p><?= htmlspecialchars($evenement['lieu']) ?></p>
+                        <h3><?= htmlspecialchars($evenement->getTitre()) ?></h3>
+                        <p><em><?= htmlspecialchars($evenement->getTypeEvenement()) ?></em></p>
+                        <p><?= htmlspecialchars($evenement->getLieu()) ?></p>
                         <p>
-                            <?php if ($places_restantes > 0): ?>
-                                <?= $places_restantes ?> place(s) restante(s)
+                            <?php if (!$evenement->estComplet()): ?>
+                                <?= $evenement->getPlacesRestantes() ?> place(s) restante(s)
                             <?php else: ?>
                                 Complet
                             <?php endif; ?>
                         </p>
-                        <?php if ($connecte && $profil !== 'gestionnaire'): ?>
-                            <a href="<?= $racine ?>pages/evenement/detail.php?id=<?= (int)$evenement['id_evenement'] ?>">Voir le détail</a>
+                        <?php if ($connecte && $role !== 'gestionnaire'): ?>
+                            <a href="<?= $racine ?>pages/evenement/detail.php?id=<?= $evenement->getIdEvenement() ?>">Voir le détail</a>
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>
-            <?php if ($connecte && $profil !== 'gestionnaire'): ?>
+            <?php if ($connecte && $role !== 'gestionnaire'): ?>
                 <a href="<?= $racine ?>pages/evenement/liste.php">Voir tous les événements &rarr;</a>
             <?php endif; ?>
         <?php endif; ?>
@@ -121,15 +95,15 @@ $offres = $stmt->fetchAll();
             <ul>
                 <?php foreach ($offres as $offre): ?>
                     <li>
-                        <?= htmlspecialchars($offre['titre']) ?>
-                        (<?= htmlspecialchars($offre['type_offre']) ?>)
-                        <?php if ($connecte && $profil !== 'gestionnaire'): ?>
-                            — <a href="<?= $racine ?>pages/offres/detail.php?id=<?= (int)$offre['id_offre'] ?>">Voir</a>
+                        <?= htmlspecialchars($offre->getTitre()) ?>
+                        (<?= htmlspecialchars($offre->getTypeOffre()) ?>)
+                        <?php if ($connecte && $role !== 'gestionnaire'): ?>
+                            — <a href="<?= $racine ?>pages/offres/detail.php?id=<?= $offre->getIdOffre() ?>">Voir</a>
                         <?php endif; ?>
                     </li>
                 <?php endforeach; ?>
             </ul>
-            <?php if ($connecte && $profil !== 'gestionnaire'): ?>
+            <?php if ($connecte && $role !== 'gestionnaire'): ?>
                 <a href="<?= $racine ?>pages/offres/index.php">Voir toutes les offres &rarr;</a>
             <?php endif; ?>
         <?php endif; ?>

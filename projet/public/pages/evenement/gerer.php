@@ -1,86 +1,33 @@
 <?php
-session_start();
-require /** @var PDO $pdo */'../../includes/config.php';
+require __DIR__ . '/../../includes/config.php';
 
-if (!isset($_SESSION['id_utilisateur'])) {
-    header('Location: ../connexion.php');
-    exit;
-}
+Session::exigerConnexion('../../');
 
-$id_evenement = $_GET['id'] ?? null;
-if (!$id_evenement || !ctype_digit((string)$id_evenement)) {
+$manager = new EvenementManager();
+$id_utilisateur = Session::getIdUtilisateur();
+$id_evenement = (int)($_GET['id'] ?? 0);
+
+$evenement = $manager->trouverParId($id_evenement);
+if ($evenement === null) {
     die("Événement introuvable.");
 }
 
-$id_utilisateur = $_SESSION['id_utilisateur'];
-
-// ------------------------------------------------------------
-// Vérifier que l'utilisateur est bien organisateur de cet événement
-// ------------------------------------------------------------
-$stmt = $pdo->prepare(
-    "SELECT organiser FROM inscription_evenement
-     WHERE id_utilisateur = :id_utilisateur AND id_evenement = :id_evenement"
-);
-$stmt->execute([':id_utilisateur' => $id_utilisateur, ':id_evenement' => $id_evenement]);
-$inscription = $stmt->fetch();
-
-if (!$inscription || (int)$inscription['organiser'] !== 1) {
+// Seuls les organisateurs de cet événement peuvent le gérer
+if (!$manager->estOrganisateur($id_utilisateur, $id_evenement)) {
     die("Accès réservé aux organisateurs de cet événement.");
 }
 
-// ------------------------------------------------------------
-// Récupération de l'événement
-// ------------------------------------------------------------
-$stmt = $pdo->prepare("SELECT * FROM evenement WHERE id_evenement = :id");
-$stmt->execute([':id' => $id_evenement]);
-$evenement = $stmt->fetch();
-
-if (!$evenement) {
-    die("Événement introuvable.");
-}
-
 $erreurs = [];
-$message = '';
 
 // ------------------------------------------------------------
 // Modification de la fiche événement
 // ------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
-
-    $type_evenement  = trim($_POST['type_evenement'] ?? '');
-    $titre           = trim($_POST['titre'] ?? '');
-    $description     = trim($_POST['description'] ?? '');
-    $lieu            = trim($_POST['lieu'] ?? '');
-    $elements_requis = trim($_POST['elements_requis'] ?? '');
-    $nombre_places   = $_POST['nombre_places'] ?? '';
-
-    if ($type_evenement === '') $erreurs[] = "Le type d'événement est obligatoire.";
-    if ($titre === '') $erreurs[] = "Le titre est obligatoire.";
-    if ($description === '') $erreurs[] = "La description est obligatoire.";
-    if ($lieu === '') $erreurs[] = "Le lieu est obligatoire.";
-    if (!ctype_digit((string)$nombre_places) || (int)$nombre_places < 1) {
-        $erreurs[] = "Le nombre de places doit être un entier positif.";
-    }
+    $erreurs = Evenement::validerFormulaire($_POST);
 
     if (empty($erreurs)) {
-        $stmt = $pdo->prepare(
-            "UPDATE evenement
-             SET type_evenement = :type_evenement, titre = :titre, description = :description,
-                 lieu = :lieu, elements_requis = :elements_requis, nombre_places = :nombre_places
-             WHERE id_evenement = :id"
-        );
-        $stmt->execute([
-            ':type_evenement'  => $type_evenement,
-            ':titre'           => $titre,
-            ':description'     => $description,
-            ':lieu'            => $lieu,
-            ':elements_requis' => $elements_requis !== '' ? $elements_requis : null,
-            ':nombre_places'   => (int)$nombre_places,
-            ':id'              => $id_evenement,
-        ]);
-
-        header('Location: gerer.php?id=' . $id_evenement);
-        exit;
+        $manager->modifier(Evenement::depuisFormulaire($_POST, $id_evenement));
+        Session::rediriger('gerer.php?id=' . $id_evenement);
     }
 }
 
@@ -88,55 +35,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
 // Retirer un inscrit (refus d'inscription)
 // ------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['retirer_id'])) {
-
-    $retirer_id = $_POST['retirer_id'];
-
-    // un organisateur ne peut pas se retirer lui-même via ce bouton
-    if ((int)$retirer_id !== (int)$id_utilisateur) {
-        $stmt = $pdo->prepare(
-            "DELETE FROM inscription_evenement
-             WHERE id_utilisateur = :id_utilisateur AND id_evenement = :id_evenement AND organiser = 0"
-        );
-        $stmt->execute([
-            ':id_utilisateur' => $retirer_id,
-            ':id_evenement'   => $id_evenement,
-        ]);
-    }
-
-    header('Location: gerer.php?id=' . $id_evenement);
-    exit;
+    // retirerParticipant() ne supprime jamais un organisateur
+    $manager->retirerParticipant((int)$_POST['retirer_id'], $id_evenement);
+    Session::rediriger('gerer.php?id=' . $id_evenement);
 }
 
-// Recharger l'événement au cas où il vient d'être modifié
-$stmt = $pdo->prepare("SELECT * FROM evenement WHERE id_evenement = :id");
-$stmt->execute([':id' => $id_evenement]);
-$evenement = $stmt->fetch();
-
-// ------------------------------------------------------------
 // Liste des inscrits (organisateurs et participants)
-// ------------------------------------------------------------
-$stmt = $pdo->prepare(
-    "SELECT u.id_utilisateur, u.nom, u.prenom, u.email, ie.organiser
-     FROM inscription_evenement ie
-     JOIN utilisateur u ON u.id_utilisateur = ie.id_utilisateur
-     WHERE ie.id_evenement = :id
-     ORDER BY ie.organiser DESC, u.nom"
-);
-$stmt->execute([':id' => $id_evenement]);
-$inscrits = $stmt->fetchAll();
+$inscrits = $manager->listerInscrits($id_evenement);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Gérer — <?= htmlspecialchars($evenement['titre']) ?></title>
+    <title>Gérer — <?= htmlspecialchars($evenement->getTitre()) ?></title>
     <link rel="stylesheet" href="../../assets/css/css.css">
 </head>
 <body>
 
+<?php $racine = '../../'; require __DIR__ . '/../../includes/header.php'; ?>
+
 <a href="detail.php?id=<?= $id_evenement ?>">&larr; Retour à l'événement</a>
 
-<h1>Gérer : <?= htmlspecialchars($evenement['titre']) ?></h1>
+<h1>Gérer : <?= htmlspecialchars($evenement->getTitre()) ?></h1>
 
 <?php if (!empty($erreurs)): ?>
     <ul class="erreurs">
@@ -151,25 +71,25 @@ $inscrits = $stmt->fetchAll();
 
     <label for="type_evenement">Type d'événement</label>
     <input type="text" id="type_evenement" name="type_evenement"
-           value="<?= htmlspecialchars($evenement['type_evenement']) ?>" required>
+           value="<?= htmlspecialchars($evenement->getTypeEvenement()) ?>" required>
 
     <label for="titre">Titre</label>
     <input type="text" id="titre" name="titre"
-           value="<?= htmlspecialchars($evenement['titre']) ?>" required>
+           value="<?= htmlspecialchars($evenement->getTitre()) ?>" required>
 
     <label for="description">Description</label>
-    <textarea id="description" name="description" rows="5" required><?= htmlspecialchars($evenement['description']) ?></textarea>
+    <textarea id="description" name="description" rows="5" required><?= htmlspecialchars($evenement->getDescription()) ?></textarea>
 
     <label for="lieu">Lieu</label>
     <input type="text" id="lieu" name="lieu"
-           value="<?= htmlspecialchars($evenement['lieu']) ?>" required>
+           value="<?= htmlspecialchars($evenement->getLieu()) ?>" required>
 
     <label for="elements_requis">Éléments requis (facultatif)</label>
-    <textarea id="elements_requis" name="elements_requis" rows="3"><?= htmlspecialchars($evenement['elements_requis'] ?? '') ?></textarea>
+    <textarea id="elements_requis" name="elements_requis" rows="3"><?= htmlspecialchars($evenement->getElementsRequis() ?? '') ?></textarea>
 
     <label for="nombre_places">Nombre de places</label>
     <input type="number" id="nombre_places" name="nombre_places" min="1"
-           value="<?= htmlspecialchars($evenement['nombre_places']) ?>" required>
+           value="<?= $evenement->getNombrePlaces() ?>" required>
 
     <button type="submit" name="modifier">Enregistrer les modifications</button>
 </form>
@@ -188,13 +108,13 @@ $inscrits = $stmt->fetchAll();
     <tbody>
     <?php foreach ($inscrits as $personne): ?>
         <tr>
-            <td><?= htmlspecialchars($personne['prenom'] . ' ' . $personne['nom']) ?></td>
-            <td><?= htmlspecialchars($personne['email']) ?></td>
-            <td><?= (int)$personne['organiser'] === 1 ? 'Organisateur' : 'Participant' ?></td>
+            <td><?= htmlspecialchars($personne->getNomComplet()) ?></td>
+            <td><?= htmlspecialchars($personne->getEmail()) ?></td>
+            <td><?= $personne->estOrganisateur() ? 'Organisateur' : 'Participant' ?></td>
             <td>
-                <?php if ((int)$personne['organiser'] !== 1): ?>
+                <?php if (!$personne->estOrganisateur()): ?>
                     <form method="post" action="gerer.php?id=<?= $id_evenement ?>" style="display:inline">
-                        <input type="hidden" name="retirer_id" value="<?= $personne['id_utilisateur'] ?>">
+                        <input type="hidden" name="retirer_id" value="<?= $personne->getIdUtilisateur() ?>">
                         <button type="submit" onclick="return confirm('Retirer cette personne ?');">Retirer</button>
                     </form>
                 <?php endif; ?>
