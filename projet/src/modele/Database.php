@@ -18,7 +18,9 @@ class Database
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 ]);
             } catch (PDOException $e) {
-                die('Connexion à la base impossible : ' . $e->getMessage());
+                error_log('Connexion BDD : ' . $e->getMessage());
+                http_response_code(500);
+                exit('Le site est momentanément indisponible. Réessaie plus tard.');
             }
         }
         return self::$connexion;

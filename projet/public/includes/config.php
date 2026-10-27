@@ -16,3 +16,8 @@ spl_autoload_register(function (string $classe): void {
 });
 
 Session::demarrer();
+
+// Tous les formulaires envoyés en POST doivent contenir le jeton CSRF
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    Session::verifierCsrf();
+}

@@ -91,6 +91,7 @@ if (isset($_GET['msg'])) {
                         <td><?= htmlspecialchars($compte->getLibelleRole()) ?></td>
                         <td class="admin-actions">
                             <form action="valider_compte.php" method="POST" class="form-inline">
+                                <?= Session::champCsrf() ?>
                                 <input type="hidden" name="id" value="<?= $compte->getIdUtilisateur() ?>">
                                 <input type="hidden" name="action" value="valider">
                                 <button type="submit" class="btn btn-valider">Valider</button>
@@ -98,6 +99,7 @@ if (isset($_GET['msg'])) {
 
                             <form action="valider_compte.php" method="POST" class="form-inline"
                                   onsubmit="return confirm('Refuser et supprimer ce compte ?');">
+                                <?= Session::champCsrf() ?>
                                 <input type="hidden" name="id" value="<?= $compte->getIdUtilisateur() ?>">
                                 <input type="hidden" name="action" value="refuser">
                                 <button type="submit" class="btn btn-refuser">Refuser</button>

@@ -13,6 +13,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($nom === '' || $prenom === '' || $email === '' || $mot_de_passe === '') {
         $erreurs[] = 'Tous les champs sont obligatoires.';
     }
+    if ($mot_de_passe !== '') {
+        $erreurs = array_merge($erreurs, Utilisateur::controlerRobustesse($mot_de_passe));
+    }
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $erreurs[] = 'Email invalide.';
     }
@@ -127,19 +130,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $nom_fichier = bin2hex(random_bytes(16)) . '.pdf';
             $fichier_cv = $dossier_cv . $nom_fichier;
-            move_uploaded_file($_FILES['cv']['tmp_name'], $fichier_cv);
-            $utilisateur->setCv('uploads/cv/' . $nom_fichier);
+            if (move_uploaded_file($_FILES['cv']['tmp_name'], $fichier_cv)) {
+                $utilisateur->setCv('uploads/cv/' . $nom_fichier);
+            } else {
+                $fichier_cv = null;
+                $erreurs[] = "Le CV n'a pas pu être enregistré. Réessaie.";
+            }
         }
 
-        try {
-            $utilisateurManager->inscrire($utilisateur, $mot_de_passe, $nouvel_etablissement, $nouvelle_entreprise);
+        if (empty($erreurs)) {
+            try {
+                $utilisateurManager->inscrire($utilisateur, $mot_de_passe, $nouvel_etablissement, $nouvelle_entreprise);
 
-            Session::rediriger('connexion.php?inscription=ok');
-        } catch (Exception $e) {
-            if ($fichier_cv !== null && is_file($fichier_cv)) {
-                unlink($fichier_cv);
+                Session::rediriger('connexion.php?inscription=ok');
+            } catch (Exception $e) {
+                if ($fichier_cv !== null && is_file($fichier_cv)) {
+                    unlink($fichier_cv);
+                }
+                error_log('Inscription : ' . $e->getMessage());
+                $erreurs[] = "L'inscription n'a pas pu être enregistrée. Réessaie plus tard.";
             }
-            $erreurs[] = "Erreur lors de l'inscription : " . $e->getMessage();
         }
     }
 }
@@ -166,6 +176,7 @@ $entreprises = (new EntrepriseRepository())->listerTous();
 <?php endforeach; ?>
 
 <form method="post" enctype="multipart/form-data">
+    <?= Session::champCsrf() ?>
 
     <label>Nom</label>
     <input type="text" name="nom" value="<?= htmlspecialchars($_POST['nom'] ?? '') ?>" required><br>

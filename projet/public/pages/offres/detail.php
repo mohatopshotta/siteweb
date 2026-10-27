@@ -62,6 +62,7 @@ $erreur = $_GET['erreur'] ?? '';
 <?php elseif ($peutPostuler): ?>
     <h2>Postuler</h2>
     <form method="post" action="postuler.php">
+        <?= Session::champCsrf() ?>
         <input type="hidden" name="id_offre" value="<?= $offre->getIdOffre() ?>">
         <label>Lettre de motivation</label><br>
         <textarea name="motivation" required rows="8" cols="60"></textarea><br>

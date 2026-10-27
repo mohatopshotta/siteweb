@@ -7,7 +7,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $mot_de_passe = $_POST['mot_de_passe'] ?? '';
 
-    $utilisateur = (new UtilisateurManager())->trouverParEmail($email);
+    $utilisateurManager = new UtilisateurManager();
+    $utilisateur = $utilisateurManager->trouverParEmail($email);
 
     if ($utilisateur === null || !$utilisateur->verifierMotDePasse($mot_de_passe)) {
         $erreur = 'Email ou mot de passe incorrect.';
@@ -15,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $erreur = 'Ton compte est en attente de validation par un gestionnaire.';
     } else {
         Session::connecter($utilisateur);
+        $utilisateurManager->majDerniereConnexion($utilisateur->getIdUtilisateur());
         Session::rediriger('../accueil/accueil.php');
     }
 }
@@ -40,6 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php endif; ?>
 
 <form method="post">
+    <?= Session::champCsrf() ?>
     <label>Email</label>
     <input type="email" name="email" required><br>
 

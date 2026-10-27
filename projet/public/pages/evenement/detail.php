@@ -74,6 +74,7 @@ $inscription = $manager->trouverInscription($id_utilisateur, $id_evenement);
 <?php elseif ($inscription !== null): ?>
     <p>Tu es inscrit(e) à cet événement.</p>
     <form method="post">
+        <?= Session::champCsrf() ?>
         <button type="submit" name="desinscrire" onclick="return confirm('Se désinscrire de cet événement ?');">
             Se désinscrire
         </button>
@@ -81,6 +82,7 @@ $inscription = $manager->trouverInscription($id_utilisateur, $id_evenement);
 
 <?php elseif (!$evenement->estComplet()): ?>
     <form method="post">
+        <?= Session::champCsrf() ?>
         <button type="submit" name="inscrire">S'inscrire</button>
     </form>
 <?php endif; ?>

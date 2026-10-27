@@ -36,6 +36,13 @@ class UtilisateurRepository extends Repository
         return $ligne ? $this->creerObjet($ligne) : null;
     }
 
+    // Sert à supprimer plus tard les comptes inactifs depuis 3 ans (RGPD)
+    public function majDerniereConnexion(int $idUtilisateur): void
+    {
+        $req = $this->pdo->prepare('UPDATE utilisateur SET date_derniere_connexion = NOW() WHERE id_utilisateur = ?');
+        $req->execute([$idUtilisateur]);
+    }
+
     public function emailExiste(string $email): bool
     {
         $req = $this->pdo->prepare('SELECT 1 FROM utilisateur WHERE email = ?');

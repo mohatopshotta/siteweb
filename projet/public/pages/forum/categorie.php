@@ -68,6 +68,7 @@ $posts = $postManager->listerParSection($id_section);
     <details>
         <summary>Nouvelle discussion</summary>
         <form method="post">
+            <?= Session::champCsrf() ?>
             <label>Titre</label>
             <input type="text" name="titre" maxlength="150" required><br>
             <label>Message</label>

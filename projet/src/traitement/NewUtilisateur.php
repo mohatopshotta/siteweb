@@ -25,6 +25,33 @@ abstract class NewUtilisateur extends NewTraitement
         return password_verify($motDePasse, $this->motDePasse);
     }
 
+    /**
+     * Règles de la CNIL : 12 caractères minimum, avec une minuscule,
+     * une majuscule, un chiffre et un caractère spécial.
+     * Renvoie la liste des règles non respectées (tableau vide = mot de passe accepté).
+     * Sert aussi pour le futur « mot de passe oublié ».
+     */
+    public static function controlerRobustesse(string $motDePasse): array
+    {
+        $erreurs = [];
+        if (mb_strlen($motDePasse) < 12) {
+            $erreurs[] = 'Le mot de passe doit contenir au moins 12 caractères.';
+        }
+        if (!preg_match('/[a-z]/', $motDePasse)) {
+            $erreurs[] = 'Le mot de passe doit contenir au moins une minuscule.';
+        }
+        if (!preg_match('/[A-Z]/', $motDePasse)) {
+            $erreurs[] = 'Le mot de passe doit contenir au moins une majuscule.';
+        }
+        if (!preg_match('/[0-9]/', $motDePasse)) {
+            $erreurs[] = 'Le mot de passe doit contenir au moins un chiffre.';
+        }
+        if (!preg_match('/[^a-zA-Z0-9]/', $motDePasse)) {
+            $erreurs[] = 'Le mot de passe doit contenir au moins un caractère spécial.';
+        }
+        return $erreurs;
+    }
+
     public function getIdUtilisateur(): ?int { return $this->idUtilisateur; }
     public function getNom(): string { return $this->nom; }
     public function getPrenom(): string { return $this->prenom; }
