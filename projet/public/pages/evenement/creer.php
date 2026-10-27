@@ -1,73 +1,19 @@
 <?php
-require /** @var PDO $pdo */ '../../includes/config.php';
+require __DIR__ . '/../../includes/config.php';
 
-// ------------------------------------------------------------
-// Accès réservé aux médecins et partenaires
-// ------------------------------------------------------------
-if (!isset($_SESSION['id_utilisateur']) || !in_array($_SESSION['profil'], ['medecin', 'partenaire'])) {
-    header('Location: ../connexion.php');
-    exit;
-}
+Session::exigerRole(['medecin', 'partenaire'], '../../');
 
 $erreurs = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $erreurs = NewEvenement::validerFormulaire($_POST);
 
-    // Récupération des champs
-    $type_evenement  = trim($_POST['type_evenement'] ?? '');
-    $titre           = trim($_POST['titre'] ?? '');
-    $description     = trim($_POST['description'] ?? '');
-    $lieu            = trim($_POST['lieu'] ?? '');
-    $elements_requis = trim($_POST['elements_requis'] ?? '');
-    $nombre_places   = $_POST['nombre_places'] ?? '';
-
-    // Validation basique
-    if ($type_evenement === '') $erreurs[] = "Le type d'événement est obligatoire.";
-    if ($titre === '') $erreurs[] = "Le titre est obligatoire.";
-    if ($description === '') $erreurs[] = "La description est obligatoire.";
-    if ($lieu === '') $erreurs[] = "Le lieu est obligatoire.";
-    if (!ctype_digit((string)$nombre_places) || (int)$nombre_places < 1) {
-        $erreurs[] = "Le nombre de places doit être un entier positif.";
-    }
-
-    // Si tout est bon, on enregistre
     if (empty($erreurs)) {
         try {
-            $pdo->beginTransaction();
-
-            // 1. Création de l'événement
-            $stmt = $pdo->prepare(
-                "INSERT INTO evenement (type_evenement, titre, description, lieu, elements_requis, nombre_places)
-                 VALUES (:type_evenement, :titre, :description, :lieu, :elements_requis, :nombre_places)"
-            );
-            $stmt->execute([
-                ':type_evenement'  => $type_evenement,
-                ':titre'           => $titre,
-                ':description'     => $description,
-                ':lieu'            => $lieu,
-                ':elements_requis' => $elements_requis !== '' ? $elements_requis : null,
-                ':nombre_places'   => (int)$nombre_places,
-            ]);
-
-            $id_evenement = $pdo->lastInsertId();
-
-            // 2. Le créateur devient organisateur de l'événement
-            $stmt = $pdo->prepare(
-                "INSERT INTO inscription_evenement (id_utilisateur, id_evenement, organiser)
-                 VALUES (:id_utilisateur, :id_evenement, 1)"
-            );
-            $stmt->execute([
-                ':id_utilisateur' => $_SESSION['id_utilisateur'],
-                ':id_evenement'   => $id_evenement,
-            ]);
-
-            $pdo->commit();
-
-            header('Location: detail.php?id=' . $id_evenement);
-            exit;
-
+            $evenement = NewEvenement::depuisFormulaire($_POST);
+            $id_evenement = (new EvenementRepository())->creer($evenement, Session::getIdUtilisateur());
+            Session::rediriger('detail.php?id=' . $id_evenement);
         } catch (PDOException $e) {
-            $pdo->rollBack();
             $erreurs[] = "Erreur lors de l'enregistrement : " . $e->getMessage();
         }
     }
@@ -81,6 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="../../assets/css/css.css">
 </head>
 <body>
+
+<?php $racine = '../../'; require __DIR__ . '/../../includes/header.php'; ?>
 
 <h1>Créer un événement</h1>
 

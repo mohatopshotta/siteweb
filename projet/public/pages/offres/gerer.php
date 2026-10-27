@@ -1,97 +1,41 @@
-
 <?php
-// config.php démarre la session et crée la connexion $pdo
-require '../../includes/config.php';
+require __DIR__ . '/../../includes/config.php';
 
-// Profil de l'utilisateur ('profil' ou 'role' selon les pages, on accepte les deux)
-$profil = $_SESSION['profil'] ?? $_SESSION['role'] ?? '';
+Session::exigerRole(['partenaire'], '../../');
 
-// Seuls les partenaires connectés ont le droit d'être ici
-if (!isset($_SESSION['id_utilisateur']) || $profil !== 'partenaire') {
-    header('Location: ../connexion.php');
-    exit;
-}
-
-$id_utilisateur = $_SESSION['id_utilisateur'];
-
-// id de l'offre dans l'URL (gerer.php?id=5). (int) transforme en nombre : pas de risque d'injection.
+$id_utilisateur = Session::getIdUtilisateur();
 $id_offre = (int)($_GET['id'] ?? 0);
 
-// On récupère l'offre et le nom de son entreprise
-$stmt = $pdo->prepare(
-    "SELECT o.*, e.nom AS entreprise
-     FROM offre o
-     JOIN entreprise e ON e.id_entreprise = o.id_entreprise
-     WHERE o.id_offre = ?"
-);
-$stmt->execute([$id_offre]);
-$offre = $stmt->fetch();
+$offreManager = new OffreManager();
+$candidatureManager = new CandidatureManager();
 
-if (!$offre) {
-    die("Offre introuvable.");
+$offre = $offreManager->trouverParId($id_offre);
+if ($offre === null) {
+    die("NewOffre introuvable.");
 }
 
-// Seul l'auteur de l'offre peut la gérer
-if ($offre['id_auteur'] != $id_utilisateur) {
+if ($offre->getIdAuteur() !== $id_utilisateur) {
     die("Tu n'es pas l'auteur de cette offre.");
 }
 
-// ------------------------------------------------------------
-// Actions : clic sur un des boutons de la page
-// ------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
     $action      = $_POST['action'] ?? '';
     $id_candidat = (int)($_POST['id_candidat'] ?? 0);
 
     if ($action === 'bloquer') {
-        // Offre bloquée : plus personne ne peut postuler
-        $pdo->prepare("UPDATE offre SET etat = 'cloture' WHERE id_offre = ?")->execute([$id_offre]);
-
+        $offreManager->changerEtat($id_offre, NewOffre::CLOTURE, $id_utilisateur);
     } elseif ($action === 'rouvrir') {
-        $pdo->prepare("UPDATE offre SET etat = 'ouvert' WHERE id_offre = ?")->execute([$id_offre]);
-
+        $offreManager->changerEtat($id_offre, NewOffre::OUVERT, $id_utilisateur);
     } elseif ($action === 'retenir') {
-        $pdo->prepare("UPDATE candidature SET statut = 'retenue' WHERE id_offre = ? AND id_utilisateur = ?")
-            ->execute([$id_offre, $id_candidat]);
-
+        $candidatureManager->retenir($id_offre, $id_candidat);
     } elseif ($action === 'refuser') {
-        $stmt = $pdo->prepare("UPDATE candidature SET statut = 'non_retenue' WHERE id_offre = ? AND id_utilisateur = ?");
-        $stmt->execute([$id_offre, $id_candidat]);
-
-        // rowCount() > 0 : la candidature a bien été modifiée, on envoie l'email de refus
-        if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->prepare("SELECT prenom, email FROM utilisateur WHERE id_utilisateur = ?");
-            $stmt->execute([$id_candidat]);
-            $candidat = $stmt->fetch();
-
-            $message = "Bonjour " . $candidat['prenom'] . ",\n\n"
-                     . "Votre candidature à l'offre « " . $offre['titre'] . " » n'a pas été retenue.\n\n"
-                     . "Cordialement,\n" . $offre['entreprise'];
-
-            // Le @ cache l'erreur si le serveur mail n'est pas configuré (cas fréquent en local)
-            @mail($candidat['email'], "Votre candidature", $message, "Content-Type: text/plain; charset=UTF-8");
-        }
+        $candidatureManager->refuser($offre, $id_candidat);
     }
 
-    // On recharge la page (évite de renvoyer le formulaire avec F5)
-    header('Location: gerer.php?id=' . $id_offre);
-    exit;
+    Session::rediriger('gerer.php?id=' . $id_offre);
 }
 
-// ------------------------------------------------------------
-// Liste des candidats de l'offre
-// ------------------------------------------------------------
-$stmt = $pdo->prepare(
-    "SELECT u.id_utilisateur, u.nom, u.prenom, u.email,
-            c.motivation, c.statut
-     FROM candidature c
-     JOIN utilisateur u ON u.id_utilisateur = c.id_utilisateur
-     WHERE c.id_offre = ?
-     ORDER BY c.date_candidature DESC"
-);
-$stmt->execute([$id_offre]);
-$candidats = $stmt->fetchAll();
+$candidats = $candidatureManager->listerParOffre($id_offre);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -102,18 +46,17 @@ $candidats = $stmt->fetchAll();
 </head>
 <body>
 
-<?php $racine = '../../'; require '../../includes/header.php'; ?>
+<?php $racine = '../../'; require __DIR__ . '/../../includes/header.php'; ?>
 
-<h1><?= htmlspecialchars($offre['titre']) ?></h1>
+<h1><?= htmlspecialchars($offre->getTitre()) ?></h1>
 <p>
-    <?= htmlspecialchars($offre['entreprise']) ?> ·
-    État : <strong><?= $offre['etat'] === 'ouvert' ? 'ouverte' : 'bloquée' ?></strong> ·
+    <?= htmlspecialchars($offre->getEntreprise()) ?> ·
+    État : <strong><?= $offre->estOuverte() ? 'ouverte' : 'bloquée' ?></strong> ·
     <a href="detail.php?id=<?= $id_offre ?>">voir l'offre</a>
 </p>
 
-<!-- Bouton bloquer / rouvrir selon l'état actuel -->
 <form method="post">
-    <?php if ($offre['etat'] === 'ouvert'): ?>
+    <?php if ($offre->estOuverte()): ?>
         <button type="submit" name="action" value="bloquer">Bloquer l'offre</button>
     <?php else: ?>
         <button type="submit" name="action" value="rouvrir">Rouvrir l'offre</button>
@@ -135,13 +78,13 @@ $candidats = $stmt->fetchAll();
         </tr>
         <?php foreach ($candidats as $c): ?>
             <tr>
-                <td><?= htmlspecialchars($c['prenom'] . ' ' . $c['nom']) ?></td>
-                <td><?= htmlspecialchars($c['email']) ?></td>
-                <td><?= nl2br(htmlspecialchars($c['motivation'])) ?></td>
-                <td><?= htmlspecialchars(str_replace('_', ' ', $c['statut'])) ?></td>
+                <td><?= htmlspecialchars($c->getNomCandidat()) ?></td>
+                <td><?= htmlspecialchars($c->getEmail()) ?></td>
+                <td><?= nl2br(htmlspecialchars($c->getMotivation())) ?></td>
+                <td><?= htmlspecialchars($c->getLibelleStatut()) ?></td>
                 <td>
                     <form method="post">
-                        <input type="hidden" name="id_candidat" value="<?= (int)$c['id_utilisateur'] ?>">
+                        <input type="hidden" name="id_candidat" value="<?= $c->getIdUtilisateur() ?>">
                         <button type="submit" name="action" value="retenir">Retenir</button>
                         <button type="submit" name="action" value="refuser">Refuser</button>
                     </form>
