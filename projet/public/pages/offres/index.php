@@ -2,6 +2,8 @@
 require_once '../../includes/config.php';
 /** @var PDO $pdo */
 
+$racine = '../../';
+
 $type = $_GET['type'] ?? '';
 $erreur = '';
 
@@ -205,6 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
+<?php require $racine . 'includes/header.php'; ?>
 <div class="container">
 
     <header class="entete">
