@@ -1,0 +1,12 @@
+# Dossier des fichiers envoyés par les utilisateurs (CV).
+# Aucun script ne doit pouvoir s'exécuter ici, même si un fichier piégé arrive à y être déposé.
+<FilesMatch "\.(php|phtml|php[0-9]|phar|pl|py|cgi|sh)$">
+    Require all denied
+</FilesMatch>
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+Options -Indexes
