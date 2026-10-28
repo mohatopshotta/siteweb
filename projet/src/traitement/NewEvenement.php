@@ -9,11 +9,11 @@ class NewEvenement extends NewTraitement
     private string $lieu = '';
     private ?string $dateEvenement = null;
 
-    private bool $estOrganisateur = false;
+   
     private ?string $elementsRequis = null;
     private int $nombrePlaces = 0;
     private int $placesPrises = 0;
-    private bool $estOrganisateur = false;
+
 
     public function getPlacesRestantes(): int
     {

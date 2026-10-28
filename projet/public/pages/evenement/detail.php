@@ -115,11 +115,7 @@ $message     = Session::consommerFlash();
         </button>
     </form>
 
-<<<<<<< HEAD
-<?php elseif (!$evenement->estComplet() && !$evenement->estPasse()): ?>
-=======
-<?php elseif ($peutSInscrire && !$evenement->estComplet()): ?>
->>>>>>> e1704c89a67093ca2d2a3594efd9e3aa7c782e3e
+<?php elseif ($peutSInscrire && !$evenement->estComplet() && !$evenement->estPasse()): ?>
     <form method="post">
         <?= Session::champCsrf() ?>
         <button type="submit" name="inscrire">S'inscrire</button>
