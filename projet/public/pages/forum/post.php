@@ -7,7 +7,7 @@ $id_utilisateur = Session::getIdUtilisateur();
 $role = Session::getRole();
 $id_post = (int)($_GET['id'] ?? 0);
 
-$post = (new PostManager())->trouverParId($id_post);
+$post = (new PostRepository())->trouverParId($id_post);
 if ($post === null) {
     http_response_code(404);
     die('Discussion introuvable.');

@@ -3,7 +3,7 @@ require __DIR__ . '/../includes/config.php';
 
 Session::exigerConnexion('../');
 
-$manager = new UtilisateurManager();
+$manager = new UtilisateurRepository();
 $id_utilisateur = Session::getIdUtilisateur();
 
 $message = '';

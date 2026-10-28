@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $hopitaux = (new HopitalRepository())->listerTous();
 $specialites = (new SpecialiteRepository())->listerTous();
 $etablissements = (new EtablissementRepository())->listerTous();
-$entreprises = (new EntreprisesRepository())->listerTous();
+$entreprises = (new EntrepriseRepository())->listerTous();
 ?>
 <!DOCTYPE html>
 <html lang="fr">

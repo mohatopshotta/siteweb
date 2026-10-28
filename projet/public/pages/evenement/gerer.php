@@ -22,20 +22,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
     $erreurs = NewEvenement::validerFormulaire($_POST);
 
     // Interdire de descendre sous le nombre d'inscrits actuel
-    if (empty($erreurs)) {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM inscription_evenement WHERE id_evenement = :id");
-        $stmt->execute([':id' => $id_evenement]);
-        $nb_inscrits = (int)$stmt->fetchColumn();
-
-        if (empty($erreurs) && (int)$_POST['nombre_places'] < $evenement->getPlacesPrises()) {
-    $erreurs[] = "Il y a déjà " . $evenement->getPlacesPrises() . " participants inscrits : le nombre de places ne peut pas être inférieur.";
-}
-        }
+    if (empty($erreurs) && (int)$_POST['nombre_places'] < $evenement->getPlacesPrises()) {
+        $erreurs[] = "Il y a déjà " . $evenement->getPlacesPrises() . " participants inscrits : le nombre de places ne peut pas être inférieur.";
     }
 
     if (empty($erreurs)) {
         $manager->modifier(NewEvenement::depuisFormulaire($_POST, $id_evenement));
         Session::rediriger('gerer.php?id=' . $id_evenement);
+    }
+
 
 }
 
