@@ -34,7 +34,7 @@ if (isset($_GET['msg'])) {
 <head>
     <meta charset="UTF-8">
     <title>Administration - HSP GDH</title>
-    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="../../assets/css/css.css">
 </head>
 <body>
 
