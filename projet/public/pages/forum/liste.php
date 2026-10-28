@@ -30,5 +30,6 @@ $sections = (new SectionForumRepository())->listerAvecNbPosts();
 
 <p><a href="mes_posts.php">Mes discussions et réponses</a></p>
 
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>

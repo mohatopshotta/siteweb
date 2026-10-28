@@ -5,21 +5,40 @@ Session::exigerConnexion('../');
 
 $manager = new UtilisateurRepository();
 $id_utilisateur = Session::getIdUtilisateur();
+$utilisateur = $manager->trouverParId($id_utilisateur);
 
 $message = '';
+$erreur_suppression = '';
+$compte_supprime = false;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nom = trim($_POST['nom'] ?? '');
-    $prenom = trim($_POST['prenom'] ?? '');
+    $action = $_POST['action'] ?? 'modifier';
 
-    if ($nom !== '' && $prenom !== '') {
-        $manager->modifierNomPrenom($id_utilisateur, $nom, $prenom);
+    if ($action === 'supprimer') {
+        // RGPD : droit à l'effacement. On redemande le mot de passe pour être sûr que c'est bien la personne.
+        if ($utilisateur instanceof NewGestionnaire) {
+            $erreur_suppression = 'Un compte gestionnaire ne peut pas être supprimé depuis cette page.';
+        } elseif (!$utilisateur->verifierMotDePasse($_POST['mot_de_passe'] ?? '')) {
+            $erreur_suppression = 'Mot de passe incorrect : le compte n\'a pas été supprimé.';
+        } elseif ($manager->supprimer($id_utilisateur)) {
+            Session::deconnecter();
+            $compte_supprime = true;
+        } else {
+            $erreur_suppression = 'Le compte n\'a pas pu être supprimé. Réessaie plus tard.';
+        }
+    } else {
+        $nom = trim($_POST['nom'] ?? '');
+        $prenom = trim($_POST['prenom'] ?? '');
 
-        Session::majIdentite($nom, $prenom);
-        $message = 'Profil mis à jour.';
+        if ($nom !== '' && $prenom !== '') {
+            $manager->modifierNomPrenom($id_utilisateur, $nom, $prenom);
+
+            Session::majIdentite($nom, $prenom);
+            $message = 'Profil mis à jour.';
+            $utilisateur = $manager->trouverParId($id_utilisateur);
+        }
     }
 }
-
-$utilisateur = $manager->trouverParId($id_utilisateur);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -30,6 +49,14 @@ $utilisateur = $manager->trouverParId($id_utilisateur);
 <body>
 
 <?php $racine = '../'; require __DIR__ . '/../includes/header.php'; ?>
+
+<?php if ($compte_supprime): ?>
+
+<h1>Compte supprimé</h1>
+<p>Ton compte et toutes tes données (profil, CV, candidatures, inscriptions, messages) ont été supprimés.</p>
+<p><a href="../accueil/accueil.php">Retour à l'accueil</a></p>
+
+<?php else: ?>
 
 <h1>Mon profil</h1>
 
@@ -68,5 +95,32 @@ $utilisateur = $manager->trouverParId($id_utilisateur);
 
 <p><a href="deconnexion.php">Se déconnecter</a></p>
 
+<<<<<<< HEAD
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
+=======
+<?php if (!$utilisateur instanceof NewGestionnaire): ?>
+    <h2>Supprimer mon compte</h2>
+    <p>
+        Ton compte et toutes tes données seront supprimés définitivement : profil, CV, candidatures,
+        inscriptions aux événements et messages du forum.
+        Voir la <a href="politique_confidentialite.php">politique de confidentialité</a>.
+    </p>
+
+    <?php if ($erreur_suppression): ?>
+        <p style="color:red;"><?= htmlspecialchars($erreur_suppression) ?></p>
+    <?php endif; ?>
+
+    <form method="post" onsubmit="return confirm('Supprimer définitivement ton compte et toutes tes données ?');">
+        <?= Session::champCsrf() ?>
+        <input type="hidden" name="action" value="supprimer">
+        <label>Confirme avec ton mot de passe</label>
+        <input type="password" name="mot_de_passe" required><br>
+        <button type="submit" style="color:red;">Supprimer mon compte</button>
+    </form>
+<?php endif; ?>
+
+<?php endif; ?>
+
+>>>>>>> 1a152f4c98d3bb87031396cafb526c4ef5c4eab7
 </body>
 </html>

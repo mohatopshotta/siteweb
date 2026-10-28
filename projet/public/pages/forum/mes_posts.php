@@ -52,5 +52,6 @@ $mes_reponses = $postRepository->listerOuUtilisateurARepondu($id_utilisateur);
 
 <p><a href="liste.php">Retour au forum</a></p>
 
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>

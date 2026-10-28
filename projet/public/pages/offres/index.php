@@ -44,7 +44,7 @@ if (Session::aLeRole(['partenaire'])) {
             margin-bottom: 30px;
             text-align: center;
             color: white;
-            background: linear-gradient(135deg, #2457c5, #6489ed);
+            background: linear-gradient(135deg, #1f5f58, #6489ed);
             border-radius: 16px;
         }
 
@@ -94,7 +94,7 @@ if (Session::aLeRole(['partenaire'])) {
         }
 
         .offre h2 a {
-            color: #2457c5;
+            color: #1f5f58;
             text-decoration: none;
         }
 
@@ -268,5 +268,7 @@ if (Session::aLeRole(['partenaire'])) {
     <?php endif; ?>
 
 </div>
+
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>
