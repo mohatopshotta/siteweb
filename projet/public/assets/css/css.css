@@ -1,14 +1,3 @@
-/* ==========================================================================
-   GDH – Hôpital Sud Paris : feuille de style commune à tout le site
-   --------------------------------------------------------------------------
-   Idée : le site reprend la signalétique d'un hôpital. Le menu est un
-   panneau d'orientation vert « bloc opératoire » avec la croix, le reste
-   reste calme, clair et très lisible (police Atkinson Hyperlegible,
-   dessinée pour les personnes malvoyantes).
-
-   Elle est chargée par includes/header.php : toutes les pages l'ont.
-   On change une couleur dans :root, elle change sur tout le site.
-   ========================================================================== */
 
 @import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700;800&display=swap");
 
