@@ -7,17 +7,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $mot_de_passe = $_POST['mot_de_passe'] ?? '';
 
-    $utilisateurRepository = new UtilisateurRepository();
-    $utilisateur = $utilisateurRepository->trouverParEmail($email);
+    $limite = new TentativeConnexionRepository();
 
-    if ($utilisateur === null || !$utilisateur->verifierMotDePasse($mot_de_passe)) {
-        $erreur = 'Email ou mot de passe incorrect.';
-    } elseif (!$utilisateur->isValide()) {
-        $erreur = 'Ton compte est en attente de validation par un gestionnaire.';
+    if ($limite->tropDEchecs($email)) {
+        $erreur = 'Trop de tentatives de connexion. Réessaie dans ' . TentativeConnexionRepository::FENETRE_MINUTES . ' minutes.';
     } else {
-        Session::connecter($utilisateur);
-        $utilisateurRepository->majDerniereConnexion($utilisateur->getIdUtilisateur());
-        Session::rediriger('../accueil/accueil.php');
+        $utilisateurRepository = new UtilisateurRepository();
+        $utilisateur = $utilisateurRepository->trouverParEmail($email);
+
+        if ($utilisateur === null || !$utilisateur->verifierMotDePasse($mot_de_passe)) {
+            $erreur = 'Email ou mot de passe incorrect.';
+            $limite->enregistrerEchec($email);
+        } elseif (!$utilisateur->isValide()) {
+            $erreur = 'Ton compte est en attente de validation par un gestionnaire.';
+        } else {
+            $limite->effacer($email);
+            Session::connecter($utilisateur);
+            $utilisateurRepository->majDerniereConnexion($utilisateur->getIdUtilisateur());
+            Session::rediriger('../accueil/accueil.php');
+        }
     }
 }
 ?>
@@ -51,6 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <button type="submit">Se connecter</button>
 </form>
+
+<p><a href="mot_de_passe_oublie.php">Mot de passe oublié ?</a></p>
 
 <p>Pas encore de compte ? <a href="inscription.php">S'inscrire</a></p>
 

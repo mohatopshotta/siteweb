@@ -1,7 +1,8 @@
 <?php
 require __DIR__ . '/../../includes/config.php';
 
-Session::exigerMembre('../../');
+// Lecture ouverte à tout utilisateur connecté, gestionnaire compris (il ne peut pas agir)
+Session::exigerConnexion('../../');
 
 $manager = new EvenementRepository();
 $id_utilisateur = Session::getIdUtilisateur();
@@ -15,7 +16,10 @@ if ($evenement === null) {
 
 $erreur = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// Le gestionnaire consulte seulement : pas d'inscription
+$peutSInscrire = Session::getRole() !== 'gestionnaire';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $peutSInscrire) {
     if (isset($_POST['inscrire'])) {
         if ($evenement->estPasse()) {
             $erreur = 'Cet événement est terminé.';
@@ -111,7 +115,11 @@ $message     = Session::consommerFlash();
         </button>
     </form>
 
+<<<<<<< HEAD
 <?php elseif (!$evenement->estComplet() && !$evenement->estPasse()): ?>
+=======
+<?php elseif ($peutSInscrire && !$evenement->estComplet()): ?>
+>>>>>>> e1704c89a67093ca2d2a3594efd9e3aa7c782e3e
     <form method="post">
         <?= Session::champCsrf() ?>
         <button type="submit" name="inscrire">S'inscrire</button>

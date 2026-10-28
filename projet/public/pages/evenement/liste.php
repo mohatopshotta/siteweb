@@ -1,6 +1,10 @@
 <?php
 require __DIR__ . '/../../includes/config.php';
 
+<<<<<<< HEAD
+=======
+// Lecture ouverte à tout utilisateur connecté, gestionnaire compris (il ne peut pas agir)
+>>>>>>> e1704c89a67093ca2d2a3594efd9e3aa7c782e3e
 Session::exigerConnexion('../../');
 
 $repo = new EvenementRepository();

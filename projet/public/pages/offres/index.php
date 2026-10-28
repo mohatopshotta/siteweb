@@ -1,45 +1,22 @@
 <?php
-require_once '../../includes/config.php';
-/** @var PDO $pdo */
+require_once __DIR__ . '/../../includes/config.php';
+
+// Lecture ouverte à tout utilisateur connecté, gestionnaire compris (il ne peut pas agir)
+Session::exigerConnexion('../../');
 
 $racine = '../../';
 
+$offreRepository = new OffreRepository();
+
 $type = $_GET['type'] ?? '';
-$erreur = '';
+$offres = $offreRepository->listerOuvertes($type);
 
-$sql = "SELECT o.id_offre, o.titre, o.type_offre, o.salaire,
-               o.date_publication, COALESCE(e.nom, 'Groupe GDH') AS entreprise
-        FROM offre o
-        LEFT JOIN entreprise e ON e.id_entreprise = o.id_entreprise
-        WHERE o.etat = 'ouvert'";
-
-$params = [];
-
-if (in_array($type, ['stage', 'alternance', 'cdd', 'cdi'], true)) {
-    $sql .= " AND o.type_offre = ?";
-    $params[] = $type;
-}
-
-$sql .= " ORDER BY o.date_publication DESC";
-
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$offres = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Choix d'une offre dans la liste : on redirige vers sa fiche détaillée,
-// où se trouve le vrai formulaire de candidature (avec lettre de motivation).
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id_offre = filter_input(INPUT_POST, 'id_offre', FILTER_VALIDATE_INT);
-
-    if (!$id_offre) {
-        $erreur = "Veuillez sélectionner une offre avant de continuer.";
-    } else {
-        header("Location: detail.php?id=$id_offre");
-        exit;
-    }
+$offres_entreprise = [];
+if (Session::aLeRole(['partenaire'])) {
+    $partenaire = (new UtilisateurRepository())->trouverParId(Session::getIdUtilisateur());
+    $offres_entreprise = $offreRepository->listerParEntreprise($partenaire->getIdEntreprise());
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -50,7 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
-<?php require $racine . 'includes/header.php'; ?>
+
+<?php require __DIR__ . '/../../includes/header.php'; ?>
 
 <div class="container">
 
@@ -58,14 +36,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h1>Découvrez toutes nos offres !</h1>
         <p>
             Vous êtes à la recherche d'un stage, d'une alternance
-            ou d'un emploi dans nos établissements partenaires ? Consultez toutes nos opportunités et
+            ou d'un emploi ? Consultez toutes nos opportunités et
             choisissez l'offre qui correspond à votre projet professionnel.
         </p>
         <p>Votre prochaine opportunité commence ici !</p>
     </header>
 
-    <?php if ($erreur): ?>
-        <p style="color:red"><?= htmlspecialchars($erreur) ?></p>
+    <?php if (Session::aLeRole(['partenaire'])): ?>
+        <section class="filtre">
+            <h2>Offres de mon entreprise</h2>
+            <?php if (empty($offres_entreprise)): ?>
+                <p>Aucune offre publiée par ton entreprise.</p>
+            <?php else: ?>
+                <ul>
+                    <?php foreach ($offres_entreprise as $o): ?>
+                        <li>
+                            <a href="detail.php?id=<?= $o->getIdOffre() ?>"><?= htmlspecialchars($o->getTitre()) ?></a>
+                            (<?= $o->estOuverte() ? 'ouverte' : 'clôturée' ?>)
+                            — publiée par <?= htmlspecialchars($o->getNomAuteur()) ?>
+                            <?php if ($o->getIdAuteur() === Session::getIdUtilisateur()): ?>
+                                — <a href="gerer.php?id=<?= $o->getIdOffre() ?>">Gérer</a>
+                            <?php endif; ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+            <a href="creer.php">+ Créer une offre</a>
+        </section>
     <?php endif; ?>
 
     <section class="filtre">
@@ -75,11 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <select name="type" onchange="this.form.submit()">
                 <option value="">Tous les types de contrats</option>
 
-                <?php foreach (['stage', 'alternance', 'cdd', 'cdi'] as $t): ?>
-                    <option
-                            value="<?= htmlspecialchars($t) ?>"
-                        <?= $type === $t ? 'selected' : '' ?>
-                    >
+                <?php foreach (NewOffre::TYPES as $t): ?>
+                    <option value="<?= $t ?>" <?= $type === $t ? 'selected' : '' ?>>
                         <?= strtoupper($t) ?>
                     </option>
                 <?php endforeach; ?>
@@ -99,61 +93,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <?php else: ?>
 
-        <form method="post">
-            <div class="offres">
+        <div class="offres">
+            <?php foreach ($offres as $o): ?>
+                <article class="offre">
 
-                <?php foreach ($offres as $o): ?>
-                    <article class="offre">
-
-                        <h2>
-                            <a href="detail.php?id=<?= (int) $o['id_offre'] ?>">
-                                <?= htmlspecialchars($o['titre']) ?>
-                            </a>
-                        </h2>
-
-                        <p class="entreprise">
-                            <?= htmlspecialchars($o['entreprise']) ?>
-                        </p>
-
-                        <span class="badge">
-                            <?= strtoupper(htmlspecialchars($o['type_offre'])) ?>
-                        </span>
-
-                        <?php if ($o['salaire'] !== null && $o['salaire'] !== ''): ?>
-                            <p>
-                                Salaire :
-                                <?= htmlspecialchars((string) $o['salaire']) ?> €
-                            </p>
-                        <?php endif; ?>
-
-                        <p>
-                            Publiée le
-                            <?= date('d/m/Y', strtotime($o['date_publication'])) ?>
-                        </p>
-
-                        <label>
-                            <input
-                                    type="radio"
-                                    name="id_offre"
-                                    value="<?= (int) $o['id_offre'] ?>"
-                                    required
-                            >
-                            Je choisis cette offre
-                        </label>
-
-                        <a href="detail.php?id=<?= (int) $o['id_offre'] ?>">
-                            Voir les détails
+                    <h2>
+                        <a href="detail.php?id=<?= $o->getIdOffre() ?>">
+                            <?= htmlspecialchars($o->getTitre()) ?>
                         </a>
+                    </h2>
 
-                    </article>
-                <?php endforeach; ?>
+                    <p class="entreprise"><?= htmlspecialchars($o->getEntreprise()) ?></p>
 
-            </div>
+                    <span class="badge"><?= strtoupper(htmlspecialchars($o->getTypeOffre())) ?></span>
 
-            <button type="submit">
-                Postuler à l'offre sélectionnée
-            </button>
-        </form>
+                    <?php if ($o->getSalaire() !== null): ?>
+                        <p>Salaire : <?= number_format($o->getSalaire(), 2, ',', ' ') ?> €</p>
+                    <?php endif; ?>
+
+                    <p>Publiée le <?= date('d/m/Y', strtotime($o->getDatePublication())) ?></p>
+
+                    <a href="detail.php?id=<?= $o->getIdOffre() ?>">Voir les détails et postuler</a>
+
+                </article>
+            <?php endforeach; ?>
+        </div>
 
     <?php endif; ?>
 
