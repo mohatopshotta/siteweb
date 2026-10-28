@@ -96,5 +96,6 @@ $candidats = $candidatureManager->listerParOffre($id_offre);
     </table>
 <?php endif; ?>
 
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>

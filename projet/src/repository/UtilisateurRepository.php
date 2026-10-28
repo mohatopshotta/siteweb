@@ -128,7 +128,9 @@ class UtilisateurRepository extends Repository
     ): int {
         $this->pdo->beginTransaction();
         try {
-            $req = $this->pdo->prepare('INSERT INTO utilisateur (nom, prenom, email, mot_de_passe) VALUES (?, ?, ?, ?)');
+            // date_consentement = NOW() : la page d'inscription refuse l'envoi si la case RGPD n'est pas cochée,
+            // donc arriver ici veut dire que la politique de confidentialité vient d'être acceptée
+            $req = $this->pdo->prepare('INSERT INTO utilisateur (nom, prenom, email, mot_de_passe, date_consentement) VALUES (?, ?, ?, ?, NOW())');
             $req->execute([
                 $utilisateur->getNom(),
                 $utilisateur->getPrenom(),
@@ -183,5 +185,91 @@ class UtilisateurRepository extends Repository
     {
         $req = $this->pdo->prepare('DELETE FROM utilisateur WHERE id_utilisateur = ? AND valide = 0');
         $req->execute([$idUtilisateur]);
+    }
+
+    // ---------------------------------------------------------------
+    // RGPD : droit à l'effacement et durée de conservation
+    // ---------------------------------------------------------------
+
+    // Condition SQL commune : comptes sans connexion depuis X ans (ou jamais connectés depuis l'inscription)
+    private const CONDITION_INACTIF = 'COALESCE(u.date_derniere_connexion, u.date_inscription) < NOW() - INTERVAL ? YEAR';
+
+    /**
+     * Supprime un compte et toutes ses données (droit à l'effacement).
+     * Les lignes liées (etudiant, candidatures, posts, inscriptions...) partent grâce aux ON DELETE CASCADE.
+     * Un gestionnaire ne peut pas être supprimé par cette méthode.
+     * Renvoie false si rien n'a été supprimé.
+     */
+    public function supprimer(int $idUtilisateur): bool
+    {
+        // On récupère le CV avant la suppression : après, la ligne etudiant n'existe plus
+        $req = $this->pdo->prepare('SELECT cv FROM etudiant WHERE id_utilisateur = ?');
+        $req->execute([$idUtilisateur]);
+        $cv = $req->fetchColumn();
+
+        $req = $this->pdo->prepare('
+            DELETE FROM utilisateur
+            WHERE id_utilisateur = ?
+              AND id_utilisateur NOT IN (SELECT id_utilisateur FROM gestionnaire)
+        ');
+        $req->execute([$idUtilisateur]);
+
+        if ($req->rowCount() === 0) {
+            return false;
+        }
+
+        $this->supprimerFichierCv($cv ?: null);
+        return true;
+    }
+
+    /**
+     * Nombre de comptes inactifs depuis $annees ans (gestionnaires exclus).
+     */
+    public function compterInactifs(int $annees): int
+    {
+        $req = $this->pdo->prepare('
+            SELECT COUNT(*) FROM utilisateur u
+            WHERE ' . self::CONDITION_INACTIF . '
+              AND u.id_utilisateur NOT IN (SELECT id_utilisateur FROM gestionnaire)
+        ');
+        $req->execute([$annees]);
+        return (int)$req->fetchColumn();
+    }
+
+    /**
+     * Supprime les comptes inactifs depuis $annees ans (gestionnaires exclus), avec leurs CV.
+     * Renvoie le nombre de comptes supprimés.
+     */
+    public function supprimerInactifs(int $annees): int
+    {
+        $req = $this->pdo->prepare('
+            SELECT u.id_utilisateur FROM utilisateur u
+            WHERE ' . self::CONDITION_INACTIF . '
+              AND u.id_utilisateur NOT IN (SELECT id_utilisateur FROM gestionnaire)
+        ');
+        $req->execute([$annees]);
+
+        $nbSupprimes = 0;
+        foreach ($req->fetchAll(PDO::FETCH_COLUMN) as $id) {
+            if ($this->supprimer((int)$id)) {
+                $nbSupprimes++;
+            }
+        }
+        return $nbSupprimes;
+    }
+
+    /**
+     * Supprime le fichier PDF du CV dans public/uploads/cv/.
+     * basename() empêche de sortir du dossier, même si le chemin en base était modifié.
+     */
+    private function supprimerFichierCv(?string $cv): void
+    {
+        if ($cv === null || $cv === '') {
+            return;
+        }
+        $fichier = __DIR__ . '/../../public/uploads/cv/' . basename($cv);
+        if (is_file($fichier)) {
+            unlink($fichier);
+        }
     }
 }

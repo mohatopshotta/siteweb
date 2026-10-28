@@ -69,5 +69,6 @@ $reponses = $reponseRepository->listerParPost($id_post);
     </form>
 <?php endif; ?>
 
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>

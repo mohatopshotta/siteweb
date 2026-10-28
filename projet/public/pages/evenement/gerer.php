@@ -123,6 +123,6 @@ $inscrits = $manager->listerInscrits($id_evenement);
     <?php endforeach; ?>
     </tbody>
 </table>
-
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>

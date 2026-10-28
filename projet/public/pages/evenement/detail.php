@@ -87,5 +87,6 @@ $inscription = $manager->trouverInscription($id_utilisateur, $id_evenement);
     </form>
 <?php endif; ?>
 
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>
