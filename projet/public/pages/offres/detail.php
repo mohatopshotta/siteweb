@@ -1,7 +1,8 @@
 <?php
 require __DIR__ . '/../../includes/config.php';
 
-Session::exigerMembre('../../');
+// Lecture ouverte à tout utilisateur connecté, gestionnaire compris (il ne peut pas agir)
+Session::exigerConnexion('../../');
 
 $id_utilisateur = Session::getIdUtilisateur();
 $id_offre = (int)($_GET['id'] ?? 0);

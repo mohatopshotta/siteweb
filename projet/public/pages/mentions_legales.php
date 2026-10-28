@@ -87,7 +87,3 @@ if (!function_exists('e')) {
 <?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>
-
-<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
-</body>
-</html>

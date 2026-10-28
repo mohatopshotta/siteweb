@@ -1,7 +1,8 @@
 <?php
 require_once __DIR__ . '/../../includes/config.php';
 
-Session::exigerMembre('../../');
+// Lecture ouverte à tout utilisateur connecté, gestionnaire compris (il ne peut pas agir)
+Session::exigerConnexion('../../');
 
 $sections = (new SectionForumRepository())->listerAvecNbPosts();
 ?>

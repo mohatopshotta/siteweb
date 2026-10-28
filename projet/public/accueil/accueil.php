@@ -75,16 +75,13 @@ $offres = (new OffreRepository())->listerOuvertes(null, 3);
                                 Complet
                             <?php endif; ?>
                         </p>
-                        <?php if ($connecte && $role !== 'gestionnaire'): ?>
-                            <a href="<?= $racine ?>pages/evenement/detail.php?id=<?= $evenement->getIdEvenement() ?>">Voir le détail</a>
-                        <?php endif; ?>
+                        <a href="<?= $racine ?>pages/evenement/detail.php?id=<?= $evenement->getIdEvenement() ?>">Voir le détail</a>
                     </div>
                 <?php endforeach; ?>
             </div>
-            <?php if ($connecte && $role !== 'gestionnaire'): ?>
-                <a href="<?= $racine ?>pages/evenement/liste.php">Voir tous les événements &rarr;</a>
-            <?php endif; ?>
         <?php endif; ?>
+
+        <p><a href="<?= $racine ?>pages/evenement/liste.php">Voir tous les événements &rarr;</a></p>
     </section>
 
     <section class="actualites">
@@ -98,16 +95,13 @@ $offres = (new OffreRepository())->listerOuvertes(null, 3);
                     <li>
                         <?= htmlspecialchars($offre->getTitre()) ?>
                         (<?= htmlspecialchars($offre->getTypeOffre()) ?>)
-                        <?php if ($connecte && $role !== 'gestionnaire'): ?>
-                            — <a href="<?= $racine ?>pages/offres/detail.php?id=<?= $offre->getIdOffre() ?>">Voir</a>
-                        <?php endif; ?>
+                        — <a href="<?= $racine ?>pages/offres/detail.php?id=<?= $offre->getIdOffre() ?>">Voir</a>
                     </li>
                 <?php endforeach; ?>
             </ul>
-            <?php if ($connecte && $role !== 'gestionnaire'): ?>
-                <a href="<?= $racine ?>pages/offres/index.php">Voir toutes les offres &rarr;</a>
-            <?php endif; ?>
         <?php endif; ?>
+
+        <p><a href="<?= $racine ?>pages/offres/index.php">Voir toutes les offres &rarr;</a></p>
     </section>
 
 </main>
