@@ -95,6 +95,19 @@ class Session
         }
     }
 
+
+    public static function flash(string $message): void
+    {
+        $_SESSION['flash'] = $message;
+    }
+
+    public static function consommerFlash(): ?string
+    {
+        $message = $_SESSION['flash'] ?? null;
+        unset($_SESSION['flash']);
+        return $message;
+    }
+
     public static function rediriger(string $url): never
     {
         header('Location: ' . $url);

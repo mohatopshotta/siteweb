@@ -6,12 +6,14 @@ Session::exigerRole(['medecin', 'partenaire'], '../../');
 $erreurs = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $erreurs = NewEvenement::validerFormulaire($_POST, true);
     $erreurs = NewEvenement::validerFormulaire($_POST);
 
     if (empty($erreurs)) {
         try {
             $evenement = NewEvenement::depuisFormulaire($_POST);
             $id_evenement = (new EvenementRepository())->creer($evenement, Session::getIdUtilisateur());
+            Session::flash('Événement créé. Tu en es l\'organisateur.');
             Session::rediriger('detail.php?id=' . $id_evenement);
         } catch (PDOException $e) {
             error_log('Création événement : ' . $e->getMessage());
@@ -58,6 +60,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <label for="lieu">Lieu</label>
     <input type="text" id="lieu" name="lieu"
            value="<?= htmlspecialchars($_POST['lieu'] ?? '') ?>" required>
+
+    <label for="date_evenement">Date et heure</label>
+    <input type="datetime-local" id="date_evenement" name="date_evenement"
+           value="<?= htmlspecialchars($_POST['date_evenement'] ?? '') ?>" required>
 
     <label for="elements_requis">Éléments requis (facultatif)</label>
     <textarea id="elements_requis" name="elements_requis" rows="3"><?= htmlspecialchars($_POST['elements_requis'] ?? '') ?></textarea>

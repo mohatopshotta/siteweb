@@ -9,14 +9,70 @@ class EvenementRepository extends Repository
                ON ie.id_evenement = e.id_evenement AND ie.organiser = 0
     ";
 
+    /** Événements à venir (les plus proches d'abord). Sert à l'accueil. */
     public function listerTous(?int $limite = null): array
     {
-        $sql = self::SELECT_AVEC_PLACES . ' GROUP BY e.id_evenement ORDER BY e.id_evenement DESC';
+        return $this->rechercher(null, null, false, $limite);
+    }
+
+    public function rechercher(?string $mot = null, ?string $type = null, bool $inclurePasses = false, ?int $limite = null): array
+    {
+        $conditions = [];
+        $params = [];
+
+        if ($mot !== null && trim($mot) !== '') {
+            $conditions[] = '(e.titre LIKE ? OR e.description LIKE ? OR e.lieu LIKE ?)';
+            $like = '%' . trim($mot) . '%';
+            array_push($params, $like, $like, $like);
+        }
+        if ($type !== null && $type !== '') {
+            $conditions[] = 'e.type_evenement = ?';
+            $params[] = $type;
+        }
+        if (!$inclurePasses) {
+            $conditions[] = '(e.date_evenement IS NULL OR e.date_evenement >= NOW())';
+        }
+
+        $sql = self::SELECT_AVEC_PLACES
+            . ($conditions ? ' WHERE ' . implode(' AND ', $conditions) : '')
+            . ' GROUP BY e.id_evenement'
+            . ' ORDER BY e.date_evenement IS NULL, e.date_evenement ASC, e.id_evenement DESC';
         if ($limite !== null) {
             $sql .= ' LIMIT ' . (int)$limite;
         }
-        $lignes = $this->pdo->query($sql)->fetchAll();
-        return $this->hydraterListe($lignes, NewEvenement::class);
+
+        $req = $this->pdo->prepare($sql);
+        $req->execute($params);
+        return $this->hydraterListe($req->fetchAll(), NewEvenement::class);
+    }
+
+    public function listerTypes(): array
+    {
+        return $this->pdo->query('SELECT DISTINCT type_evenement FROM evenement ORDER BY type_evenement')
+            ->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    /** Événements d'un utilisateur (inscrit ou organisateur), passés compris. */
+    public function listerPourUtilisateur(int $idUtilisateur): array
+    {
+        $req = $this->pdo->prepare(
+            'SELECT e.*, ie_moi.organiser AS est_organisateur,
+                    (SELECT COUNT(*) FROM inscription_evenement x
+                      WHERE x.id_evenement = e.id_evenement AND x.organiser = 0) AS places_prises
+             FROM evenement e
+             JOIN inscription_evenement ie_moi
+               ON ie_moi.id_evenement = e.id_evenement AND ie_moi.id_utilisateur = ?
+             ORDER BY e.date_evenement IS NULL, e.date_evenement ASC, e.id_evenement DESC'
+        );
+        $req->execute([$idUtilisateur]);
+        return $this->hydraterListe($req->fetchAll(), NewEvenement::class);
+    }
+
+    public function supprimer(int $idEvenement): void
+    {
+        // Les inscriptions partent avec (clé étrangère ON DELETE CASCADE).
+        $req = $this->pdo->prepare('DELETE FROM evenement WHERE id_evenement = ?');
+        $req->execute([$idEvenement]);
     }
 
     public function trouverParId(int $idEvenement): ?NewEvenement
@@ -32,14 +88,15 @@ class EvenementRepository extends Repository
         $this->pdo->beginTransaction();
         try {
             $req = $this->pdo->prepare(
-                'INSERT INTO evenement (type_evenement, titre, description, lieu, elements_requis, nombre_places)
-                 VALUES (?, ?, ?, ?, ?, ?)'
+                'INSERT INTO evenement (type_evenement, titre, description, lieu, date_evenement, elements_requis, nombre_places)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)'
             );
             $req->execute([
                 $evenement->getTypeEvenement(),
                 $evenement->getTitre(),
                 $evenement->getDescription(),
                 $evenement->getLieu(),
+                $evenement->getDateEvenement(),
                 $evenement->getElementsRequis(),
                 $evenement->getNombrePlaces(),
             ]);
@@ -62,7 +119,7 @@ class EvenementRepository extends Repository
     {
         $req = $this->pdo->prepare(
             'UPDATE evenement
-             SET type_evenement = ?, titre = ?, description = ?, lieu = ?, elements_requis = ?, nombre_places = ?
+             SET type_evenement = ?, titre = ?, description = ?, lieu = ?, date_evenement = ?, elements_requis = ?, nombre_places = ?
              WHERE id_evenement = ?'
         );
         $req->execute([
@@ -70,6 +127,7 @@ class EvenementRepository extends Repository
             $evenement->getTitre(),
             $evenement->getDescription(),
             $evenement->getLieu(),
+            $evenement->getDateEvenement(),
             $evenement->getElementsRequis(),
             $evenement->getNombrePlaces(),
             $evenement->getIdEvenement(),

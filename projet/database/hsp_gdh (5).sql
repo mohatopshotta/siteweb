@@ -337,7 +337,6 @@ CREATE TABLE IF NOT EXISTS `utilisateur` (
     `id_validateur` int UNSIGNED DEFAULT NULL,
     `date_inscription` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `date_derniere_connexion` datetime DEFAULT NULL,
-    `date_consentement` datetime DEFAULT NULL,
     PRIMARY KEY (`id_utilisateur`),
     UNIQUE KEY `uq_utilisateur_email` (`email`),
     KEY `fk_utilisateur_validateur` (`id_validateur`),
@@ -371,6 +370,22 @@ CREATE TABLE IF NOT EXISTS `reinitialisation_mdp` (
     UNIQUE KEY `uq_reinitialisation_jeton` (`jeton_hash`),
     KEY `fk_reinitialisation_utilisateur` (`id_utilisateur`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Structure de la table `tentative_connexion` (limite de 5 échecs en 15 minutes)
+-- On ne garde que l'email et la date, et les lignes de plus d'un jour sont supprimées.
+--
+
+DROP TABLE IF EXISTS `tentative_connexion`;
+CREATE TABLE IF NOT EXISTS `tentative_connexion` (
+    `id_tentative` int UNSIGNED NOT NULL AUTO_INCREMENT,
+    `email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `date_tentative` datetime NOT NULL,
+    PRIMARY KEY (`id_tentative`),
+    KEY `idx_tentative_email_date` (`email`, `date_tentative`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
 
 --
 -- Contraintes pour les tables déchargées

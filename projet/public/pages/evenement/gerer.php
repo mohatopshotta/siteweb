@@ -28,18 +28,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
 
     if (empty($erreurs)) {
         $manager->modifier(NewEvenement::depuisFormulaire($_POST, $id_evenement));
+        Session::flash('Modifications enregistrées.');
         Session::rediriger('gerer.php?id=' . $id_evenement);
     }
 
 
 }
-
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['supprimer_evenement'])) {
+    $manager->supprimer($id_evenement);
+    Session::flash('Événement supprimé.');
+    Session::rediriger('liste.php');
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['retirer_id'])) {
     $manager->retirerParticipant((int)$_POST['retirer_id'], $id_evenement);
+    Session::flash('Participant retiré.');
     Session::rediriger('gerer.php?id=' . $id_evenement);
 }
 
 $inscrits = $manager->listerInscrits($id_evenement);
+$message  = Session::consommerFlash();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -55,6 +62,10 @@ $inscrits = $manager->listerInscrits($id_evenement);
 <a href="detail.php?id=<?= $id_evenement ?>">&larr; Retour à l'événement</a>
 
 <h1>Gérer : <?= htmlspecialchars($evenement->getTitre()) ?></h1>
+
+<?php if ($message): ?>
+    <p class="message-succes"><?= htmlspecialchars($message) ?></p>
+<?php endif; ?>
 
 <?php if (!empty($erreurs)): ?>
     <ul class="erreurs">
@@ -82,6 +93,10 @@ $inscrits = $manager->listerInscrits($id_evenement);
     <label for="lieu">Lieu</label>
     <input type="text" id="lieu" name="lieu"
            value="<?= htmlspecialchars($evenement->getLieu()) ?>" required>
+
+    <label for="date_evenement">Date et heure</label>
+    <input type="datetime-local" id="date_evenement" name="date_evenement"
+           value="<?= htmlspecialchars($_POST['date_evenement'] ?? $evenement->getDateFormulaire()) ?>" required>
 
     <label for="elements_requis">Éléments requis (facultatif)</label>
     <textarea id="elements_requis" name="elements_requis" rows="3"><?= htmlspecialchars($evenement->getElementsRequis() ?? '') ?></textarea>
@@ -123,6 +138,14 @@ $inscrits = $manager->listerInscrits($id_evenement);
     <?php endforeach; ?>
     </tbody>
 </table>
+<h2>Zone dangereuse</h2>
+<form method="post" action="gerer.php?id=<?= $id_evenement ?>">
+    <?= Session::champCsrf() ?>
+    <button type="submit" name="supprimer_evenement" class="bouton-danger"
+            onclick="return confirm('Supprimer définitivement cet événement et toutes ses inscriptions ?');">
+        Supprimer cet événement
+    </button>
+</form>
 <?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>
