@@ -142,5 +142,6 @@ $droits         = InfosSite::getDroits();
     </p>
 </main>
 
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>
