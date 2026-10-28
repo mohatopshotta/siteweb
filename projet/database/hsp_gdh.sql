@@ -337,6 +337,7 @@ CREATE TABLE IF NOT EXISTS `utilisateur` (
     `id_validateur` int UNSIGNED DEFAULT NULL,
     `date_inscription` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `date_derniere_connexion` datetime DEFAULT NULL,
+    `date_consentement` datetime DEFAULT NULL,
     PRIMARY KEY (`id_utilisateur`),
     UNIQUE KEY `uq_utilisateur_email` (`email`),
     KEY `fk_utilisateur_validateur` (`id_validateur`),
