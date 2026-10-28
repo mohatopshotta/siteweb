@@ -13,12 +13,19 @@ $nbEnAttente   = $repository->compterEnAttente();
 
 $comptesEnAttente = $repository->listerEnAttente();
 
+// RGPD : comptes à supprimer car inactifs depuis trop longtemps
+$anneesConservation = InfosSite::ANNEES_CONSERVATION_INACTIF;
+$nbInactifs = $repository->compterInactifs($anneesConservation);
+
 $message = '';
 if (isset($_GET['msg'])) {
     if ($_GET['msg'] === 'valide') {
         $message = "Le compte a été validé.";
     } elseif ($_GET['msg'] === 'refuse') {
         $message = "Le compte a été refusé et supprimé.";
+    } elseif ($_GET['msg'] === 'inactifs') {
+        $nbSupprimes = (int)($_GET['nb'] ?? 0);
+        $message = $nbSupprimes . " compte(s) inactif(s) supprimé(s).";
     }
 }
 ?>
@@ -109,6 +116,24 @@ if (isset($_GET['msg'])) {
                 <?php endforeach; ?>
                 </tbody>
             </table>
+        <?php endif; ?>
+    </section>
+
+    <section class="admin-section">
+        <h2>RGPD : comptes inactifs</h2>
+        <p>
+            Comptes sans connexion depuis plus de <?= $anneesConservation ?> ans (gestionnaires exclus) :
+            <strong><?= $nbInactifs ?></strong>
+        </p>
+
+        <?php if ($nbInactifs > 0): ?>
+            <form action="supprimer_inactifs.php" method="POST"
+                  onsubmit="return confirm('Supprimer définitivement <?= $nbInactifs ?> compte(s) inactif(s) et toutes leurs données ?');">
+                <?= Session::champCsrf() ?>
+                <button type="submit" class="btn btn-refuser">Supprimer les comptes inactifs (RGPD)</button>
+            </form>
+        <?php else: ?>
+            <p class="alerte alerte-info">Aucun compte à supprimer pour le moment.</p>
         <?php endif; ?>
     </section>
 
