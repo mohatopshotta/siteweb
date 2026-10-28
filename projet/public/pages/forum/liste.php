@@ -3,7 +3,7 @@ require_once __DIR__ . '/../../includes/config.php';
 
 Session::exigerMembre('../../');
 
-$sections = (new SectionForumManager())->listerAvecNbPosts();
+$sections = (new SectionForumRepository())->listerAvecNbPosts();
 ?>
 <!DOCTYPE html>
 <html lang="fr">

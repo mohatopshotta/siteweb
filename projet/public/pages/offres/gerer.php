@@ -6,8 +6,8 @@ Session::exigerRole(['partenaire'], '../../');
 $id_utilisateur = Session::getIdUtilisateur();
 $id_offre = (int)($_GET['id'] ?? 0);
 
-$offreManager = new OffreManager();
-$candidatureManager = new CandidatureManager();
+$offreManager = new OffreRepository();
+$candidatureManager = new CandidatureRepository();
 
 $offre = $offreManager->trouverParId($id_offre);
 if ($offre === null) {

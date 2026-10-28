@@ -3,15 +3,15 @@ require_once __DIR__ . '/../../includes/config.php';
 
 Session::exigerRole(['gestionnaire'], '../../');
 
-$manager = new UtilisateurManager();
+$repository = new UtilisateurRepository();
 
-$nbValides     = $manager->compterValides();
-$nbEtudiants   = $manager->compterParRole('etudiant');
-$nbMedecins    = $manager->compterParRole('medecin');
-$nbPartenaires = $manager->compterParRole('partenaire');
-$nbEnAttente   = $manager->compterEnAttente();
+$nbValides     = $repository->compterValides();
+$nbEtudiants   = $repository->compterParRole('etudiant');
+$nbMedecins    = $repository->compterParRole('medecin');
+$nbPartenaires = $repository->compterParRole('partenaire');
+$nbEnAttente   = $repository->compterEnAttente();
 
-$comptesEnAttente = $manager->listerEnAttente();
+$comptesEnAttente = $repository->listerEnAttente();
 
 $message = '';
 if (isset($_GET['msg'])) {

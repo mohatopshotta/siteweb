@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $erreurs[] = 'Tous les champs sont obligatoires.';
     }
     if ($mot_de_passe !== '') {
-        $erreurs = array_merge($erreurs, Utilisateur::controlerRobustesse($mot_de_passe));
+        $erreurs = array_merge($erreurs, NewUtilisateur::controlerRobustesse($mot_de_passe));
     }
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $erreurs[] = 'Email invalide.';
@@ -23,9 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $erreurs[] = 'Rôle invalide.';
     }
 
-    $utilisateurManager = new UtilisateurManager();
+    $utilisateurRepository = new UtilisateurRepository();
 
-    if (empty($erreurs) && $utilisateurManager->emailExiste($email)) {
+    if (empty($erreurs) && $utilisateurRepository->emailExiste($email)) {
         $erreurs[] = 'Cet email est déjà utilisé.';
     }
 
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (in_array('', $infos_etablissement, true)) {
                 $erreurs[] = 'Les informations du nouvel établissement sont incomplètes.';
             }
-            $nouvel_etablissement = new Etablissement($infos_etablissement);
+            $nouvel_etablissement = new NewEtablissement($infos_etablissement);
         } elseif (!ctype_digit($id_etablissement)) {
             $erreurs[] = 'Choisis un établissement.';
         }
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (in_array('', $infos_etablissement, true)) {
                 $erreurs[] = 'Les informations du nouvel établissement sont incomplètes.';
             }
-            $nouvel_etablissement = new Etablissement($infos_etablissement);
+            $nouvel_etablissement = new NewEtablissement($infos_etablissement);
         }
 
         $utilisateur = new NewMedecin([
@@ -140,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (empty($erreurs)) {
             try {
-                $utilisateurManager->inscrire($utilisateur, $mot_de_passe, $nouvel_etablissement, $nouvelle_entreprise);
+                $utilisateurRepository->inscrire($utilisateur, $mot_de_passe, $nouvel_etablissement, $nouvelle_entreprise);
 
                 Session::rediriger('connexion.php?inscription=ok');
             } catch (Exception $e) {
@@ -154,10 +154,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$hopitaux = (new HopitalManager())->listerTous();
-$specialites = (new SpecialiteManager())->listerTous();
-$etablissements = (new EtablissementManager())->listerTous();
-$entreprises = (new EntrepriseRepository())->listerTous();
+$hopitaux = (new HopitalRepository())->listerTous();
+$specialites = (new SpecialiteRepository())->listerTous();
+$etablissements = (new EtablissementRepository())->listerTous();
+$entreprises = (new EntreprisesRepository())->listerTous();
 ?>
 <!DOCTYPE html>
 <html lang="fr">

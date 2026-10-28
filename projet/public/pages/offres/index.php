@@ -3,15 +3,15 @@ require_once __DIR__ . '/../../includes/config.php';
 
 Session::exigerMembre('../../');
 
-$offreManager = new OffreManager();
+$offreRepository = new OffreRepository();
 
 $type = $_GET['type'] ?? '';
-$offres = $offreManager->listerOuvertes($type);
+$offres = $offreRepository->listerOuvertes($type);
 
 $offres_entreprise = [];
 if (Session::aLeRole(['partenaire'])) {
-    $partenaire = (new UtilisateurManager())->trouverParId(Session::getIdUtilisateur());
-    $offres_entreprise = $offreManager->listerParEntreprise($partenaire->getIdEntreprise());
+    $partenaire = (new UtilisateurRepository())->trouverParId(Session::getIdUtilisateur());
+    $offres_entreprise = $offreRepository->listerParEntreprise($partenaire->getIdEntreprise());
 }
 ?>
 <!DOCTYPE html>

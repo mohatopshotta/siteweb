@@ -7,8 +7,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $mot_de_passe = $_POST['mot_de_passe'] ?? '';
 
-    $utilisateurManager = new UtilisateurManager();
-    $utilisateur = $utilisateurManager->trouverParEmail($email);
+    $utilisateurRepository = new UtilisateurRepository();
+    $utilisateur = $utilisateurRepository->trouverParEmail($email);
 
     if ($utilisateur === null || !$utilisateur->verifierMotDePasse($mot_de_passe)) {
         $erreur = 'Email ou mot de passe incorrect.';
@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $erreur = 'Ton compte est en attente de validation par un gestionnaire.';
     } else {
         Session::connecter($utilisateur);
-        $utilisateurManager->majDerniereConnexion($utilisateur->getIdUtilisateur());
+        $utilisateurRepository->majDerniereConnexion($utilisateur->getIdUtilisateur());
         Session::rediriger('../accueil/accueil.php');
     }
 }

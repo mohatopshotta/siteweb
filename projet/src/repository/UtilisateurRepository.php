@@ -123,7 +123,7 @@ class UtilisateurRepository extends Repository
     public function inscrire(
         NewUtilisateur $utilisateur,
         string         $motDePasse,
-        ?Etablissement $nouvelEtablissement = null,
+        ?NewEtablissement $nouvelEtablissement = null,
         ?NewEntreprise $nouvelleEntreprise = null
     ): int {
         $this->pdo->beginTransaction();
@@ -139,7 +139,7 @@ class UtilisateurRepository extends Repository
             $utilisateur->setIdUtilisateur($id);
 
             if ($nouvelEtablissement !== null && ($utilisateur instanceof NewEtudiant || $utilisateur instanceof NewMedecin)) {
-                $utilisateur->setIdEtablissement((new EtablissementManager())->trouverOuCreer($nouvelEtablissement));
+                $utilisateur->setIdEtablissement((new EtablissementRepository())->trouverOuCreer($nouvelEtablissement));
             }
             if ($nouvelleEntreprise !== null && $utilisateur instanceof NewPartenaire) {
                 $utilisateur->setIdEntreprise((new EntrepriseRepository())->trouverOuCreer($nouvelleEntreprise));
