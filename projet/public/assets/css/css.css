@@ -1,9 +1,693 @@
-form { max-width: 500px; margin: 20px auto; }
-form label { display: block; margin-top: 12px; font-weight: bold; }
-form input[type="text"], form input[type="number"],
-form input[type="email"], form input[type="password"],
-form textarea, form select {
-    width: 100%; padding: 8px; margin-top: 4px;
-    border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
+/* ==========================================================================
+   GDH – Hôpital Sud Paris : feuille de style commune à tout le site
+   --------------------------------------------------------------------------
+   Idée : le site reprend la signalétique d'un hôpital. Le menu est un
+   panneau d'orientation vert « bloc opératoire » avec la croix, le reste
+   reste calme, clair et très lisible (police Atkinson Hyperlegible,
+   dessinée pour les personnes malvoyantes).
+
+   Elle est chargée par includes/header.php : toutes les pages l'ont.
+   On change une couleur dans :root, elle change sur tout le site.
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700;800&display=swap");
+
+:root {
+    /* Couleurs */
+    --encre:        #1b2a28;   /* texte principal, vert presque noir   */
+    --encre-douce:  #52635f;   /* texte secondaire                      */
+    --vert:         #1f5f58;   /* vert bloc opératoire : menu, boutons  */
+    --vert-fonce:   #164742;   /* survol des boutons                    */
+    --celadon:      #e2eeea;   /* vert d'eau des murs d'hôpital         */
+    --papier:       #f6f9f8;   /* fond de page                          */
+    --blanc:        #ffffff;
+    --ligne:        #cddbd7;   /* bordures                              */
+    --croix:        #c4362b;   /* rouge de la croix : erreurs, danger   */
+    --croix-fond:   #fbecea;
+    --succes:       #1e6b45;
+    --succes-fond:  #e5f3ea;
+    --alerte:       #8a5a00;
+    --alerte-fond:  #fff4d6;
+
+    /* Typographie */
+    --police: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible",
+    "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+
+    /* Mise en page */
+    --largeur: 68rem;          /* largeur maximale du contenu          */
+    --lecture: 70ch;           /* largeur maximale d'un paragraphe     */
+    --rayon:   6px;            /* boutons, champs                      */
+    --rayon-l: 10px;           /* blocs, cartes                        */
 }
-form button { margin-top: 16px; padding: 10px 20px; cursor: pointer; }
+
+/* ---------- Base ---------------------------------------------------------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+/* Le corps est une grille à 3 colonnes : marge | contenu | marge.
+   Toutes les pages posent leur contenu directement dans <body>,
+   il se range donc tout seul dans la colonne du milieu. */
+body {
+    margin: 0;
+    padding: 0 0 4rem;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(1rem, 1fr) minmax(0, var(--largeur)) minmax(1rem, 1fr);
+    align-content: start;
+    background: var(--papier);
+    color: var(--encre);
+    font-family: var(--police);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+}
+
+body > * {
+    grid-column: 2;
+    margin: 0;
+    min-width: 0;
+}
+
+/* Espacement vertical régulier entre les blocs de la page */
+body > * + * { margin-top: 1rem; }
+
+/* Liens et boutons posés seuls dans la page : pas étirés sur toute la largeur */
+body > a,
+body > button { justify-self: start; }
+
+/* Titres */
+h1, h2, h3 {
+    line-height: 1.2;
+    color: var(--encre);
+    text-wrap: balance;
+}
+
+h1 {
+    font-size: clamp(1.9rem, 1.4rem + 2vw, 2.6rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+h2 { font-size: 1.45rem; font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 1.15rem; font-weight: 700; }
+
+body > h1 { margin-top: 2.5rem; }
+body > h2 { margin-top: 2.25rem; }
+body > h1 + p { color: var(--encre-douce); }
+
+p, li { max-width: var(--lecture); }
+
+a {
+    color: var(--vert);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
+a:hover { text-decoration-thickness: 2px; }
+
+em { font-style: normal; color: var(--encre-douce); }
+
+code {
+    background: var(--celadon);
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    font-size: 0.92em;
+}
+
+/* Focus clavier bien visible partout */
+:focus-visible {
+    outline: 3px solid var(--vert);
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+/* ---------- Menu : le panneau de signalétique ----------------------------- */
+
+.menu {
+    grid-column: 1 / -1;
+    order: -1;                       /* toujours tout en haut de la page */
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.35rem;
+    padding: 0.75rem max(1rem, calc((100% - var(--largeur)) / 2));
+    background: var(--vert);
+    border-bottom: 4px solid var(--vert-fonce);
+    margin: 0;
+}
+
+/* Le logo : la croix dans un carré blanc, puis le nom du site */
+.menu::before {
+    content: "GDH\A Hôpital Sud Paris";
+    white-space: pre;
+    margin-right: auto;
+    padding-left: 2.6rem;
+    min-height: 2rem;
+    display: flex;
+    align-items: center;
+    color: var(--blanc);
+    font-weight: 800;
+    font-size: 0.95rem;
+    line-height: 1.05;
+    background:
+            linear-gradient(var(--croix), var(--croix)) 0.85rem center / 0.4rem 1.2rem no-repeat,
+            linear-gradient(var(--croix), var(--croix)) 0.45rem center / 1.2rem 0.4rem no-repeat,
+            linear-gradient(var(--blanc), var(--blanc)) 0 center / 2.1rem 2.1rem no-repeat;
+}
+
+.menu a {
+    color: var(--blanc);
+    text-decoration: none;
+    font-weight: 600;
+    padding: 0.45rem 0.75rem;
+    border-radius: var(--rayon);
+}
+
+.menu a:hover { background: rgba(255, 255, 255, 0.12); }
+.menu a:focus-visible { outline-color: var(--blanc); }
+
+/* Inscription : mis en avant comme un bouton blanc */
+.menu a[href$="pages/inscription.php"] {
+    background: var(--blanc);
+    color: var(--vert);
+}
+.menu a[href$="pages/inscription.php"]:hover { background: var(--celadon); }
+
+/* Déconnexion : discret */
+.menu a[href$="deconnexion.php"] {
+    opacity: 0.8;
+    font-weight: 400;
+}
+
+/* ---------- Bandeau d'accueil (page d'accueil) ---------------------------- */
+
+body > header {
+    grid-column: 1 / -1;
+    padding: 3.5rem max(1rem, calc((100% - var(--largeur)) / 2)) 3rem;
+    background: var(--celadon);
+    border-bottom: 1px solid var(--ligne);
+}
+
+body > header h1 {
+    margin: 0;
+    max-width: 18ch;
+    font-size: clamp(2.2rem, 1.5rem + 3vw, 3.4rem);
+}
+
+body > header p {
+    margin: 0.75rem 0 0;
+    font-size: 1.2rem;
+    color: var(--vert);
+    font-weight: 600;
+}
+
+/* La page d'accueil a un <main> : on lui redonne la même logique de colonne */
+body > main > * + * { margin-top: 2.5rem; }
+
+.presentation {
+    margin-top: 2.5rem;
+    font-size: 1.12rem;
+}
+.presentation h2 { margin: 0 0 0.75rem; }
+.presentation p { margin: 0 0 0.75rem; }
+
+.actualites h2 { margin: 0 0 1rem; }
+.actualites > ul {
+    padding: 0;
+    margin: 0 0 1rem;
+    list-style: none;
+    background: var(--blanc);
+    border: 1px solid var(--ligne);
+    border-radius: var(--rayon-l);
+    max-width: none;
+}
+.actualites > ul li {
+    max-width: none;
+    padding: 0.8rem 1.1rem;
+}
+.actualites > ul li + li { border-top: 1px solid var(--ligne); }
+
+/* ---------- Boutons ------------------------------------------------------- */
+
+button,
+.bouton,
+.btn,
+body > a[href$="creer.php"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.65rem 1.2rem;
+    border: 2px solid var(--vert);
+    border-radius: var(--rayon);
+    background: var(--vert);
+    color: var(--blanc);
+    font: inherit;
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+button:hover,
+.bouton:hover,
+.btn:hover,
+body > a[href$="creer.php"]:hover {
+    background: var(--vert-fonce);
+    border-color: var(--vert-fonce);
+}
+
+/* Actions destructrices : contour rouge (se désinscrire, refuser, retirer…) */
+button[onclick*="confirm"],
+button[value="refuser"],
+button[value="bloquer"],
+button[value="cloturer"],
+.btn-refuser {
+    background: var(--blanc);
+    color: var(--croix);
+    border-color: var(--croix);
+}
+button[onclick*="confirm"]:hover,
+button[value="refuser"]:hover,
+button[value="bloquer"]:hover,
+button[value="cloturer"]:hover,
+.btn-refuser:hover {
+    background: var(--croix-fond);
+    border-color: var(--croix);
+}
+
+.btn-valider { background: var(--succes); border-color: var(--succes); }
+.btn-valider:hover { background: #165536; border-color: #165536; }
+
+.btn { padding: 0.45rem 0.9rem; font-size: 0.95rem; }
+
+/* ---------- Formulaires --------------------------------------------------- */
+
+/* Les vrais formulaires (avec des champs) sont posés sur une fiche blanche.
+   Les petits formulaires à un seul bouton restent simples. */
+form:has(label) {
+    max-width: 36rem;
+    padding: 1.5rem;
+    background: var(--blanc);
+    border: 1px solid var(--ligne);
+    border-radius: var(--rayon-l);
+}
+
+form br { display: none; }
+
+form label {
+    display: block;
+    margin: 1rem 0 0.35rem;
+    font-weight: 700;
+}
+form label:first-of-type { margin-top: 0; }
+
+input,
+select,
+textarea {
+    font: inherit;
+    color: var(--encre);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="url"],
+input[type="file"],
+select,
+textarea {
+    display: block;
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    background: var(--blanc);
+    border: 1px solid #a9bcb7;
+    border-radius: var(--rayon);
+}
+
+textarea { min-height: 9rem; resize: vertical; }
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: 3px solid rgba(31, 95, 88, 0.25);
+    outline-offset: 0;
+    border-color: var(--vert);
+}
+
+input:disabled {
+    background: var(--papier);
+    color: var(--encre-douce);
+    border-style: dashed;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    width: 1.15rem;
+    height: 1.15rem;
+    accent-color: var(--vert);
+    vertical-align: -0.15em;
+}
+
+form p { margin: 0.75rem 0 0; color: var(--encre-douce); }
+
+form:has(label) button[type="submit"],
+form:has(label) button:not([type]) { margin-top: 1.5rem; }
+
+/* Formulaires de filtre (liste déroulante seule) */
+form[method="get"] select { max-width: 22rem; }
+
+.form-inline { display: inline; }
+
+/* ---------- Messages : erreurs, succès, informations ---------------------- */
+
+/* Les pages écrivent leurs messages avec style="color:red/green" :
+   on les transforme en vrais encadrés sans toucher aux pages. */
+p[style*="color:red"],
+p[style*="color: red"],
+.erreurs,
+.alerte-erreur {
+    max-width: 36rem;
+    padding: 0.8rem 1rem;
+    background: var(--croix-fond);
+    border: 1px solid #ecb8b2;
+    border-left: 4px solid var(--croix);
+    border-radius: var(--rayon);
+    color: #8f2219 !important;
+}
+
+p[style*="color:green"],
+p[style*="color: green"],
+.alerte-succes {
+    max-width: 36rem;
+    padding: 0.8rem 1rem;
+    background: var(--succes-fond);
+    border: 1px solid #b5d9c2;
+    border-left: 4px solid var(--succes);
+    border-radius: var(--rayon);
+    color: var(--succes) !important;
+}
+
+.alerte-info {
+    padding: 0.8rem 1rem;
+    background: var(--celadon);
+    border-left: 4px solid var(--vert);
+    border-radius: var(--rayon);
+    color: var(--vert-fonce);
+}
+
+.alerte { margin-bottom: 1.25rem; }
+
+.erreurs { list-style: none; }
+.erreurs li + li { margin-top: 0.25rem; }
+
+/* ---------- Événements ---------------------------------------------------- */
+
+.liste-evenements {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: 1rem;
+}
+
+.carte-evenement {
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+    background: var(--blanc);
+    border: 1px solid var(--ligne);
+    border-top: 5px solid var(--vert);   /* comme un repère de couleur sur un panneau */
+    border-radius: var(--rayon-l);
+}
+
+.carte-evenement h2,
+.carte-evenement h3 { margin: 0 0 0.5rem; font-size: 1.2rem; }
+
+.carte-evenement p { margin: 0 0 0.35rem; }
+
+.carte-evenement em {
+    font-weight: 700;
+    color: var(--vert);
+}
+
+.carte-evenement a {
+    margin-top: auto;
+    padding-top: 0.75rem;
+    font-weight: 700;
+}
+
+/* ---------- Forum --------------------------------------------------------- */
+
+.carte-forum {
+    padding: 1rem 1.25rem;
+    background: var(--blanc);
+    border: 1px solid var(--ligne);
+    border-radius: var(--rayon-l);
+}
+
+body > .carte-forum + .carte-forum { margin-top: 0.5rem; }
+
+.carte-forum h3 { margin: 0 0 0.25rem; }
+.carte-forum h3 a { text-decoration: none; }
+.carte-forum h3 a:hover { text-decoration: underline; }
+.carte-forum p { margin: 0.25rem 0 0; color: var(--encre-douce); }
+.carte-forum p:last-child { color: var(--encre); }
+.carte-forum > a {
+    display: inline-block;
+    margin-top: 0.6rem;
+    font-weight: 700;
+}
+
+/* Contenu d'une discussion */
+body > h1 + p + div {
+    padding: 1.25rem 1.5rem;
+    background: var(--blanc);
+    border: 1px solid var(--ligne);
+    border-left: 5px solid var(--vert);
+    border-radius: var(--rayon-l);
+    max-width: 48rem;
+}
+
+/* « Nouvelle discussion » : bloc qui se déplie */
+details {
+    max-width: 36rem;
+}
+
+details > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.2rem;
+    border: 2px solid var(--vert);
+    border-radius: var(--rayon);
+    color: var(--vert);
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+}
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before { content: "+"; font-size: 1.2em; line-height: 1; }
+details[open] > summary::before { content: "−"; }
+details > summary:hover { background: var(--celadon); }
+details > form { margin-top: 0.75rem; }
+
+/* ---------- Offres -------------------------------------------------------- */
+
+.container {               /* la page des offres a son propre conteneur */
+    max-width: none;
+    margin: 2rem 0 0;
+}
+.container > * + * { margin-top: 1.25rem; }
+
+/* Bandeau en haut de la liste des offres */
+.entete {
+    padding: 2rem 2rem 1.75rem;
+    background: var(--celadon);
+    color: var(--encre);
+    border: 1px solid var(--ligne);
+    border-radius: var(--rayon-l);
+    text-align: left;
+}
+.entete h1 { margin: 0 0 0.5rem; font-size: clamp(1.8rem, 1.3rem + 2vw, 2.4rem); }
+.entete p { margin: 0.4rem 0 0; font-size: 1.05rem; line-height: 1.6; }
+
+.filtre {
+    padding: 1.25rem 1.5rem;
+    background: var(--blanc);
+    border: 1px solid var(--ligne);
+    border-radius: var(--rayon-l);
+}
+.filtre h2 { margin: 0 0 0.75rem; font-size: 1.2rem; }
+.filtre ul { margin: 0 0 1rem; padding-left: 1.2rem; }
+.filtre form { margin: 0; }
+
+.offres {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+    gap: 1rem;
+}
+
+.offre {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.25rem;
+    background: var(--blanc);
+    border: 1px solid var(--ligne);
+    border-radius: var(--rayon-l);
+    box-shadow: none;
+}
+.offre h2 { margin: 0 0 0.25rem; font-size: 1.2rem; }
+.offre h2 a { color: var(--encre); text-decoration: none; }
+.offre h2 a:hover { color: var(--vert); text-decoration: underline; }
+.offre p { margin: 0.35rem 0 0; }
+.offre > a:last-child { margin-top: auto; padding-top: 0.9rem; font-weight: 700; }
+
+.entreprise { color: var(--encre-douce); font-weight: 600; }
+
+.badge {
+    display: inline-block;
+    margin-top: 0.5rem;
+    padding: 0.15rem 0.6rem;
+    background: var(--celadon);
+    color: var(--vert-fonce);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.vide {
+    padding: 2rem;
+    text-align: center;
+    background: transparent;
+    border: 2px dashed var(--ligne);
+    border-radius: var(--rayon-l);
+    color: var(--encre-douce);
+}
+.vide h3 { margin: 0 0 0.25rem; }
+.vide p { margin: 0 auto; }
+
+/* ---------- Tableaux (administration, inscrits, candidatures) ------------- */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--blanc);
+    border: 1px solid var(--ligne);
+    border-radius: var(--rayon-l);
+    overflow: hidden;
+    font-size: 0.97rem;
+}
+
+th, td {
+    padding: 0.75rem 0.9rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--ligne);
+}
+
+th {
+    background: var(--celadon);
+    font-weight: 700;
+    color: var(--vert-fonce);
+}
+
+tr:last-child td { border-bottom: none; }
+
+td form { margin: 0; }
+td button { padding: 0.4rem 0.8rem; font-size: 0.92rem; }
+
+/* ---------- Administration ------------------------------------------------ */
+
+.admin-container { max-width: none; margin: 0; padding: 0; }
+.admin-container > h1 { margin: 2.5rem 0 0; }
+.admin-section { margin: 2rem 0 0; }
+.admin-section h2 { margin: 0 0 1rem; }
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.stat-card {
+    padding: 1rem 1.2rem;
+    background: var(--blanc);
+    border: 1px solid var(--ligne);
+    border-radius: var(--rayon-l);
+    text-align: left;
+    min-width: 0;
+}
+.stat-card.stat-alerte {
+    background: var(--alerte-fond);
+    border-color: #f0d38a;
+}
+
+.stat-nombre {
+    display: block;
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--vert);
+}
+.stat-alerte .stat-nombre { color: var(--alerte); }
+
+.stat-label {
+    display: block;
+    margin-top: 0.2rem;
+    color: var(--encre-douce);
+    font-size: 0.95rem;
+}
+
+.admin-table { margin-top: 0; }
+td.admin-actions { display: table-cell; white-space: nowrap; }
+td.admin-actions form + form { margin-left: 0.4rem; }
+
+/* ---------- Pages légales (mentions, confidentialité) --------------------- */
+
+.page-legale { max-width: 48rem; padding: 0; }
+.page-legale h1 { margin-top: 2.5rem; }
+.page-legale h2 { margin-top: 2rem; font-size: 1.25rem; }
+.page-legale table { margin: 0.75rem 0; }
+
+/* ---------- Pied de page (si includes/footer.php est ajouté) -------------- */
+
+body > footer {
+    grid-column: 1 / -1;
+    margin-top: 4rem;
+    padding: 1.5rem max(1rem, calc((100% - var(--largeur)) / 2));
+    border-top: 1px solid var(--ligne);
+    color: var(--encre-douce);
+    font-size: 0.95rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+}
+body > footer a { color: var(--encre-douce); }
+
+/* ---------- Téléphone ----------------------------------------------------- */
+
+@media (max-width: 640px) {
+    body { font-size: 1rem; }
+
+    .menu { position: static; padding-top: 0.6rem; padding-bottom: 0.6rem; }
+    .menu::before { flex-basis: 100%; margin-bottom: 0.35rem; }
+    .menu a { padding: 0.4rem 0.6rem; }
+
+    body > header { padding-top: 2.25rem; padding-bottom: 2rem; }
+
+    form:has(label) { padding: 1.1rem; }
+    .entete { padding: 1.5rem 1.25rem; }
+
+    /* Les tableaux défilent horizontalement au lieu de déborder */
+    table { display: block; overflow-x: auto; white-space: nowrap; }
+    td { white-space: normal; min-width: 9rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto !important; transition: none !important; }
+}
