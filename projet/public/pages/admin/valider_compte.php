@@ -13,12 +13,12 @@ if (!$id || !in_array($action, ['valider', 'refuser'], true)) {
     Session::rediriger('admin.php');
 }
 
-$manager = new UtilisateurManager();
+$repository = new UtilisateurRepository();
 
 if ($action === 'valider') {
-    $manager->valider($id, Session::getIdUtilisateur());
+    $repository->valider($id, Session::getIdUtilisateur());
     Session::rediriger('admin.php?msg=valide');
 }
 
-$manager->supprimerEnAttente($id);
+$repository->supprimerEnAttente($id);
 Session::rediriger('admin.php?msg=refuse');

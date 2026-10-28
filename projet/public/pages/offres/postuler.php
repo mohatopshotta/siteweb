@@ -9,9 +9,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $id_offre = (int)($_POST['id_offre'] ?? 0);
 
-$offre = (new OffreManager())->trouverParId($id_offre);
+$offre = (new OffreRepository())->trouverParId($id_offre);
 if ($offre === null) {
-    die("NewOffre introuvable.");
+    die("Offre introuvable.");
 }
 
 $candidature = new NewCandidature([
@@ -20,7 +20,7 @@ $candidature = new NewCandidature([
     'motivation'     => trim($_POST['motivation'] ?? ''),
 ]);
 
-$erreur = (new CandidatureManager())->postuler($candidature, $offre);
+$erreur = (new CandidatureRepository())->postuler($candidature, $offre);
 
 if ($erreur !== '') {
     Session::rediriger('detail.php?id=' . $id_offre . '&erreur=' . urlencode($erreur));

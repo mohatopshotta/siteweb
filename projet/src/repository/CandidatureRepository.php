@@ -61,7 +61,7 @@ class CandidatureRepository extends Repository
         $req->execute([NewCandidature::NON_RETENUE, $offre->getIdOffre(), $idCandidat, NewCandidature::NON_RETENUE]);
 
         if ($req->rowCount() > 0) {
-            $candidat = (new UtilisateurManager())->trouverParId($idCandidat);
+            $candidat = (new UtilisateurRepository())->trouverParId($idCandidat);
             if ($candidat !== null) {
                 $message = "Bonjour " . $candidat->getPrenom() . ",\n\n"
                     . "Votre candidature à l'offre « " . $offre->getTitre() . " » n'a pas été retenue.\n\n"

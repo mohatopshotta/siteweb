@@ -6,15 +6,15 @@ Session::exigerMembre('../../');
 $id_utilisateur = Session::getIdUtilisateur();
 $id_offre = (int)($_GET['id'] ?? 0);
 
-$offre = (new OffreManager())->trouverParId($id_offre);
+$offre = (new OffreRepository())->trouverParId($id_offre);
 if ($offre === null) {
-    die("NewOffre introuvable.");
+    die("Offre introuvable.");
 }
 
 $estAuteur = $offre->getIdAuteur() === $id_utilisateur;
 
 $peutPostuler = Session::aLeRole(['etudiant', 'medecin']);
-$dejaPostule = (new CandidatureManager())->aDejaPostule($id_utilisateur, $id_offre);
+$dejaPostule = (new CandidatureRepository())->aDejaPostule($id_utilisateur, $id_offre);
 
 $erreur = $_GET['erreur'] ?? '';
 ?>

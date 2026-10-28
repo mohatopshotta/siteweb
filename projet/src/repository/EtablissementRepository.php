@@ -5,10 +5,10 @@ class EtablissementRepository extends Repository
     public function listerTous(): array
     {
         $lignes = $this->pdo->query('SELECT * FROM etablissement ORDER BY nom')->fetchAll();
-        return $this->hydraterListe($lignes, Etablissement::class);
+        return $this->hydraterListe($lignes, NewEtablissement::class);
     }
 
-    public function trouverOuCreer(Etablissement $etablissement): int
+    public function trouverOuCreer(NewEtablissement $etablissement): int
     {
         $req = $this->pdo->prepare('SELECT id_etablissement FROM etablissement WHERE site_web = ?');
         $req->execute([$etablissement->getSiteWeb()]);

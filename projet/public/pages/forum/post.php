@@ -7,24 +7,24 @@ $id_utilisateur = Session::getIdUtilisateur();
 $role = Session::getRole();
 $id_post = (int)($_GET['id'] ?? 0);
 
-$post = (new PostManager())->trouverParId($id_post);
+$post = (new PostRepository())->trouverParId($id_post);
 if ($post === null) {
     http_response_code(404);
     die('Discussion introuvable.');
 }
 
-$section = (new SectionForumManager())->trouverParId($post->getIdSection());
+$section = (new SectionForumRepository())->trouverParId($post->getIdSection());
 if (!$section->peutLire($role)) {
     http_response_code(403);
     die('Cette discussion ne vous est pas accessible.');
 }
 
-$reponseManager = new ReponseManager();
+$reponseRepository = new ReponseRepository();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $role !== 'gestionnaire') {
     $contenu = trim($_POST['contenu'] ?? '');
     if ($contenu !== '') {
-        $reponseManager->creer(new NewReponse([
+        $reponseRepository->creer(new NewReponse([
             'id_post'   => $id_post,
             'id_auteur' => $id_utilisateur,
             'contenu'   => $contenu,
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $role !== 'gestionnaire') {
     }
 }
 
-$reponses = $reponseManager->listerParPost($id_post);
+$reponses = $reponseRepository->listerParPost($id_post);
 ?>
 <!DOCTYPE html>
 <html lang="fr">

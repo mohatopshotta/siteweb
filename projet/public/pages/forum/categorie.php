@@ -7,7 +7,7 @@ $id_utilisateur = Session::getIdUtilisateur();
 $role = Session::getRole();
 $id_section = (int)($_GET['id'] ?? 0);
 
-$section = (new SectionForumManager())->trouverParId($id_section);
+$section = (new SectionForumRepository())->trouverParId($id_section);
 if ($section === null) {
     http_response_code(404);
     die('Section de forum introuvable.');
@@ -18,7 +18,7 @@ if (!$section->peutLire($role)) {
     die('Cette section du forum ne vous est pas accessible.');
 }
 
-$postManager = new PostManager();
+$postRepository = new PostRepository();
 
 $erreur = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (mb_strlen($titre) > 150) {
         $erreur = 'Le titre ne doit pas dépasser 150 caractères.';
     } else {
-        $postManager->creer(new NewPost([
+        $postRepository->creer(new NewPost([
             'id_section' => $id_section,
             'id_auteur'  => $id_utilisateur,
             'titre'      => $titre,
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$posts = $postManager->listerParSection($id_section);
+$posts = $postRepository->listerParSection($id_section);
 ?>
 <!DOCTYPE html>
 <html lang="fr">

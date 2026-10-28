@@ -1,9 +1,5 @@
 <?php
-<<<<<<< HEAD
-require '../../includes/config.php';
-=======
 require __DIR__ . '/../../includes/config.php';
->>>>>>> f45b22633bb0b88fc655b8aa90c97e2f305e39b3
 
 Session::exigerConnexion('../../');
 
@@ -26,20 +22,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
     $erreurs = NewEvenement::validerFormulaire($_POST);
 
     // Interdire de descendre sous le nombre d'inscrits actuel
-    if (empty($erreurs)) {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM inscription_evenement WHERE id_evenement = :id");
-        $stmt->execute([':id' => $id_evenement]);
-        $nb_inscrits = (int)$stmt->fetchColumn();
-
-        if ((int)$nombre_places < $nb_inscrits) {
-            $erreurs[] = "Il y a déjà $nb_inscrits inscrits : le nombre de places ne peut pas être inférieur.";
-        }
+    if (empty($erreurs) && (int)$_POST['nombre_places'] < $evenement->getPlacesPrises()) {
+        $erreurs[] = "Il y a déjà " . $evenement->getPlacesPrises() . " participants inscrits : le nombre de places ne peut pas être inférieur.";
     }
 
     if (empty($erreurs)) {
         $manager->modifier(NewEvenement::depuisFormulaire($_POST, $id_evenement));
         Session::rediriger('gerer.php?id=' . $id_evenement);
     }
+
+
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['retirer_id'])) {
@@ -58,11 +50,7 @@ $inscrits = $manager->listerInscrits($id_evenement);
 </head>
 <body>
 
-<<<<<<< HEAD
-<?php $racine = '../../'; require $racine . 'includes/header.php'; ?>
-=======
 <?php $racine = '../../'; require __DIR__ . '/../../includes/header.php'; ?>
->>>>>>> f45b22633bb0b88fc655b8aa90c97e2f305e39b3
 
 <a href="detail.php?id=<?= $id_evenement ?>">&larr; Retour à l'événement</a>
 
@@ -77,8 +65,8 @@ $inscrits = $manager->listerInscrits($id_evenement);
 <?php endif; ?>
 
 <h2>Modifier la fiche</h2>
-<form method="post" action="gerer.php?id=<?= $id_evenement ?>
-    <?= Session::champCsrf() ?>">
+<form method="post" action="gerer.php?id=<?= $id_evenement ?>">
+    <?= Session::champCsrf() ?>
 
     <label for="type_evenement">Type d'événement</label>
     <input type="text" id="type_evenement" name="type_evenement"
@@ -124,8 +112,8 @@ $inscrits = $manager->listerInscrits($id_evenement);
             <td><?= $personne->estOrganisateur() ? 'Organisateur' : 'Participant' ?></td>
             <td>
                 <?php if (!$personne->estOrganisateur()): ?>
-                    <form method="post" action="gerer.php?id=<?= $id_evenement ?>
-                        <?= Session::champCsrf() ?>" style="display:inline">
+                    <form method="post" action="gerer.php?id=<?= $id_evenement ?>" style="display:inline">
+                        <?= Session::champCsrf() ?>
                         <input type="hidden" name="retirer_id" value="<?= $personne->getIdUtilisateur() ?>">
                         <button type="submit" onclick="return confirm('Retirer cette personne ?');">Retirer</button>
                     </form>

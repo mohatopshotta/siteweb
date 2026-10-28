@@ -7,7 +7,7 @@ $role     = Session::getRole();
 
 $evenements = (new EvenementRepository())->listerTous(3);
 
-$offres = (new OffreManager())->listerOuvertes(null, 3);
+$offres = (new OffreRepository())->listerOuvertes(null, 3);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -19,10 +19,10 @@ $offres = (new OffreManager())->listerOuvertes(null, 3);
 </head>
 <body>
 
-<<<<<<< HEAD
 
-=======
->>>>>>> f45b22633bb0b88fc655b8aa90c97e2f305e39b3
+
+
+
 <header>
     <h1>La Générale des Hôpitaux (GDH)</h1>
     <p>Hôpital Sud Paris (HSP)</p>

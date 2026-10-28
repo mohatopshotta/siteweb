@@ -3,7 +3,7 @@ require __DIR__ . '/../../includes/config.php';
 
 Session::exigerRole(['partenaire'], '../../');
 
-$partenaire = (new UtilisateurManager())->trouverParId(Session::getIdUtilisateur());
+$partenaire = (new UtilisateurRepository())->trouverParId(Session::getIdUtilisateur());
 
 if (!$partenaire instanceof NewPartenaire || !$partenaire->getIdEntreprise()) {
     die("Ton compte partenaire n'est lié à aucune entreprise.");
@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'salaire'       => $salaire !== '' ? (float)$salaire : null,
             'type_offre'    => $_POST['type_offre'],
         ]);
-        $id_offre = (new OffreManager())->creer($offre);
+        $id_offre = (new OffreRepository())->creer($offre);
 
         Session::rediriger('gerer.php?id=' . $id_offre);
     }

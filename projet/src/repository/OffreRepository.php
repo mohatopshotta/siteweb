@@ -1,6 +1,6 @@
 <?php
 
-class OffreRepository extends Repository
+ class OffreRepository extends Repository
 {
     private const SELECT_COMPLET = "
         SELECT o.*, e.nom AS entreprise,

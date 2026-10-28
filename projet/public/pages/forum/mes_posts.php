@@ -4,10 +4,10 @@ require_once __DIR__ . '/../../includes/config.php';
 Session::exigerMembre('../../');
 
 $id_utilisateur = Session::getIdUtilisateur();
-$postManager = new PostManager();
+$postRepository = new PostRepository();
 
-$mes_posts = $postManager->listerParAuteur($id_utilisateur);
-$mes_reponses = $postManager->listerOuUtilisateurARepondu($id_utilisateur);
+$mes_posts = $postRepository->listerParAuteur($id_utilisateur);
+$mes_reponses = $postRepository->listerOuUtilisateurARepondu($id_utilisateur);
 ?>
 <!DOCTYPE html>
 <html lang="fr">

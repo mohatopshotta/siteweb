@@ -1,6 +1,6 @@
 <?php
 
-class Etablissement extends NewTraitement
+class NewEtablissement extends NewTraitement
 {
     private ?int $idEtablissement = null;
     private string $nom = '';
