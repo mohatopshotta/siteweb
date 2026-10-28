@@ -8,7 +8,7 @@ $id_offre = (int)($_GET['id'] ?? 0);
 
 $offre = (new OffreRepository())->trouverParId($id_offre);
 if ($offre === null) {
-    die("NewOffre introuvable.");
+    die("Offre introuvable.");
 }
 
 $estAuteur = $offre->getIdAuteur() === $id_utilisateur;

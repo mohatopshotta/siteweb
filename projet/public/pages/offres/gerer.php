@@ -11,7 +11,7 @@ $candidatureManager = new CandidatureRepository();
 
 $offre = $offreManager->trouverParId($id_offre);
 if ($offre === null) {
-    die("NewOffre introuvable.");
+    die("Offre introuvable.");
 }
 
 if ($offre->getIdAuteur() !== $id_utilisateur) {

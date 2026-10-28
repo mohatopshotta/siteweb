@@ -7,7 +7,7 @@ class NewPartenaire extends NewUtilisateur
     private ?string $nomEntreprise = null;
 
     public function getRole(): string { return 'partenaire'; }
-    public function getLibelleRole(): string { return 'NewPartenaire'; }
+    public function getLibelleRole(): string { return 'Partenaire'; }
 
     public function getIdEntreprise(): ?int { return $this->idEntreprise; }
     public function getPoste(): string { return $this->poste; }
