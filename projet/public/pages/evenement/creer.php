@@ -6,6 +6,7 @@ Session::exigerRole(['medecin', 'partenaire'], '../../');
 $erreurs = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    Session::verifierCsrf();
     $erreurs = NewEvenement::validerFormulaire($_POST, true);
     $erreurs = NewEvenement::validerFormulaire($_POST);
 
@@ -26,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Créer un événement</title>
     <link rel="stylesheet" href="../../assets/css/css.css">
 </head>
