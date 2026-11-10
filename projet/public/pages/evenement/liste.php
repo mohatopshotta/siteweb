@@ -1,6 +1,4 @@
 <?php
-ini_set('display_errors', '1');
-error_reporting(E_ALL);
 require __DIR__ . '/../../includes/config.php';
 
 
@@ -11,8 +9,19 @@ $repo = new EvenementRepository();
 $mot           = trim($_GET['q'] ?? '');
 $type          = trim($_GET['type'] ?? '');
 $inclurePasses = isset($_GET['passes']);
+$tri           = $_GET['tri'] ?? 'date';
 
-$evenements = $repo->rechercher($mot, $type, $inclurePasses);
+$evenements = $repo->rechercher($mot, $type, $inclurePasses, null, $tri);
+
+// Pagination : 9 événements par page
+const PAR_PAGE = 9;
+$nbEvenements = count($evenements);
+$nbPages      = max(1, (int) ceil($nbEvenements / PAR_PAGE));
+$page         = min(max(1, (int) ($_GET['page'] ?? 1)), $nbPages);
+$evenements   = array_slice($evenements, ($page - 1) * PAR_PAGE, PAR_PAGE);
+
+// Garde les filtres dans les liens de pagination
+$filtresUrl = array_filter(['q' => $mot, 'type' => $type, 'tri' => $tri === 'date' ? '' : $tri, 'passes' => $inclurePasses ? '1' : '']);
 $types      = $repo->listerTypes();
 $message    = Session::consommerFlash();
 ?>
@@ -54,6 +63,12 @@ $message    = Session::consommerFlash();
                 <?= htmlspecialchars($t) ?>
             </option>
         <?php endforeach; ?>
+    </select>
+
+    <select name="tri" aria-label="Trier par">
+        <option value="date"   <?= $tri === 'date'   ? 'selected' : '' ?>>Trier : date</option>
+        <option value="places" <?= $tri === 'places' ? 'selected' : '' ?>>Trier : places restantes</option>
+        <option value="titre"  <?= $tri === 'titre'  ? 'selected' : '' ?>>Trier : titre (A-Z)</option>
     </select>
 
     <label>
@@ -103,6 +118,18 @@ $message    = Session::consommerFlash();
             </div>
         <?php endforeach; ?>
     </div>
+
+    <?php if ($nbPages > 1): ?>
+        <nav class="pagination" aria-label="Pagination">
+            <?php if ($page > 1): ?>
+                <a href="liste.php?<?= htmlspecialchars(http_build_query($filtresUrl + ['page' => $page - 1])) ?>">&larr; Précédent</a>
+            <?php endif; ?>
+            <span>Page <?= $page ?> / <?= $nbPages ?></span>
+            <?php if ($page < $nbPages): ?>
+                <a href="liste.php?<?= htmlspecialchars(http_build_query($filtresUrl + ['page' => $page + 1])) ?>">Suivant &rarr;</a>
+            <?php endif; ?>
+        </nav>
+    <?php endif; ?>
 <?php endif; ?>
 
 <?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>

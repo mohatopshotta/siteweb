@@ -109,6 +109,27 @@ $message     = Session::consommerFlash();
     <p>Tu es organisateur de cet événement.</p>
     <a href="gerer.php?id=<?= $evenement->getIdEvenement() ?>">Gérer l'événement et les inscrits</a>
 
+    <?php $inscrits = $manager->listerInscrits($id_evenement); ?>
+    <h2>Participants (<?= $evenement->getPlacesPrises() ?>)</h2>
+    <?php if ($evenement->getPlacesPrises() === 0): ?>
+        <p>Personne ne s'est encore inscrit.</p>
+    <?php else: ?>
+        <table>
+            <thead>
+            <tr><th>Nom</th><th>Email</th><th>Rôle</th></tr>
+            </thead>
+            <tbody>
+            <?php foreach ($inscrits as $personne): ?>
+                <tr>
+                    <td><?= htmlspecialchars($personne->getNomComplet()) ?></td>
+                    <td><?= htmlspecialchars($personne->getEmail()) ?></td>
+                    <td><?= $personne->estOrganisateur() ? 'Organisateur' : 'Participant' ?></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php endif; ?>
+
 <?php elseif ($inscription !== null): ?>
     <p>Tu es inscrit(e) à cet événement.</p>
     <form method="post">

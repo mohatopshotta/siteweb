@@ -714,3 +714,6 @@ body > footer a { color: var(--encre-douce); }
 .bouton-danger { background:var(--croix); color:var(--blanc); }
 .bouton-danger:hover { background:#9d2a21; }
 .pied-page { margin-top:2.5rem; padding:1.25rem 0; border-top:1px solid var(--ligne); font-size:0.9rem; }
+
+.pagination { display:flex; align-items:center; justify-content:center; gap:1.25rem; margin:2rem 0 0; }
+.pagination a { font-weight:700; }
