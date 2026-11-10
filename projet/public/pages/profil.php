@@ -68,5 +68,6 @@ $utilisateur = $manager->trouverParId($id_utilisateur);
 
 <p><a href="deconnexion.php">Se déconnecter</a></p>
 
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>

@@ -75,6 +75,7 @@ if (!function_exists('e')) {
         <a href="politique_confidentialite.php">politique de confidentialité</a>.
     </p>
 
+
     <h2>6. Cookies</h2>
     <p>
         Le site utilise seulement un cookie de session, nécessaire pour rester connecté.
@@ -83,5 +84,10 @@ if (!function_exists('e')) {
     </p>
 </main>
 
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
+</body>
+</html>
+
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>

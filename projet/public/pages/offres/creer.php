@@ -75,5 +75,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 </form>
 
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>

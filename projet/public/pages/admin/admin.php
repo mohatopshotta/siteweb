@@ -113,5 +113,6 @@ if (isset($_GET['msg'])) {
     </section>
 
 </div>
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>

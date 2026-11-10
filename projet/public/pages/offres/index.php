@@ -268,5 +268,7 @@ if (Session::aLeRole(['partenaire'])) {
     <?php endif; ?>
 
 </div>
+
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>

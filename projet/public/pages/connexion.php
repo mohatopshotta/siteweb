@@ -54,5 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <p>Pas encore de compte ? <a href="inscription.php">S'inscrire</a></p>
 
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>
