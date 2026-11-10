@@ -64,7 +64,13 @@ if (Session::aLeRole(['partenaire'])) {
             <a href="creer.php">+ Créer une offre</a>
         </section>
     <?php endif; ?>
-
+    <?php if (Session::aLeRole(['gestionnaire'])): ?>
+        <section class="filtre">
+            <h2>Offres du groupe GDH</h2>
+            <p>En tant que gestionnaire, vous pouvez publier des offres au nom du groupe.</p>
+            <a href="creer.php">+ Créer une offre du groupe</a>
+        </section>
+    <?php endif; ?>
     <section class="filtre">
         <h2>Rechercher une offre</h2>
 
