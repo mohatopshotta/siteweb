@@ -30,8 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
         $manager->modifier(NewEvenement::depuisFormulaire($_POST, $id_evenement));
         Session::rediriger('gerer.php?id=' . $id_evenement);
     }
+}
 
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter_organisateur'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter_organisateur'])) {
     $erreurOrga = $manager->ajouterOrganisateur($_POST['email_organisateur'] ?? '', $id_evenement);
     if ($erreurOrga === '') {
         Session::flash('Organisateur ajouté.');
@@ -39,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
     }
     $erreurs[] = $erreurOrga;
 }
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['supprimer_evenement'])) {
     $manager->supprimer($id_evenement);
     Session::flash('Événement supprimé.');
@@ -49,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['retirer_id'])) {
     $manager->retirerParticipant((int)$_POST['retirer_id'], $id_evenement);
     Session::rediriger('gerer.php?id=' . $id_evenement);
 }
+
 $inscrits = $manager->listerInscrits($id_evenement);
 ?>
 <!DOCTYPE html>

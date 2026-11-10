@@ -81,6 +81,9 @@ $message     = Session::consommerFlash();
     <?php if ($evenement->estPasse()): ?><span class="badge badge-passe">Terminé</span><?php endif; ?>
 </p>
 <p><strong>Lieu :</strong> <?= htmlspecialchars($evenement->getLieu()) ?></p>
+<?php if ($evenement->getDateEvenement() !== null && !$evenement->estPasse()): ?>
+    <p><a href="calendrier.php?id=<?= $evenement->getIdEvenement() ?>">&#128197; Ajouter à mon calendrier</a></p>
+<?php endif; ?>
 <p><?= nl2br(htmlspecialchars($evenement->getDescription())) ?></p>
 
 <?php if ($evenement->getElementsRequis() !== null): ?>

@@ -15,8 +15,15 @@ class EvenementRepository extends Repository
         return $this->rechercher(null, null, false, $limite);
     }
 
-    public function rechercher(?string $mot = null, ?string $type = null, bool $inclurePasses = false, ?int $limite = null): array
+    public function rechercher(?string $mot = null, ?string $type = null, bool $inclurePasses = false, ?int $limite = null, string $tri = 'date'): array
     {
+        // Liste blanche : on ne met jamais $tri directement dans le SQL
+        $ordres = [
+            'date'   => 'e.date_evenement IS NULL, e.date_evenement ASC, e.id_evenement DESC',
+            'places' => '(e.nombre_places - COUNT(ie.id_utilisateur)) DESC, e.date_evenement ASC',
+            'titre'  => 'e.titre ASC',
+        ];
+        $ordre = $ordres[$tri] ?? $ordres['date'];
         $conditions = [];
         $params = [];
 
@@ -36,7 +43,7 @@ class EvenementRepository extends Repository
         $sql = self::SELECT_AVEC_PLACES
             . ($conditions ? ' WHERE ' . implode(' AND ', $conditions) : '')
             . ' GROUP BY e.id_evenement'
-            . ' ORDER BY e.date_evenement IS NULL, e.date_evenement ASC, e.id_evenement DESC';
+            . ' ORDER BY ' . $ordre;
         if ($limite !== null) {
             $sql .= ' LIMIT ' . (int)$limite;
         }

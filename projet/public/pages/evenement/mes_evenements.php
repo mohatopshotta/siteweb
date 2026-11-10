@@ -49,4 +49,4 @@ $evenements = (new EvenementRepository())->listerPourUtilisateur(Session::getIdU
 
 <?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
-</html>x²
+</html>

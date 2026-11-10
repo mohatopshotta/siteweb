@@ -8,7 +8,6 @@ $erreurs = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     Session::verifierCsrf();
     $erreurs = NewEvenement::validerFormulaire($_POST, true);
-    $erreurs = NewEvenement::validerFormulaire($_POST);
 
     if (empty($erreurs)) {
         try {
