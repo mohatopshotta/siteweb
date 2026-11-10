@@ -97,15 +97,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <p><a href="deconnexion.php">Se déconnecter</a></p>
 
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 <?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
-=======
-<<<<<<< HEAD
+
 <?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
-=======
-=======
->>>>>>> a88174d314afc3eaf6b2c96d3a2ad887093b46c8
+
 <?php if (!$utilisateur instanceof NewGestionnaire): ?>
     <h2>Supprimer mon compte</h2>
     <p>
@@ -129,11 +125,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 
-<<<<<<< HEAD
->>>>>>> 1a152f4c98d3bb87031396cafb526c4ef5c4eab7
->>>>>>> f732a2af103700d408b935c388415f478fd2f8d8
-=======
+
 <?php endif; ?>
->>>>>>> a88174d314afc3eaf6b2c96d3a2ad887093b46c8
+
 </body>
 </html>
