@@ -31,12 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
         Session::rediriger('gerer.php?id=' . $id_evenement);
     }
 
-
-}
-<<<<<<< HEAD
-
-=======
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter_organisateur'])) {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter_organisateur'])) {
     $erreurOrga = $manager->ajouterOrganisateur($_POST['email_organisateur'] ?? '', $id_evenement);
     if ($erreurOrga === '') {
         Session::flash('Organisateur ajouté.');
@@ -49,12 +44,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['supprimer_evenement']
     Session::flash('Événement supprimé.');
     Session::rediriger('liste.php');
 }
->>>>>>> a88174d314afc3eaf6b2c96d3a2ad887093b46c8
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['retirer_id'])) {
     $manager->retirerParticipant((int)$_POST['retirer_id'], $id_evenement);
     Session::rediriger('gerer.php?id=' . $id_evenement);
 }
-
 $inscrits = $manager->listerInscrits($id_evenement);
 ?>
 <!DOCTYPE html>
@@ -139,8 +133,7 @@ $inscrits = $manager->listerInscrits($id_evenement);
     <?php endforeach; ?>
     </tbody>
 </table>
-<<<<<<< HEAD
-=======
+
 <h2>Ajouter un organisateur</h2>
 <p>Un médecin ou un partenaire peut organiser cet événement avec toi.</p>
 <form method="post" action="gerer.php?id=<?= $id_evenement ?>">
@@ -158,7 +151,7 @@ $inscrits = $manager->listerInscrits($id_evenement);
         Supprimer cet événement
     </button>
 </form>
->>>>>>> a88174d314afc3eaf6b2c96d3a2ad887093b46c8
+
 <?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>

@@ -55,39 +55,4 @@ $message    = Session::consommerFlash();
     </select>
 
     <label>
-        <input type="checkbox" name="passes" value="1" <?= $inclurePasses ? 'checked' : '' ?>>
-        Voir aussi les événements passés
-    </label>
-
-    <button type="submit">Filtrer</button>
-    <a href="liste.php">Réinitialiser</a>
-</form>
-
-<?php if (empty($evenements)): ?>
-    <p>Aucun événement ne correspond.</p>
-<?php else: ?>
-    <div class="liste-evenements">
-        <?php foreach ($evenements as $evenement): ?>
-            <div class="carte-evenement">
-                <h2><?= htmlspecialchars($evenement->getTitre()) ?></h2>
-                <p><em><?= htmlspecialchars($evenement->getTypeEvenement()) ?></em></p>
-                <p><?= htmlspecialchars($evenement->getDateAffichage()) ?></p>
-                <p><?= htmlspecialchars($evenement->getLieu()) ?></p>
-                <p>
-                    <?php if ($evenement->estPasse()): ?>
-                        <span class="badge badge-passe">Terminé</span>
-                    <?php elseif ($evenement->estComplet()): ?>
-                        <span class="badge badge-complet">Complet</span>
-                    <?php else: ?>
-                        <span class="badge badge-dispo"><?= $evenement->getPlacesRestantes() ?> place(s) restante(s)</span>
-                    <?php endif; ?>
-                </p>
-                <a href="detail.php?id=<?= $evenement->getIdEvenement() ?>">Voir le détail</a>
-            </div>
-        <?php endforeach; ?>
-    </div>
-<?php endif; ?>
-
-<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
-</body>
-</html>
+        <input type="checkbox"
