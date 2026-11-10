@@ -54,77 +54,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <?php if ($compte_supprime): ?>
 
-<h1>Compte supprimé</h1>
-<p>Ton compte et toutes tes données (profil, CV, candidatures, inscriptions, messages) ont été supprimés.</p>
-<p><a href="../accueil/accueil.php">Retour à l'accueil</a></p>
+    <h1>Compte supprimé</h1>
+    <p>Ton compte et toutes tes données (profil, CV, candidatures, inscriptions, messages) ont été supprimés.</p>
+    <p><a href="../accueil/accueil.php">Retour à l'accueil</a></p>
 
 <?php else: ?>
 
-<h1>Mon profil</h1>
+    <h1>Mon profil</h1>
 
-<?php if ($message): ?>
-    <p style="color:green;"><?= htmlspecialchars($message) ?></p>
-<?php endif; ?>
-
-<form method="post">
-    <?= Session::champCsrf() ?>
-    <label>Nom</label>
-    <input type="text" name="nom" value="<?= htmlspecialchars($utilisateur->getNom()) ?>"><br>
-
-    <label>Prénom</label>
-    <input type="text" name="prenom" value="<?= htmlspecialchars($utilisateur->getPrenom()) ?>"><br>
-
-    <label>Email</label>
-    <input type="text" value="<?= htmlspecialchars($utilisateur->getEmail()) ?>" disabled><br>
-
-    <label>Rôle</label>
-    <input type="text" value="<?= htmlspecialchars($utilisateur->getLibelleRole()) ?>" disabled><br>
-
-    <?php if ($utilisateur instanceof NewEtudiant): ?>
-        <p>Formation : <?= htmlspecialchars($utilisateur->getFormation()) ?></p>
-        <p>Établissement : <?= htmlspecialchars($utilisateur->getNomEtablissement() ?? '') ?></p>
-    <?php elseif ($utilisateur instanceof NewMedecin): ?>
-        <p>Spécialité : <?= htmlspecialchars($utilisateur->getSpecialite() ?? '') ?></p>
-        <p>Hôpital : <?= htmlspecialchars($utilisateur->getHopital() ?? '') ?></p>
-        <p>Établissement d'enseignement : <?= htmlspecialchars($utilisateur->getNomEtablissement() ?? '—') ?></p>
-    <?php elseif ($utilisateur instanceof NewPartenaire): ?>
-        <p>Poste : <?= htmlspecialchars($utilisateur->getPoste()) ?></p>
-        <p>Entreprise : <?= htmlspecialchars($utilisateur->getNomEntreprise() ?? '') ?></p>
+    <?php if ($message): ?>
+        <p style="color:green;"><?= htmlspecialchars($message) ?></p>
     <?php endif; ?>
 
-    <button type="submit">Enregistrer</button>
-</form>
-
-<p><a href="deconnexion.php">Se déconnecter</a></p>
-
-
-<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
-
-<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
-
-<?php if (!$utilisateur instanceof NewGestionnaire): ?>
-    <h2>Supprimer mon compte</h2>
-    <p>
-        Ton compte et toutes tes données seront supprimés définitivement : profil, CV, candidatures,
-        inscriptions aux événements et messages du forum.
-        Voir la <a href="politique_confidentialite.php">politique de confidentialité</a>.
-    </p>
-
-    <?php if ($erreur_suppression): ?>
-        <p style="color:red;"><?= htmlspecialchars($erreur_suppression) ?></p>
-    <?php endif; ?>
-
-    <form method="post" onsubmit="return confirm('Supprimer définitivement ton compte et toutes tes données ?');">
+    <form method="post">
         <?= Session::champCsrf() ?>
-        <input type="hidden" name="action" value="supprimer">
-        <label>Confirme avec ton mot de passe</label>
-        <input type="password" name="mot_de_passe" required><br>
-        <button type="submit" style="color:red;">Supprimer mon compte</button>
+        <label>Nom</label>
+        <input type="text" name="nom" value="<?= htmlspecialchars($utilisateur->getNom()) ?>"><br>
+
+        <label>Prénom</label>
+        <input type="text" name="prenom" value="<?= htmlspecialchars($utilisateur->getPrenom()) ?>"><br>
+
+        <label>Email</label>
+        <input type="text" value="<?= htmlspecialchars($utilisateur->getEmail()) ?>" disabled><br>
+
+        <label>Rôle</label>
+        <input type="text" value="<?= htmlspecialchars($utilisateur->getLibelleRole()) ?>" disabled><br>
+
+        <?php if ($utilisateur instanceof NewEtudiant): ?>
+            <p>Formation : <?= htmlspecialchars($utilisateur->getFormation()) ?></p>
+            <p>Établissement : <?= htmlspecialchars($utilisateur->getNomEtablissement() ?? '') ?></p>
+        <?php elseif ($utilisateur instanceof NewMedecin): ?>
+            <p>Spécialité : <?= htmlspecialchars($utilisateur->getSpecialite() ?? '') ?></p>
+            <p>Hôpital : <?= htmlspecialchars($utilisateur->getHopital() ?? '') ?></p>
+            <p>Établissement d'enseignement : <?= htmlspecialchars($utilisateur->getNomEtablissement() ?? '—') ?></p>
+        <?php elseif ($utilisateur instanceof NewPartenaire): ?>
+            <p>Poste : <?= htmlspecialchars($utilisateur->getPoste()) ?></p>
+            <p>Entreprise : <?= htmlspecialchars($utilisateur->getNomEntreprise() ?? '') ?></p>
+        <?php endif; ?>
+
+        <button type="submit">Enregistrer</button>
     </form>
-<?php endif; ?>
 
-<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
+    <p><a href="deconnexion.php">Se déconnecter</a></p>
 
+    <?php if (!$utilisateur instanceof NewGestionnaire): ?>
+        <h2>Supprimer mon compte</h2>
+        <p>
+            Ton compte et toutes tes données seront supprimés définitivement : profil, CV, candidatures,
+            inscriptions aux événements et messages du forum.
+            Voir la <a href="politique_confidentialite.php">politique de confidentialité</a>.
+        </p>
+
+        <?php if ($erreur_suppression): ?>
+            <p style="color:red;"><?= htmlspecialchars($erreur_suppression) ?></p>
+        <?php endif; ?>
+
+        <form method="post" onsubmit="return confirm('Supprimer définitivement ton compte et toutes tes données ?');">
+            <?= Session::champCsrf() ?>
+            <input type="hidden" name="action" value="supprimer">
+            <label>Confirme avec ton mot de passe</label>
+            <input type="password" name="mot_de_passe" required><br>
+            <button type="submit" class="btn-refuser">Supprimer mon compte</button>
+        </form>
+    <?php endif; ?>
+
+    <?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 
 <?php endif; ?>
 
