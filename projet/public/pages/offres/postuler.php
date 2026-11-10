@@ -6,6 +6,8 @@ Session::exigerRole(['etudiant', 'medecin'], '../../');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Session::rediriger('index.php');
 }
+Session::verifierCsrf();
+
 
 $id_offre = (int)($_POST['id_offre'] ?? 0);
 
