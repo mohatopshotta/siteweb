@@ -62,6 +62,18 @@
         return (int)$this->pdo->lastInsertId();
     }
 
+    public function listerToutes(): array
+    {
+        $lignes = $this->pdo->query(self::SELECT_COMPLET . ' ORDER BY o.date_publication DESC')->fetchAll();
+        return $this->hydraterListe($lignes, NewOffre::class);
+    }
+
+    public function supprimer(int $idOffre): void
+    {
+        $req = $this->pdo->prepare('DELETE FROM offre WHERE id_offre = ?');
+        $req->execute([$idOffre]);
+    }
+
     public function changerEtat(int $idOffre, string $etat, int $idAuteur): void
     {
         if (!in_array($etat, [NewOffre::OUVERT, NewOffre::CLOTURE], true)) {

@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS `evenement` (
     `titre` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
     `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
     `lieu` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `date_evenement` datetime DEFAULT NULL,
     `elements_requis` text COLLATE utf8mb4_unicode_ci,
     `nombre_places` int UNSIGNED NOT NULL,
     PRIMARY KEY (`id_evenement`),
@@ -336,8 +337,8 @@ CREATE TABLE IF NOT EXISTS `utilisateur` (
     `valide` tinyint(1) NOT NULL DEFAULT '0',
     `id_validateur` int UNSIGNED DEFAULT NULL,
     `date_inscription` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `date_derniere_connexion` datetime DEFAULT NULL,
     `date_consentement` datetime DEFAULT NULL,
+    `date_derniere_connexion` datetime DEFAULT NULL,
     PRIMARY KEY (`id_utilisateur`),
     UNIQUE KEY `uq_utilisateur_email` (`email`),
     KEY `fk_utilisateur_validateur` (`id_validateur`),
@@ -389,6 +390,25 @@ CREATE TABLE IF NOT EXISTS `tentative_connexion` (
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `message_contact` (formulaire de contact / support)
+--
+
+DROP TABLE IF EXISTS `message_contact`;
+CREATE TABLE IF NOT EXISTS `message_contact` (
+    `id_message` int UNSIGNED NOT NULL AUTO_INCREMENT,
+    `id_utilisateur` int UNSIGNED DEFAULT NULL,
+    `nom` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `sujet` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
+    `date_message` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id_message`),
+    KEY `fk_message_contact_utilisateur` (`id_utilisateur`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Contraintes pour les tables déchargées
 --
 
@@ -427,6 +447,12 @@ ALTER TABLE `medecin`
   ADD CONSTRAINT `fk_medecin_hopital` FOREIGN KEY (`id_hopital`) REFERENCES `hopital` (`id_hopital`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_medecin_specialite` FOREIGN KEY (`id_specialite`) REFERENCES `specialite` (`id_specialite`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_medecin_utilisateur` FOREIGN KEY (`id_utilisateur`) REFERENCES `utilisateur` (`id_utilisateur`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `message_contact`
+--
+ALTER TABLE `message_contact`
+    ADD CONSTRAINT `fk_message_contact_utilisateur` FOREIGN KEY (`id_utilisateur`) REFERENCES `utilisateur` (`id_utilisateur`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Contraintes pour la table `offre`

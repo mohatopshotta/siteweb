@@ -67,6 +67,7 @@ $offres = (new OffreRepository())->listerOuvertes(null, 3);
                     <div class="carte-evenement">
                         <h3><?= htmlspecialchars($evenement->getTitre()) ?></h3>
                         <p><em><?= htmlspecialchars($evenement->getTypeEvenement()) ?></em></p>
+                        <p><?= htmlspecialchars($evenement->getDateAffichage()) ?></p>
                         <p><?= htmlspecialchars($evenement->getLieu()) ?></p>
                         <p>
                             <?php if (!$evenement->estComplet()): ?>

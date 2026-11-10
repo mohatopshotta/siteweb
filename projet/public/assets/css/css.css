@@ -679,4 +679,45 @@ body > footer a { color: var(--encre-douce); }
 
 @media (prefers-reduced-motion: reduce) {
     * { scroll-behavior: auto !important; transition: none !important; }
+    /* ---------- Événements : filtres, badges, messages ---------- */
+
+    .filtres {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        margin: 1rem 0 1.5rem;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.15rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 700;
+    }
+    .badge-dispo   { background: #e3f4e8; color: #1d6b3a; }
+    .badge-complet { background: #fde4e4; color: #a12626; }
+    .badge-passe   { background: #ececec; color: #555; }
+    .badge-orga    { background: #e4ecfb; color: #1f4a99; }
+
+    .message-succes {
+        padding: 0.75rem 1rem;
+        margin: 1rem 0;
+        background: #e3f4e8;
+        border: 1px solid #b6dfc2;
+        border-radius: 8px;
+        color: #1d6b3a;
+    }
+
+    .bouton-danger { background: #b32424; color: #fff; }
+    .bouton-danger:hover { background: #8f1c1c; }
+
+    .pied-page {
+        text-align: center;
+        padding: 1.25rem;
+        margin-top: 2.5rem;
+        border-top: 1px solid #ccc;
+        font-size: 0.9rem;
+    }
 }

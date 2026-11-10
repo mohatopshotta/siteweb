@@ -44,7 +44,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mon profil</title>
+    <link rel="stylesheet" href="../assets/css/css.css">
 </head>
 <body>
 
@@ -95,9 +97,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <p><a href="deconnexion.php">Se déconnecter</a></p>
 
-<<<<<<< HEAD
-<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
-=======
 <?php if (!$utilisateur instanceof NewGestionnaire): ?>
     <h2>Supprimer mon compte</h2>
     <p>
@@ -119,8 +118,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 <?php endif; ?>
 
-<?php endif; ?>
+<?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 
->>>>>>> 1a152f4c98d3bb87031396cafb526c4ef5c4eab7
+<?php endif; ?>
 </body>
 </html>

@@ -21,9 +21,32 @@ $peutSInscrire = Session::getRole() !== 'gestionnaire';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $peutSInscrire) {
     if (isset($_POST['inscrire'])) {
-        $erreur = $manager->inscrire($id_utilisateur, $evenement);
+        if ($evenement->estPasse()) {
+            $erreur = 'Cet événement est terminé.';
+        } else {
+            $erreur = $manager->inscrire($id_utilisateur, $evenement);
+        }
+        if ($erreur === '') {
+            $mailEnvoye = false;
+            $moi = (new UtilisateurRepository())->trouverParId($id_utilisateur);
+            if ($moi !== null) {
+                $mailEnvoye = Mail::envoyer(
+                    $moi->getEmail(),
+                    'Confirmation d\'inscription : ' . $evenement->getTitre(),
+                    "Bonjour " . $moi->getPrenom() . ",\n\n"
+                    . "Ton inscription à l'événement « " . $evenement->getTitre() . " » est bien enregistrée.\n"
+                    . "Date : " . $evenement->getDateAffichage() . "\n"
+                    . "Lieu : " . $evenement->getLieu() . "\n\n"
+                    . "À bientôt,\nL'équipe GDH - Hôpital Sud Paris"
+                );
+            }
+            Session::flash($mailEnvoye
+                ? 'Inscription enregistrée. Un mail de confirmation t\'a été envoyé.'
+                : 'Inscription enregistrée.');
+        }
     } elseif (isset($_POST['desinscrire'])) {
         $manager->retirerParticipant($id_utilisateur, $id_evenement);
+        Session::flash('Désinscription enregistrée.');
     }
 
     if ($erreur === '') {
@@ -32,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $peutSInscrire) {
 }
 
 $inscription = $manager->trouverInscription($id_utilisateur, $id_evenement);
+$message     = Session::consommerFlash();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -49,6 +73,13 @@ $inscription = $manager->trouverInscription($id_utilisateur, $id_evenement);
 <h1><?= htmlspecialchars($evenement->getTitre()) ?></h1>
 <p><em><?= htmlspecialchars($evenement->getTypeEvenement()) ?></em></p>
 
+<?php if ($message): ?>
+    <p class="message-succes"><?= htmlspecialchars($message) ?></p>
+<?php endif; ?>
+
+<p><strong>Date :</strong> <?= htmlspecialchars($evenement->getDateAffichage()) ?>
+    <?php if ($evenement->estPasse()): ?><span class="badge badge-passe">Terminé</span><?php endif; ?>
+</p>
 <p><strong>Lieu :</strong> <?= htmlspecialchars($evenement->getLieu()) ?></p>
 <p><?= nl2br(htmlspecialchars($evenement->getDescription())) ?></p>
 
@@ -84,7 +115,7 @@ $inscription = $manager->trouverInscription($id_utilisateur, $id_evenement);
         </button>
     </form>
 
-<?php elseif ($peutSInscrire && !$evenement->estComplet()): ?>
+<?php elseif ($peutSInscrire && !$evenement->estComplet() && !$evenement->estPasse()): ?>
     <form method="post">
         <?= Session::champCsrf() ?>
         <button type="submit" name="inscrire">S'inscrire</button>
