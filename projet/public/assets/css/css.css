@@ -447,14 +447,26 @@ body > .carte-forum + .carte-forum { margin-top: 0.5rem; }
 .carte-forum h3 a:hover { text-decoration: underline; }
 .carte-forum p { margin: 0.25rem 0 0; color: var(--encre-douce); }
 .carte-forum p:last-child { color: var(--encre); }
+/* Recherche et pagination du forum */
+.recherche-forum { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin: 1rem 0; max-width: 40rem; }
+.recherche-forum input[type="search"] { flex: 1; min-width: 12rem; padding: 0.55rem 0.75rem; border: 1px solid var(--ligne); border-radius: var(--rayon-l); font: inherit; }
+.recherche-forum button { margin-top: 0 !important; }
+.pagination { display: flex; gap: 1rem; align-items: center; margin: 1.25rem 0; }
+.pagination span { color: var(--encre-douce); }
+
+/* Boutons Modifier / Supprimer d'un message du forum */
+.actions-message { margin-top: 0.6rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.actions-message form { display: inline; margin: 0; padding: 0; border: 0; background: none; }
+
 .carte-forum > a {
     display: inline-block;
     margin-top: 0.6rem;
     font-weight: 700;
 }
 
-/* Contenu d'une discussion */
-body > h1 + p + div {
+/* Contenu d'une discussion (classe dédiée : l'ancien sélecteur « h1 + p + div »
+   touchait aussi la première carte de la liste du forum) */
+.contenu-discussion {
     padding: 1.25rem 1.5rem;
     background: var(--blanc);
     border: 1px solid var(--ligne);
