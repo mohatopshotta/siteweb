@@ -33,9 +33,11 @@ $message    = Session::consommerFlash();
 <?php endif; ?>
 
 <p>
-    <a href="mes_evenements.php">Mes événements</a>
+    <?php if (Session::aLeRole(['etudiant', 'medecin', 'partenaire'])): ?>
+        <a href="mes_evenements.php">Mes événements</a>
+    <?php endif; ?>
     <?php if (Session::aLeRole(['medecin', 'partenaire'])): ?>
-        | <a href="creer.php">+ Créer un événement</a>
+        <?= Session::aLeRole(['etudiant', 'medecin', 'partenaire']) ? '|' : '' ?> <a href="creer.php">+ Créer un événement</a>
     <?php endif; ?>
 </p>
 

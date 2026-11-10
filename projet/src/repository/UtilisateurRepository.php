@@ -169,6 +169,106 @@ class UtilisateurRepository extends Repository
         }
     }
 
+    /**
+     * Annuaire des médecins (comptes validés), filtrable par nom et par spécialité.
+     */
+    public function rechercherMedecins(string $mot = '', ?int $idSpecialite = null): array
+    {
+        $sql = 'SELECT u.*, m.id_specialite, m.id_hopital, m.id_etablissement,
+                       s.libelle AS specialite, h.nom AS hopital, et.nom AS nom_etablissement
+                FROM utilisateur u
+                JOIN medecin m ON m.id_utilisateur = u.id_utilisateur
+                JOIN specialite s ON s.id_specialite = m.id_specialite
+                JOIN hopital h ON h.id_hopital = m.id_hopital
+                LEFT JOIN etablissement et ON et.id_etablissement = m.id_etablissement
+                WHERE u.valide = 1';
+        $params = [];
+        if (trim($mot) !== '') {
+            $sql .= ' AND (u.nom LIKE ? OR u.prenom LIKE ?)';
+            $like = '%' . trim($mot) . '%';
+            array_push($params, $like, $like);
+        }
+        if ($idSpecialite !== null && $idSpecialite > 0) {
+            $sql .= ' AND m.id_specialite = ?';
+            $params[] = $idSpecialite;
+        }
+        $sql .= ' ORDER BY u.nom, u.prenom';
+
+        $req = $this->pdo->prepare($sql);
+        $req->execute($params);
+        return $this->hydraterListe($req->fetchAll(), NewMedecin::class);
+    }
+
+    /**
+     * Annuaire des étudiants (comptes validés), filtrable par nom ou formation.
+     */
+    public function rechercherEtudiants(string $mot = ''): array
+    {
+        $sql = 'SELECT u.*, e.id_etablissement, e.formation, e.cv, et.nom AS nom_etablissement
+                FROM utilisateur u
+                JOIN etudiant e ON e.id_utilisateur = u.id_utilisateur
+                JOIN etablissement et ON et.id_etablissement = e.id_etablissement
+                WHERE u.valide = 1';
+        $params = [];
+        if (trim($mot) !== '') {
+            $sql .= ' AND (u.nom LIKE ? OR u.prenom LIKE ? OR e.formation LIKE ?)';
+            $like = '%' . trim($mot) . '%';
+            array_push($params, $like, $like, $like);
+        }
+        $sql .= ' ORDER BY u.nom, u.prenom';
+
+        $req = $this->pdo->prepare($sql);
+        $req->execute($params);
+        return $this->hydraterListe($req->fetchAll(), NewEtudiant::class);
+    }
+
+    /**
+     * Crée un compte gestionnaire (seul un autre gestionnaire peut le faire) : il est validé tout de suite.
+     * Renvoie '' si tout va bien, sinon le message d'erreur.
+     */
+    public function creerGestionnaire(string $nom, string $prenom, string $email, string $motDePasse, int $idValidateur): string
+    {
+        if ($nom === '' || $prenom === '' || $email === '' || $motDePasse === '') {
+            return 'Tous les champs sont obligatoires.';
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return 'Email invalide.';
+        }
+        $erreurs = NewUtilisateur::controlerRobustesse($motDePasse);
+        if (!empty($erreurs)) {
+            return implode(' ', $erreurs);
+        }
+        if ($this->emailExiste($email)) {
+            return 'Cet email est déjà utilisé.';
+        }
+
+        $this->pdo->beginTransaction();
+        try {
+            $req = $this->pdo->prepare(
+                'INSERT INTO utilisateur (nom, prenom, email, mot_de_passe, valide, id_validateur, date_consentement)
+                 VALUES (?, ?, ?, ?, 1, ?, NOW())'
+            );
+            $req->execute([$nom, $prenom, $email, password_hash($motDePasse, PASSWORD_DEFAULT), $idValidateur]);
+            $id = (int)$this->pdo->lastInsertId();
+            $req = $this->pdo->prepare('INSERT INTO gestionnaire (id_utilisateur) VALUES (?)');
+            $req->execute([$id]);
+            $this->pdo->commit();
+            return '';
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            error_log('Création gestionnaire : ' . $e->getMessage());
+            return "Le gestionnaire n'a pas pu être créé.";
+        }
+    }
+
+    /** Emails des gestionnaires (pour leur transmettre les messages de contact). */
+    public function listerEmailsGestionnaires(): array
+    {
+        return $this->pdo->query(
+            'SELECT u.email FROM utilisateur u JOIN gestionnaire g ON g.id_utilisateur = u.id_utilisateur'
+        )->fetchAll(PDO::FETCH_COLUMN);
+    }
+
     public function modifierNomPrenom(int $idUtilisateur, string $nom, string $prenom): void
     {
         $req = $this->pdo->prepare('UPDATE utilisateur SET nom = ?, prenom = ? WHERE id_utilisateur = ?');

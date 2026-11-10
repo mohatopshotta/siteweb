@@ -13,6 +13,15 @@ $role     = Session::getRole();
     <a href="<?= $racine ?>pages/evenement/liste.php">Événements</a>
     <a href="<?= $racine ?>pages/forum/liste.php">Forum</a>
 
+    <?php if (in_array($role, ['etudiant', 'medecin', 'gestionnaire'], true)): ?>
+        <a href="<?= $racine ?>pages/annuaire/medecins.php">Annuaire médecins</a>
+    <?php endif; ?>
+    <?php if (in_array($role, ['medecin', 'gestionnaire'], true)): ?>
+        <a href="<?= $racine ?>pages/annuaire/etudiants.php">Annuaire étudiants</a>
+    <?php endif; ?>
+
+    <a href="<?= $racine ?>pages/contact.php">Contact</a>
+
     <?php if ($connecte && $role !== 'gestionnaire'): ?>
         <a href="<?= $racine ?>pages/profil.php">Mon profil</a>
     <?php endif; ?>

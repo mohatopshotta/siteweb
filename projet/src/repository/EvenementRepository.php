@@ -161,6 +161,34 @@ class EvenementRepository extends Repository
         return '';
     }
 
+    /**
+     * Ajoute un organisateur (médecin ou partenaire validé) à un événement, à partir de son email.
+     * S'il était déjà inscrit comme participant, il passe organisateur. Renvoie '' ou un message d'erreur.
+     */
+    public function ajouterOrganisateur(string $email, int $idEvenement): string
+    {
+        $utilisateur = (new UtilisateurRepository())->trouverParEmail(trim($email));
+        if ($utilisateur === null || !$utilisateur->isValide()) {
+            return 'Aucun compte validé avec cet email.';
+        }
+        if (!in_array($utilisateur->getRole(), ['medecin', 'partenaire'], true)) {
+            return 'Seuls un médecin ou un partenaire peuvent organiser un événement.';
+        }
+
+        $id = $utilisateur->getIdUtilisateur();
+        $inscription = $this->trouverInscription($id, $idEvenement);
+        if ($inscription !== null && $inscription->estOrganisateur()) {
+            return 'Cette personne organise déjà cet événement.';
+        }
+        if ($inscription !== null) {
+            $req = $this->pdo->prepare('UPDATE inscription_evenement SET organiser = 1 WHERE id_utilisateur = ? AND id_evenement = ?');
+        } else {
+            $req = $this->pdo->prepare('INSERT INTO inscription_evenement (id_utilisateur, id_evenement, organiser) VALUES (?, ?, 1)');
+        }
+        $req->execute([$id, $idEvenement]);
+        return '';
+    }
+
     public function retirerParticipant(int $idUtilisateur, int $idEvenement): void
     {
         $req = $this->pdo->prepare(

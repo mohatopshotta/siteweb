@@ -137,6 +137,11 @@ if (isset($_GET['msg'])) {
         <?php endif; ?>
     </section>
 
+    <section class="admin-section">
+        <h2>Gestion de la plateforme</h2>
+        <p><a href="gestion.php">Gérer les spécialités, les offres, les événements, les messages de contact et les gestionnaires &rarr;</a></p>
+    </section>
+
 </div>
 <?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>

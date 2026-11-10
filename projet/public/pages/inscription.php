@@ -167,7 +167,9 @@ $entreprises = (new EntrepriseRepository())->listerTous();
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Inscription</title>
+    <link rel="stylesheet" href="../assets/css/css.css">
 </head>
 <body>
 
@@ -197,15 +199,15 @@ $entreprises = (new EntrepriseRepository())->listerTous();
     <label>Je suis</label>
     <select name="role" id="role" onchange="afficherChamps()" required>
         <option value="">-- choisir --</option>
-        <option value="etudiant">Étudiant</option>
-        <option value="medecin">Médecin</option>
-        <option value="partenaire">Partenaire</option>
+        <option value="etudiant" <?= (($_POST['role'] ?? '') === 'etudiant') ? 'selected' : '' ?>>Étudiant</option>
+        <option value="medecin" <?= (($_POST['role'] ?? '') === 'medecin') ? 'selected' : '' ?>>Médecin</option>
+        <option value="partenaire" <?= (($_POST['role'] ?? '') === 'partenaire') ? 'selected' : '' ?>>Partenaire</option>
     </select><br>
 
     <div id="champs-etudiant" style="display:none;">
         <h3>Étudiant</h3>
         <label>Formation</label>
-        <input type="text" name="formation"><br>
+        <input type="text" name="formation" value="<?= htmlspecialchars($_POST['formation'] ?? '') ?>"><br>
 
         <label>CV en PDF (facultatif, 2 Mo max)</label>
         <input type="file" name="cv" accept="application/pdf"><br>
@@ -214,9 +216,9 @@ $entreprises = (new EntrepriseRepository())->listerTous();
         <select name="id_etablissement" onchange="afficherNouvelEtablissement(this)">
             <option value="">-- choisir --</option>
             <?php foreach ($etablissements as $etab): ?>
-                <option value="<?= $etab->getIdEtablissement() ?>"><?= htmlspecialchars($etab->getNom()) ?></option>
+                <option value="<?= $etab->getIdEtablissement() ?>" <?= (($_POST['id_etablissement'] ?? '') == $etab->getIdEtablissement()) ? 'selected' : '' ?>><?= htmlspecialchars($etab->getNom()) ?></option>
             <?php endforeach; ?>
-            <option value="nouveau">+ Nouvel établissement</option>
+            <option value="nouveau" <?= (($_POST['id_etablissement'] ?? '') === 'nouveau') ? 'selected' : '' ?>>+ Nouvel établissement</option>
         </select><br>
     </div>
 
@@ -226,7 +228,7 @@ $entreprises = (new EntrepriseRepository())->listerTous();
         <select name="id_specialite">
             <option value="">-- choisir --</option>
             <?php foreach ($specialites as $spe): ?>
-                <option value="<?= $spe->getIdSpecialite() ?>"><?= htmlspecialchars($spe->getLibelle()) ?></option>
+                <option value="<?= $spe->getIdSpecialite() ?>" <?= (($_POST['id_specialite'] ?? '') == $spe->getIdSpecialite()) ? 'selected' : '' ?>><?= htmlspecialchars($spe->getLibelle()) ?></option>
             <?php endforeach; ?>
         </select><br>
 
@@ -234,7 +236,7 @@ $entreprises = (new EntrepriseRepository())->listerTous();
         <select name="id_hopital">
             <option value="">-- choisir --</option>
             <?php foreach ($hopitaux as $hop): ?>
-                <option value="<?= $hop->getIdHopital() ?>"><?= htmlspecialchars($hop->getNom()) ?></option>
+                <option value="<?= $hop->getIdHopital() ?>" <?= (($_POST['id_hopital'] ?? '') == $hop->getIdHopital()) ? 'selected' : '' ?>><?= htmlspecialchars($hop->getNom()) ?></option>
             <?php endforeach; ?>
         </select><br>
 
@@ -242,39 +244,39 @@ $entreprises = (new EntrepriseRepository())->listerTous();
         <select name="id_etablissement_medecin" onchange="afficherNouvelEtablissement(this)">
             <option value="">-- aucun --</option>
             <?php foreach ($etablissements as $etab): ?>
-                <option value="<?= $etab->getIdEtablissement() ?>"><?= htmlspecialchars($etab->getNom()) ?></option>
+                <option value="<?= $etab->getIdEtablissement() ?>" <?= (($_POST['id_etablissement_medecin'] ?? '') == $etab->getIdEtablissement()) ? 'selected' : '' ?>><?= htmlspecialchars($etab->getNom()) ?></option>
             <?php endforeach; ?>
-            <option value="nouveau">+ Nouvel établissement</option>
+            <option value="nouveau" <?= (($_POST['id_etablissement_medecin'] ?? '') === 'nouveau') ? 'selected' : '' ?>>+ Nouvel établissement</option>
         </select><br>
     </div>
 
     <div id="champs-partenaire" style="display:none;">
         <h3>Partenaire</h3>
         <label>Poste occupé</label>
-        <input type="text" name="poste"><br>
+        <input type="text" name="poste" value="<?= htmlspecialchars($_POST['poste'] ?? '') ?>"><br>
 
         <label>Entreprise</label>
         <select name="id_entreprise" onchange="afficherNouvelleEntreprise(this)">
             <option value="">-- choisir --</option>
             <?php foreach ($entreprises as $ent): ?>
-                <option value="<?= $ent->getIdEntreprise() ?>"><?= htmlspecialchars($ent->getNom()) ?></option>
+                <option value="<?= $ent->getIdEntreprise() ?>" <?= (($_POST['id_entreprise'] ?? '') == $ent->getIdEntreprise()) ? 'selected' : '' ?>><?= htmlspecialchars($ent->getNom()) ?></option>
             <?php endforeach; ?>
-            <option value="nouveau">+ Nouvelle entreprise</option>
+            <option value="nouveau" <?= (($_POST['id_entreprise'] ?? '') === 'nouveau') ? 'selected' : '' ?>>+ Nouvelle entreprise</option>
         </select><br>
     </div>
 
     <div id="champs-nouvel-etablissement" style="display:none;">
         <h4>Nouvel établissement</h4>
-        <input type="text" name="nouvel_etablissement_nom" placeholder="Nom"><br>
-        <input type="text" name="nouvel_etablissement_adresse" placeholder="Adresse"><br>
-        <input type="text" name="nouvel_etablissement_site" placeholder="Site web"><br>
+        <input type="text" name="nouvel_etablissement_nom" value="<?= htmlspecialchars($_POST['nouvel_etablissement_nom'] ?? '') ?>" placeholder="Nom"><br>
+        <input type="text" name="nouvel_etablissement_adresse" value="<?= htmlspecialchars($_POST['nouvel_etablissement_adresse'] ?? '') ?>" placeholder="Adresse"><br>
+        <input type="text" name="nouvel_etablissement_site" value="<?= htmlspecialchars($_POST['nouvel_etablissement_site'] ?? '') ?>" placeholder="Site web"><br>
     </div>
 
     <div id="champs-nouvelle-entreprise" style="display:none;">
         <h4>Nouvelle entreprise</h4>
-        <input type="text" name="nouvelle_entreprise_nom" placeholder="Nom"><br>
-        <input type="text" name="nouvelle_entreprise_adresse" placeholder="Adresse"><br>
-        <input type="text" name="nouvelle_entreprise_site" placeholder="Site web"><br>
+        <input type="text" name="nouvelle_entreprise_nom" value="<?= htmlspecialchars($_POST['nouvelle_entreprise_nom'] ?? '') ?>" placeholder="Nom"><br>
+        <input type="text" name="nouvelle_entreprise_adresse" value="<?= htmlspecialchars($_POST['nouvelle_entreprise_adresse'] ?? '') ?>" placeholder="Adresse"><br>
+        <input type="text" name="nouvelle_entreprise_site" value="<?= htmlspecialchars($_POST['nouvelle_entreprise_site'] ?? '') ?>" placeholder="Site web"><br>
     </div>
 
     <p>
@@ -309,6 +311,19 @@ $entreprises = (new EntrepriseRepository())->listerTous();
         document.getElementById('champs-nouvelle-entreprise').style.display =
             select.value === 'nouveau' ? 'block' : 'none';
     }
+
+    // Après une erreur, la page se recharge : on réaffiche le bloc du rôle choisi
+    afficherChamps();
+    (function () {
+        const role = document.getElementById('role').value;
+        const nom = {etudiant: 'id_etablissement', medecin: 'id_etablissement_medecin', partenaire: 'id_entreprise'}[role];
+        const select = nom ? document.querySelector('select[name="' + nom + '"]') : null;
+        if (select && role === 'partenaire') {
+            afficherNouvelleEntreprise(select);
+        } else if (select) {
+            afficherNouvelEtablissement(select);
+        }
+    })();
 </script>
 
 </body>

@@ -29,7 +29,9 @@ $sections = (new SectionForumRepository())->listerAvecNbPosts();
     </div>
 <?php endforeach; ?>
 
-<p><a href="mes_posts.php">Mes discussions et réponses</a></p>
+<?php if (Session::aLeRole(['etudiant', 'medecin', 'partenaire'])): ?>
+    <p><a href="mes_posts.php">Mes discussions et réponses</a></p>
+<?php endif; ?>
 
 <?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>

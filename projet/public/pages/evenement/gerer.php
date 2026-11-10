@@ -33,7 +33,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
 
 
 }
+<<<<<<< HEAD
 
+=======
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter_organisateur'])) {
+    $erreurOrga = $manager->ajouterOrganisateur($_POST['email_organisateur'] ?? '', $id_evenement);
+    if ($erreurOrga === '') {
+        Session::flash('Organisateur ajouté.');
+        Session::rediriger('gerer.php?id=' . $id_evenement);
+    }
+    $erreurs[] = $erreurOrga;
+}
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['supprimer_evenement'])) {
+    $manager->supprimer($id_evenement);
+    Session::flash('Événement supprimé.');
+    Session::rediriger('liste.php');
+}
+>>>>>>> a88174d314afc3eaf6b2c96d3a2ad887093b46c8
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['retirer_id'])) {
     $manager->retirerParticipant((int)$_POST['retirer_id'], $id_evenement);
     Session::rediriger('gerer.php?id=' . $id_evenement);
@@ -123,6 +139,26 @@ $inscrits = $manager->listerInscrits($id_evenement);
     <?php endforeach; ?>
     </tbody>
 </table>
+<<<<<<< HEAD
+=======
+<h2>Ajouter un organisateur</h2>
+<p>Un médecin ou un partenaire peut organiser cet événement avec toi.</p>
+<form method="post" action="gerer.php?id=<?= $id_evenement ?>">
+    <?= Session::champCsrf() ?>
+    <label for="email_organisateur">Email de l'organisateur</label>
+    <input type="email" id="email_organisateur" name="email_organisateur" required>
+    <button type="submit" name="ajouter_organisateur">Ajouter</button>
+</form>
+
+<h2>Zone dangereuse</h2>
+<form method="post" action="gerer.php?id=<?= $id_evenement ?>">
+    <?= Session::champCsrf() ?>
+    <button type="submit" name="supprimer_evenement" class="bouton-danger"
+            onclick="return confirm('Supprimer définitivement cet événement et toutes ses inscriptions ?');">
+        Supprimer cet événement
+    </button>
+</form>
+>>>>>>> a88174d314afc3eaf6b2c96d3a2ad887093b46c8
 <?php require __DIR__ . '/' . $racine . 'includes/footer.php'; ?>
 </body>
 </html>
