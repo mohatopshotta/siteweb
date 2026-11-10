@@ -24,6 +24,27 @@ class NewPost extends NewTraitement
         return $this->dateHeure ? date('d/m/Y H:i', strtotime($this->dateHeure)) : '';
     }
 
+    /** Date de la dernière réponse, ou de la création s'il n'y a pas encore de réponse. */
+    public function getDerniereActiviteFormatee(): string
+    {
+        $date = $this->derniereReponse ?? $this->dateHeure;
+        return $date ? date('d/m/Y H:i', strtotime($date)) : '';
+    }
+
+    // ---------- Droits ----------
+
+    /** Seul l'auteur peut modifier son message. */
+    public function peutModifier(?int $idUtilisateur): bool
+    {
+        return $idUtilisateur !== null && $idUtilisateur === $this->idAuteur;
+    }
+
+    /** L'auteur peut supprimer son message, le gestionnaire peut supprimer n'importe quel message (modération). */
+    public function peutSupprimer(?int $idUtilisateur, ?string $role): bool
+    {
+        return $this->peutModifier($idUtilisateur) || $role === 'gestionnaire';
+    }
+
     public function getIdPost(): ?int { return $this->idPost; }
     public function getIdSection(): ?int { return $this->idSection; }
     public function getIdAuteur(): ?int { return $this->idAuteur; }
