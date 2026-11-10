@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action      = $_POST['action'] ?? '';
     $id_candidat = (int)($_POST['id_candidat'] ?? 0);
 
-    if ($action === 'bloquer') {
+    if ($action === 'cloturer') {
         $offreManager->changerEtat($id_offre, NewOffre::CLOTURE, $id_utilisateur);
     } elseif ($action === 'rouvrir') {
         $offreManager->changerEtat($id_offre, NewOffre::OUVERT, $id_utilisateur);
@@ -51,14 +51,14 @@ $candidats = $candidatureManager->listerParOffre($id_offre);
 <h1><?= htmlspecialchars($offre->getTitre()) ?></h1>
 <p>
     <?= htmlspecialchars($offre->getEntreprise()) ?> ·
-    État : <strong><?= $offre->estOuverte() ? 'ouverte' : 'bloquée' ?></strong> ·
+    État : <strong><?= $offre->estOuverte() ? 'ouverte' : 'clôturée' ?></strong> ·
     <a href="detail.php?id=<?= $id_offre ?>">voir l'offre</a>
 </p>
 
 <form method="post">
     <?= Session::champCsrf() ?>
     <?php if ($offre->estOuverte()): ?>
-        <button type="submit" name="action" value="bloquer">Bloquer l'offre</button>
+        <button type="submit" name="action" value="cloturer">Clôturer l’offre</button>
     <?php else: ?>
         <button type="submit" name="action" value="rouvrir">Rouvrir l'offre</button>
     <?php endif; ?>

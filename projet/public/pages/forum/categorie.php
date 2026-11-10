@@ -69,10 +69,10 @@ $posts = $postRepository->listerParSection($id_section);
         <summary>Nouvelle discussion</summary>
         <form method="post">
             <?= Session::champCsrf() ?>
-            <label>Titre</label>
-            <input type="text" name="titre" maxlength="150" required><br>
-            <label>Message</label>
-            <textarea name="contenu" required></textarea><br>
+            <label for="titre">Titre</label>
+            <input type="text" id="titre" name="titre" maxlength="150" required><br>
+            <label for="contenu">Message</label>
+            <textarea id="contenu" name="contenu" required></textarea><br>
             <button type="submit">Publier</button>
         </form>
     </details>

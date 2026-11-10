@@ -22,6 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!in_array($role, ['etudiant', 'medecin', 'partenaire'], true)) {
         $erreurs[] = 'Rôle invalide.';
     }
+    // RGPD : l'accord doit être vérifié côté serveur (le "required" du HTML se contourne facilement)
+    if (empty($_POST['consentement'])) {
+        $erreurs[] = 'Tu dois accepter la politique de confidentialité.';
+    }
 
     $utilisateurRepository = new UtilisateurRepository();
 
@@ -272,6 +276,14 @@ $entreprises = (new EntrepriseRepository())->listerTous();
         <input type="text" name="nouvelle_entreprise_adresse" placeholder="Adresse"><br>
         <input type="text" name="nouvelle_entreprise_site" placeholder="Site web"><br>
     </div>
+
+    <p>
+        <label>
+            <input type="checkbox" name="consentement" value="1" required
+                <?= !empty($_POST['consentement']) ? 'checked' : '' ?>>
+            J'accepte la <a href="politique_confidentialite.php" target="_blank">politique de confidentialité</a>
+        </label>
+    </p>
 
     <button type="submit">S'inscrire</button>
 </form>
