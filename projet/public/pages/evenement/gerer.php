@@ -96,6 +96,10 @@ $inscrits = $manager->listerInscrits($id_evenement);
     <input type="text" id="lieu" name="lieu"
            value="<?= htmlspecialchars($evenement->getLieu()) ?>" required>
 
+    <label for="date_evenement">Date et heure</label>
+    <input type="datetime-local" id="date_evenement" name="date_evenement"
+           value="<?= htmlspecialchars($_POST['date_evenement'] ?? $evenement->getDateFormulaire()) ?>" required>
+
     <label for="elements_requis">Éléments requis (facultatif)</label>
     <textarea id="elements_requis" name="elements_requis" rows="3"><?= htmlspecialchars($evenement->getElementsRequis() ?? '') ?></textarea>
 

@@ -81,6 +81,12 @@ class NewEvenement extends NewTraitement
         if (!ctype_digit($places) || (int)$places < 1) {
             $erreurs[] = "Le nombre de places doit être un entier positif.";
         }
+        $date = trim($post['date_evenement'] ?? '');
+        if ($date === '' || strtotime($date) === false) {
+            $erreurs[] = "La date et l'heure sont obligatoires.";
+        } elseif ($creation && strtotime($date) < time()) {
+            $erreurs[] = "La date de l'événement doit être dans le futur.";
+        }
         return $erreurs;
     }
 
