@@ -175,7 +175,7 @@ DROP TABLE IF EXISTS `medecin`;
 CREATE TABLE IF NOT EXISTS `medecin` (
                                          `id_utilisateur` int UNSIGNED NOT NULL,
                                          `id_specialite` int UNSIGNED NOT NULL,
-                                         `id_hopital` int UNSIGNED NOT NULL,
+                                           `id_hopital` int UNSIGNED NOT NULL,
                                          `id_etablissement` int UNSIGNED DEFAULT NULL,
                                          PRIMARY KEY (`id_utilisateur`),
     KEY `fk_medecin_specialite` (`id_specialite`),
@@ -193,7 +193,7 @@ DROP TABLE IF EXISTS `offre`;
 CREATE TABLE IF NOT EXISTS `offre` (
                                        `id_offre` int UNSIGNED NOT NULL AUTO_INCREMENT,
                                        `id_auteur` int UNSIGNED NOT NULL,
-                                       `id_entreprise` int UNSIGNED NOT NULL,
+                                       `id_entreprise` int UNSIGNED NULL,
                                        `titre` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
     `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
     `missions` text COLLATE utf8mb4_unicode_ci NOT NULL,
