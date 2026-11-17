@@ -73,15 +73,20 @@ $message     = Session::consommerFlash();
 <h1><?= htmlspecialchars($evenement->getTitre()) ?></h1>
 <p><em><?= htmlspecialchars($evenement->getTypeEvenement()) ?></em></p>
 
+<?php if ($evenement->estAnnule()): ?>
+    <p class="avis-annule"><strong>Cet événement est annulé.</strong> Les inscriptions sont fermées.</p>
+<?php endif; ?>
+
 <?php if ($message): ?>
     <p class="message-succes"><?= htmlspecialchars($message) ?></p>
 <?php endif; ?>
 
 <p><strong>Date :</strong> <?= htmlspecialchars($evenement->getDateAffichage()) ?>
-    <?php if ($evenement->estPasse()): ?><span class="badge badge-passe">Terminé</span><?php endif; ?>
+    <?php if ($evenement->estAnnule()): ?><span class="badge badge-annule">Annulé</span>
+    <?php elseif ($evenement->estPasse()): ?><span class="badge badge-passe">Terminé</span><?php endif; ?>
 </p>
 <p><strong>Lieu :</strong> <?= htmlspecialchars($evenement->getLieu()) ?></p>
-<?php if ($evenement->getDateEvenement() !== null && !$evenement->estPasse()): ?>
+<?php if ($evenement->getDateEvenement() !== null && !$evenement->estPasse() && !$evenement->estAnnule()): ?>
     <p><a href="calendrier.php?id=<?= $evenement->getIdEvenement() ?>">&#128197; Ajouter à mon calendrier</a></p>
 <?php endif; ?>
 <p><?= nl2br(htmlspecialchars($evenement->getDescription())) ?></p>
@@ -139,7 +144,7 @@ $message     = Session::consommerFlash();
         </button>
     </form>
 
-<?php elseif ($peutSInscrire && !$evenement->estComplet() && !$evenement->estPasse()): ?>
+<?php elseif ($peutSInscrire && !$evenement->estComplet() && !$evenement->estPasse() && !$evenement->estAnnule()): ?>
     <form method="post">
         <?= Session::champCsrf() ?>
         <button type="submit" name="inscrire">S'inscrire</button>

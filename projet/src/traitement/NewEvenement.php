@@ -13,6 +13,7 @@ class NewEvenement extends NewTraitement
     private ?string $elementsRequis = null;
     private int $nombrePlaces = 0;
     private int $placesPrises = 0;
+    private bool $annule = false;
 
 
     public function getPlacesRestantes(): int
@@ -53,6 +54,7 @@ class NewEvenement extends NewTraitement
     public function getLieu(): string { return $this->lieu; }
     public function getElementsRequis(): ?string { return $this->elementsRequis; }
     public function estOrganisateur(): bool { return $this->estOrganisateur; }
+    public function estAnnule(): bool { return $this->annule; }
     public function getNombrePlaces(): int { return $this->nombrePlaces; }
     public function getPlacesPrises(): int { return $this->placesPrises; }
 
@@ -69,6 +71,7 @@ class NewEvenement extends NewTraitement
     public function setEstOrganisateur(bool $oui): void { $this->estOrganisateur = $oui; }
     public function setNombrePlaces(int $nombre): void { $this->nombrePlaces = $nombre; }
     public function setPlacesPrises(int $nombre): void { $this->placesPrises = $nombre; }
+    public function setAnnule($valeur): void { $this->annule = (bool)(int)$valeur; }
 
     public static function validerFormulaire(array $post, bool $creation = false): array
     {

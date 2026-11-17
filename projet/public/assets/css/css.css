@@ -729,3 +729,8 @@ body > footer a { color: var(--encre-douce); }
 
 .pagination { display:flex; align-items:center; justify-content:center; gap:1.25rem; margin:2rem 0 0; }
 .pagination a { font-weight:700; }
+
+.carte-annulee { opacity:0.75; border-top-color: var(--croix); }
+.carte-annulee h2 { text-decoration: line-through; }
+.badge-annule { background:var(--croix-fond); color:var(--croix); font-weight:700; }
+.avis-annule { margin:1rem 0; padding:0.75rem 1rem; background:var(--croix-fond); border:1px solid var(--croix); border-radius:var(--rayon-l); color:var(--croix); }
