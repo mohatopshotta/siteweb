@@ -37,7 +37,7 @@ class EvenementRepository extends Repository
             $params[] = $type;
         }
         if (!$inclurePasses) {
-            $conditions[] = '(e.date_evenement IS NULL OR e.date_evenement >= NOW())';
+            $conditions[] = '(e.date_evenement IS NULL OR COALESCE(e.date_fin, e.date_evenement) >= NOW())';
         }
         if (!$inclureAnnules) {
             $conditions[] = 'e.annule = 0';
@@ -98,8 +98,8 @@ class EvenementRepository extends Repository
         $this->pdo->beginTransaction();
         try {
             $req = $this->pdo->prepare(
-                'INSERT INTO evenement (type_evenement, titre, description, lieu, date_evenement, elements_requis, nombre_places)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)'
+                'INSERT INTO evenement (type_evenement, titre, description, lieu, date_evenement, date_fin, elements_requis, nombre_places)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
             );
             $req->execute([
                 $evenement->getTypeEvenement(),
@@ -107,6 +107,7 @@ class EvenementRepository extends Repository
                 $evenement->getDescription(),
                 $evenement->getLieu(),
                 $evenement->getDateEvenement(),
+                $evenement->getDateFin(),
                 $evenement->getElementsRequis(),
                 $evenement->getNombrePlaces(),
             ]);
@@ -129,7 +130,7 @@ class EvenementRepository extends Repository
     {
         $req = $this->pdo->prepare(
             'UPDATE evenement
-             SET type_evenement = ?, titre = ?, description = ?, lieu = ?, date_evenement = ?, elements_requis = ?, nombre_places = ?
+             SET type_evenement = ?, titre = ?, description = ?, lieu = ?, date_evenement = ?, date_fin = ?, elements_requis = ?, nombre_places = ?
              WHERE id_evenement = ?'
         );
         $req->execute([
@@ -138,6 +139,7 @@ class EvenementRepository extends Repository
             $evenement->getDescription(),
             $evenement->getLieu(),
             $evenement->getDateEvenement(),
+            $evenement->getDateFin(),
             $evenement->getElementsRequis(),
             $evenement->getNombrePlaces(),
             $evenement->getIdEvenement(),

@@ -100,8 +100,10 @@ CREATE TABLE IF NOT EXISTS `evenement` (
     `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
     `lieu` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
     `date_evenement` datetime DEFAULT NULL,
+    `date_fin` datetime DEFAULT NULL,
     `elements_requis` text COLLATE utf8mb4_unicode_ci,
     `nombre_places` int UNSIGNED NOT NULL,
+    `annule` tinyint(1) NOT NULL DEFAULT '0',
     PRIMARY KEY (`id_evenement`),
     KEY `idx_evenement_type` (`type_evenement`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -173,7 +175,7 @@ DROP TABLE IF EXISTS `medecin`;
 CREATE TABLE IF NOT EXISTS `medecin` (
                                          `id_utilisateur` int UNSIGNED NOT NULL,
                                          `id_specialite` int UNSIGNED NOT NULL,
-                                         `id_hopital` int UNSIGNED NOT NULL,
+                                           `id_hopital` int UNSIGNED NOT NULL,
                                          `id_etablissement` int UNSIGNED DEFAULT NULL,
                                          PRIMARY KEY (`id_utilisateur`),
     KEY `fk_medecin_specialite` (`id_specialite`),
@@ -191,7 +193,7 @@ DROP TABLE IF EXISTS `offre`;
 CREATE TABLE IF NOT EXISTS `offre` (
                                        `id_offre` int UNSIGNED NOT NULL AUTO_INCREMENT,
                                        `id_auteur` int UNSIGNED NOT NULL,
-                                       `id_entreprise` int UNSIGNED NOT NULL,
+                                       `id_entreprise` int UNSIGNED NULL,
                                        `titre` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
     `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
     `missions` text COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -351,7 +353,7 @@ CREATE TABLE IF NOT EXISTS `utilisateur` (
 --
 
 INSERT INTO `utilisateur` (`id_utilisateur`, `nom`, `prenom`, `email`, `mot_de_passe`, `valide`, `id_validateur`) VALUES
-(1, 'Test', 'Admin', 'admin@test.com', '$2y$10$81q.hxEmnvwigDVCHaGjF.m8RFNOohmjnJcOHidQGKDgC.PYCbFhm', 1, NULL);
+    (1, 'Test', 'Admin', 'admin@test.com', '$2y$10$81q.hxEmnvwigDVCHaGjF.m8RFNOohmjnJcOHidQGKDgC.PYCbFhm', 1, NULL);
 
 INSERT INTO `gestionnaire` (`id_utilisateur`) VALUES (1);
 
@@ -364,9 +366,9 @@ INSERT INTO `gestionnaire` (`id_utilisateur`) VALUES (1);
 
 DROP TABLE IF EXISTS `reinitialisation_mdp`;
 CREATE TABLE IF NOT EXISTS `reinitialisation_mdp` (
-    `id_reinitialisation` int UNSIGNED NOT NULL AUTO_INCREMENT,
-    `id_utilisateur` int UNSIGNED NOT NULL,
-    `jeton_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+                                                      `id_reinitialisation` int UNSIGNED NOT NULL AUTO_INCREMENT,
+                                                      `id_utilisateur` int UNSIGNED NOT NULL,
+                                                      `jeton_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
     `date_expiration` datetime NOT NULL,
     PRIMARY KEY (`id_reinitialisation`),
     UNIQUE KEY `uq_reinitialisation_jeton` (`jeton_hash`),
@@ -380,8 +382,8 @@ CREATE TABLE IF NOT EXISTS `reinitialisation_mdp` (
 
 DROP TABLE IF EXISTS `tentative_connexion`;
 CREATE TABLE IF NOT EXISTS `tentative_connexion` (
-    `id_tentative` int UNSIGNED NOT NULL AUTO_INCREMENT,
-    `email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+                                                     `id_tentative` int UNSIGNED NOT NULL AUTO_INCREMENT,
+                                                     `email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
     `date_tentative` datetime NOT NULL,
     PRIMARY KEY (`id_tentative`),
     KEY `idx_tentative_email_date` (`email`, `date_tentative`)
@@ -395,9 +397,9 @@ CREATE TABLE IF NOT EXISTS `tentative_connexion` (
 
 DROP TABLE IF EXISTS `message_contact`;
 CREATE TABLE IF NOT EXISTS `message_contact` (
-    `id_message` int UNSIGNED NOT NULL AUTO_INCREMENT,
-    `id_utilisateur` int UNSIGNED DEFAULT NULL,
-    `nom` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+                                                 `id_message` int UNSIGNED NOT NULL AUTO_INCREMENT,
+                                                 `id_utilisateur` int UNSIGNED DEFAULT NULL,
+                                                 `nom` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
     `email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
     `sujet` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
     `message` text COLLATE utf8mb4_unicode_ci NOT NULL,

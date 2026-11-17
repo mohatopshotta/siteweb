@@ -66,6 +66,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <input type="datetime-local" id="date_evenement" name="date_evenement"
            value="<?= htmlspecialchars($_POST['date_evenement'] ?? '') ?>" required>
 
+    <label for="date_fin">Heure de fin (facultatif)</label>
+    <input type="datetime-local" id="date_fin" name="date_fin"
+           value="<?= htmlspecialchars($_POST['date_fin'] ?? '') ?>">
+
     <label for="elements_requis">Éléments requis (facultatif)</label>
     <textarea id="elements_requis" name="elements_requis" rows="3"><?= htmlspecialchars($_POST['elements_requis'] ?? '') ?></textarea>
 
