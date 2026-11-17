@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <h1>Mot de passe oublié</h1>
 
 <?php if ($envoye): ?>
-    <p style="color:green;">Si ce compte existe, un email a été envoyé avec un lien valable 1 heure.</p>
+    <p class="alerte-succes">Si ce compte existe, un email a été envoyé avec un lien valable 1 heure.</p>
 <?php endif; ?>
 
 <form method="post">
