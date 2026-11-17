@@ -1,4 +1,3 @@
-
 @import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700;800&display=swap");
 
 :root {
@@ -397,10 +396,6 @@ p[style*="color: green"],
 .erreurs { list-style: none; }
 .erreurs li + li { margin-top: 0.25rem; }
 
-/* Bloc caché au départ (ex : champs du formulaire d'inscription selon le rôle).
-   Le JavaScript l'affiche en mettant style.display = "block". */
-.cache { display: none; }
-
 /* ---------- Événements ---------------------------------------------------- */
 
 .liste-evenements {
@@ -729,7 +724,7 @@ body > footer a { color: var(--encre-douce); }
 .message-succes { margin:1rem 0; padding:0.75rem 1rem; background:var(--succes-fond); border:1px solid #b9dcc8; border-radius:var(--rayon-l); color:var(--succes); }
 .bouton-danger { background:var(--croix); color:var(--blanc); }
 .bouton-danger:hover { background:#9d2a21; }
-.pied-page { margin-top:2.5rem; padding:1.25rem 0; border-top:1px solid var(--ligne); font-size:0.9rem; }
+.pied-page { margin-top:2.5rem; padding:1.25rem 0; border-top:1px solid var(--ligne); font-size:0.9rem; justify-content:center; text-align:center; }
 
 .pagination { display:flex; align-items:center; justify-content:center; gap:1.25rem; margin:2rem 0 0; }
 .pagination a { font-weight:700; }
