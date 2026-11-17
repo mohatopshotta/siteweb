@@ -397,6 +397,10 @@ p[style*="color: green"],
 .erreurs { list-style: none; }
 .erreurs li + li { margin-top: 0.25rem; }
 
+/* Bloc caché au départ (ex : champs du formulaire d'inscription selon le rôle).
+   Le JavaScript l'affiche en mettant style.display = "block". */
+.cache { display: none; }
+
 /* ---------- Événements ---------------------------------------------------- */
 
 .liste-evenements {

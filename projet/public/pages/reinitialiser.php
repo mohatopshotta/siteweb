@@ -38,15 +38,15 @@ if ($lienValide && $_SERVER['REQUEST_METHOD'] === 'POST') {
 <h1>Nouveau mot de passe</h1>
 
 <?php if ($termine): ?>
-    <p style="color:green;">Mot de passe modifié. <a href="connexion.php">Se connecter</a></p>
+    <p class="alerte-succes">Mot de passe modifié. <a href="connexion.php">Se connecter</a></p>
 
 <?php elseif (!$lienValide): ?>
-    <p style="color:red;">Lien invalide ou expiré.</p>
+    <p class="alerte-erreur">Lien invalide ou expiré.</p>
     <p><a href="mot_de_passe_oublie.php">Demander un nouveau lien</a></p>
 
 <?php else: ?>
     <?php foreach ($erreurs as $erreur): ?>
-        <p style="color:red;"><?= htmlspecialchars($erreur) ?></p>
+        <p class="alerte-erreur"><?= htmlspecialchars($erreur) ?></p>
     <?php endforeach; ?>
 
     <form method="post">

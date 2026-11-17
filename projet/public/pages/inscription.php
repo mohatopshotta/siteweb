@@ -178,7 +178,7 @@ $entreprises = (new EntrepriseRepository())->listerTous();
 <h1>Inscription</h1>
 
 <?php foreach ($erreurs as $erreur): ?>
-    <p style="color:red;"><?= htmlspecialchars($erreur) ?></p>
+    <p class="alerte-erreur"><?= htmlspecialchars($erreur) ?></p>
 <?php endforeach; ?>
 
 <form method="post" enctype="multipart/form-data">
@@ -204,7 +204,7 @@ $entreprises = (new EntrepriseRepository())->listerTous();
         <option value="partenaire" <?= (($_POST['role'] ?? '') === 'partenaire') ? 'selected' : '' ?>>Partenaire</option>
     </select><br>
 
-    <div id="champs-etudiant" style="display:none;">
+    <div id="champs-etudiant" class="cache">
         <h3>Étudiant</h3>
         <label>Formation</label>
         <input type="text" name="formation" value="<?= htmlspecialchars($_POST['formation'] ?? '') ?>"><br>
@@ -222,7 +222,7 @@ $entreprises = (new EntrepriseRepository())->listerTous();
         </select><br>
     </div>
 
-    <div id="champs-medecin" style="display:none;">
+    <div id="champs-medecin" class="cache">
         <h3>Médecin</h3>
         <label>Spécialité</label>
         <select name="id_specialite">
@@ -250,7 +250,7 @@ $entreprises = (new EntrepriseRepository())->listerTous();
         </select><br>
     </div>
 
-    <div id="champs-partenaire" style="display:none;">
+    <div id="champs-partenaire" class="cache">
         <h3>Partenaire</h3>
         <label>Poste occupé</label>
         <input type="text" name="poste" value="<?= htmlspecialchars($_POST['poste'] ?? '') ?>"><br>
@@ -265,14 +265,14 @@ $entreprises = (new EntrepriseRepository())->listerTous();
         </select><br>
     </div>
 
-    <div id="champs-nouvel-etablissement" style="display:none;">
+    <div id="champs-nouvel-etablissement" class="cache">
         <h4>Nouvel établissement</h4>
         <input type="text" name="nouvel_etablissement_nom" value="<?= htmlspecialchars($_POST['nouvel_etablissement_nom'] ?? '') ?>" placeholder="Nom"><br>
         <input type="text" name="nouvel_etablissement_adresse" value="<?= htmlspecialchars($_POST['nouvel_etablissement_adresse'] ?? '') ?>" placeholder="Adresse"><br>
         <input type="text" name="nouvel_etablissement_site" value="<?= htmlspecialchars($_POST['nouvel_etablissement_site'] ?? '') ?>" placeholder="Site web"><br>
     </div>
 
-    <div id="champs-nouvelle-entreprise" style="display:none;">
+    <div id="champs-nouvelle-entreprise" class="cache">
         <h4>Nouvelle entreprise</h4>
         <input type="text" name="nouvelle_entreprise_nom" value="<?= htmlspecialchars($_POST['nouvelle_entreprise_nom'] ?? '') ?>" placeholder="Nom"><br>
         <input type="text" name="nouvelle_entreprise_adresse" value="<?= htmlspecialchars($_POST['nouvelle_entreprise_adresse'] ?? '') ?>" placeholder="Adresse"><br>
