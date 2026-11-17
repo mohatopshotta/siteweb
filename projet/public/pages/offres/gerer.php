@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'rouvrir') {
         $offreManager->changerEtat($id_offre, NewOffre::OUVERT, $id_utilisateur);
     } elseif ($action === 'retenir') {
-        $candidatureManager->retenir($id_offre, $id_candidat);
+        $candidatureManager->retenir($offre, $id_candidat);
     } elseif ($action === 'refuser') {
         $candidatureManager->refuser($offre, $id_candidat);
     }
