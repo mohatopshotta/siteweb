@@ -45,7 +45,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$posts = $postRepository->listerParSection($id_section);
+// Recherche et pagination (paramètres GET, conservés dans les liens de page)
+$recherche = trim($_GET['q'] ?? '');
+$parPage = 10;
+$total = $postRepository->compterParSection($id_section, $recherche);
+$nbPages = max(1, (int)ceil($total / $parPage));
+$page = min(max(1, (int)($_GET['page'] ?? 1)), $nbPages);
+
+$posts = $postRepository->listerParSection($id_section, $recherche, $page, $parPage);
+
+// Construit le lien vers une page en gardant la section et la recherche
+function lienPage(int $idSection, string $recherche, int $page): string
+{
+    $params = ['id' => $idSection, 'page' => $page];
+    if ($recherche !== '') {
+        $params['q'] = $recherche;
+    }
+    return 'categorie.php?' . http_build_query($params);
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -60,8 +77,12 @@ $posts = $postRepository->listerParSection($id_section);
 
 <h1><?= htmlspecialchars($section->getNom()) ?></h1>
 
+<?php if (($_GET['msg'] ?? '') === 'discussion_supprimee'): ?>
+    <p class="alerte alerte-succes">La discussion et ses réponses ont été supprimées.</p>
+<?php endif; ?>
+
 <?php if ($erreur): ?>
-    <p style="color:red;"><?= htmlspecialchars($erreur) ?></p>
+    <p class="alerte alerte-erreur"><?= htmlspecialchars($erreur) ?></p>
 <?php endif; ?>
 
 <?php if ($section->peutCreer($role)): ?>
@@ -78,8 +99,22 @@ $posts = $postRepository->listerParSection($id_section);
     </details>
 <?php endif; ?>
 
+<form method="get" class="recherche-forum">
+    <input type="hidden" name="id" value="<?= $id_section ?>">
+    <input type="search" name="q" value="<?= htmlspecialchars($recherche) ?>"
+           placeholder="Rechercher dans cette section" aria-label="Rechercher dans cette section">
+    <button type="submit">Rechercher</button>
+    <?php if ($recherche !== ''): ?>
+        <a href="categorie.php?id=<?= $id_section ?>">Effacer</a>
+    <?php endif; ?>
+</form>
+
+<?php if ($recherche !== ''): ?>
+    <p><?= $total ?> discussion(s) trouvée(s) pour « <?= htmlspecialchars($recherche) ?> ».</p>
+<?php endif; ?>
+
 <?php if (empty($posts)): ?>
-    <p>Aucune discussion pour le moment.</p>
+    <p><?= $recherche !== '' ? 'Aucune discussion ne correspond à votre recherche.' : 'Aucune discussion pour le moment.' ?></p>
 <?php endif; ?>
 
 <?php foreach ($posts as $p): ?>
@@ -89,8 +124,21 @@ $posts = $postRepository->listerParSection($id_section);
             Par <?= htmlspecialchars($p->getNomAuteur()) ?> le <?= $p->getDateFormatee() ?>
             - <?= $p->getNbReponses() ?> réponse(s)
         </p>
+        <p>Dernière activité : <?= $p->getDerniereActiviteFormatee() ?></p>
     </div>
 <?php endforeach; ?>
+
+<?php if ($nbPages > 1): ?>
+    <nav class="pagination" aria-label="Pages de la section">
+        <?php if ($page > 1): ?>
+            <a href="<?= htmlspecialchars(lienPage($id_section, $recherche, $page - 1)) ?>">&larr; Précédente</a>
+        <?php endif; ?>
+        <span>Page <?= $page ?> sur <?= $nbPages ?></span>
+        <?php if ($page < $nbPages): ?>
+            <a href="<?= htmlspecialchars(lienPage($id_section, $recherche, $page + 1)) ?>">Suivante &rarr;</a>
+        <?php endif; ?>
+    </nav>
+<?php endif; ?>
 
 <p><a href="liste.php">Retour au forum</a></p>
 
