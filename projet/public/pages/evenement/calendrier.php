@@ -6,9 +6,9 @@ Session::exigerConnexion('../../');
 $repo = new EvenementRepository();
 $evenement = $repo->trouverParId((int)($_GET['id'] ?? 0));
 
-if ($evenement === null || $evenement->getDateEvenement() === null) {
+if ($evenement === null || $evenement->getDateEvenement() === null || $evenement->estAnnule()) {
     http_response_code(404);
-    die('Événement introuvable ou sans date.');
+    die('Événement introuvable, sans date ou annulé.');
 }
 
 // Pas d'heure de fin en base : on compte 2 h par défaut

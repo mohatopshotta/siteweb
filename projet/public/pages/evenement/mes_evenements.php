@@ -37,7 +37,9 @@ $evenements = (new EvenementRepository())->listerPourUtilisateur(Session::getIdU
                     <?php else: ?>
                         <span class="badge badge-dispo">Inscrit(e)</span>
                     <?php endif; ?>
-                    <?php if ($evenement->estPasse()): ?>
+                    <?php if ($evenement->estAnnule()): ?>
+                        <span class="badge badge-annule">Annulé</span>
+                    <?php elseif ($evenement->estPasse()): ?>
                         <span class="badge badge-passe">Terminé</span>
                     <?php endif; ?>
                 </p>

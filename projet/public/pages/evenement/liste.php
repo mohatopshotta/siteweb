@@ -92,7 +92,7 @@ $message    = Session::consommerFlash();
             $restantes = $evenement->getPlacesRestantes();
             $classeJauge = $evenement->estComplet() ? 'jauge-pleine' : ($restantes <= 5 ? 'jauge-peu' : '');
             ?>
-            <div class="carte-evenement<?= $evenement->estPasse() ? ' carte-passee' : '' ?>">
+            <div class="carte-evenement<?= $evenement->estPasse() ? ' carte-passee' : '' ?><?= $evenement->estAnnule() ? ' carte-annulee' : '' ?>">
                 <p class="carte-type"><?= htmlspecialchars($evenement->getTypeEvenement()) ?></p>
                 <h2><?= htmlspecialchars($evenement->getTitre()) ?></h2>
                 <p class="carte-date"><?= htmlspecialchars($evenement->getDateAffichage()) ?></p>
@@ -104,7 +104,9 @@ $message    = Session::consommerFlash();
                 </div>
 
                 <p>
-                    <?php if ($evenement->estPasse()): ?>
+                    <?php if ($evenement->estAnnule()): ?>
+                        <span class="badge badge-annule">Annulé</span>
+                    <?php elseif ($evenement->estPasse()): ?>
                         <span class="badge badge-passe">Terminé</span>
                     <?php elseif ($evenement->estComplet()): ?>
                         <span class="badge badge-complet">Complet</span>

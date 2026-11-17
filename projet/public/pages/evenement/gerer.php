@@ -16,7 +16,20 @@ if (!$manager->estOrganisateur($id_utilisateur, $id_evenement)) {
     die("Accès réservé aux organisateurs de cet événement.");
 }
 
+// Envoie un mail à chaque participant (pas aux organisateurs). Renvoie le nombre de mails partis.
+function prevenirParticipants(array $inscrits, string $sujet, string $corps): int
+{
+    $envoyes = 0;
+    foreach ($inscrits as $personne) {
+        if (!$personne->estOrganisateur() && Mail::envoyer($personne->getEmail(), $sujet, $corps)) {
+            $envoyes++;
+        }
+    }
+    return $envoyes;
+}
+
 $erreurs = [];
+$inscrits = $manager->listerInscrits($id_evenement);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
     $erreurs = NewEvenement::validerFormulaire($_POST);
@@ -27,7 +40,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
     }
 
     if (empty($erreurs)) {
-        $manager->modifier(NewEvenement::depuisFormulaire($_POST, $id_evenement));
+        $nouveau = NewEvenement::depuisFormulaire($_POST, $id_evenement);
+
+        // La date ou le lieu a-t-il changé ?
+        $dateChangee = strtotime((string)$nouveau->getDateEvenement()) !== strtotime((string)$evenement->getDateEvenement());
+        $lieuChange  = $nouveau->getLieu() !== $evenement->getLieu();
+
+        $manager->modifier($nouveau);
+
+        // Si oui, on prévient chaque participant par mail
+        $prevenus = 0;
+        $aPrevenir = $dateChangee || $lieuChange;
+        if ($aPrevenir) {
+            $corps = "Bonjour,\n\n"
+                . "L'événement « " . $nouveau->getTitre() . " » a été modifié par son organisateur.\n\n";
+            if ($dateChangee) {
+                $corps .= "Date : " . $evenement->getDateAffichage() . "  ->  " . $nouveau->getDateAffichage() . "\n";
+            }
+            if ($lieuChange) {
+                $corps .= "Lieu : " . $evenement->getLieu() . "  ->  " . $nouveau->getLieu() . "\n";
+            }
+            $corps .= "\nSi tu ne peux plus venir, tu peux te désinscrire depuis la page de l'événement.\n\n"
+                . "L'équipe GDH - Hôpital Sud Paris";
+
+            $prevenus = prevenirParticipants($inscrits, 'Modification : ' . $nouveau->getTitre(), $corps);
+        }
+
+        Session::flash($prevenus > 0
+            ? 'Modifications enregistrées. ' . $prevenus . ' participant(s) prévenu(s) par mail.'
+            : 'Modifications enregistrées.');
         Session::rediriger('gerer.php?id=' . $id_evenement);
     }
 }
@@ -39,6 +80,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter_organisateur'
         Session::rediriger('gerer.php?id=' . $id_evenement);
     }
     $erreurs[] = $erreurOrga;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['annuler_evenement']) || isset($_POST['retablir_evenement']))) {
+    $annule = isset($_POST['annuler_evenement']);
+    $manager->definirAnnule($id_evenement, $annule);
+
+    $corps = "Bonjour,\n\n"
+        . ($annule
+            ? "L'événement « " . $evenement->getTitre() . " » prévu le " . $evenement->getDateAffichage() . " est annulé.\n\nNous nous excusons pour la gêne occasionnée."
+            : "Bonne nouvelle : l'événement « " . $evenement->getTitre() . " » est de nouveau maintenu (" . $evenement->getDateAffichage() . ", " . $evenement->getLieu() . ").")
+        . "\n\nL'équipe GDH - Hôpital Sud Paris";
+    $prevenus = prevenirParticipants($inscrits, ($annule ? 'Annulation : ' : 'Événement maintenu : ') . $evenement->getTitre(), $corps);
+
+    Session::flash(($annule ? 'Événement annulé.' : 'Événement rétabli.')
+        . ($prevenus > 0 ? ' ' . $prevenus . ' participant(s) prévenu(s) par mail.' : ''));
+    Session::rediriger('gerer.php?id=' . $id_evenement);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['supprimer_evenement'])) {
@@ -53,6 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['retirer_id'])) {
 }
 
 $inscrits = $manager->listerInscrits($id_evenement);
+$message  = Session::consommerFlash();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -68,6 +126,14 @@ $inscrits = $manager->listerInscrits($id_evenement);
 <a href="detail.php?id=<?= $id_evenement ?>">&larr; Retour à l'événement</a>
 
 <h1>Gérer : <?= htmlspecialchars($evenement->getTitre()) ?></h1>
+
+<?php if ($evenement->estAnnule()): ?>
+    <p class="avis-annule"><strong>Cet événement est annulé.</strong> Les inscriptions sont fermées.</p>
+<?php endif; ?>
+
+<?php if ($message): ?>
+    <p class="message-succes"><?= htmlspecialchars($message) ?></p>
+<?php endif; ?>
 
 <?php if (!empty($erreurs)): ?>
     <ul class="erreurs">
@@ -112,6 +178,8 @@ $inscrits = $manager->listerInscrits($id_evenement);
 
 <h2>Inscrits (<?= count($inscrits) ?>)</h2>
 
+<p><a href="export_inscrits.php?id=<?= $id_evenement ?>">&#11015; Exporter la liste (CSV)</a></p>
+
 <table>
     <thead>
     <tr>
@@ -149,6 +217,24 @@ $inscrits = $manager->listerInscrits($id_evenement);
     <input type="email" id="email_organisateur" name="email_organisateur" required>
     <button type="submit" name="ajouter_organisateur">Ajouter</button>
 </form>
+
+<h2><?= $evenement->estAnnule() ? 'Rétablir l\'événement' : 'Annuler l\'événement' ?></h2>
+<?php if ($evenement->estAnnule()): ?>
+    <p>L'événement reste visible avec le badge « Annulé ». Tu peux le rétablir : les inscriptions rouvrent et les participants sont prévenus.</p>
+    <form method="post" action="gerer.php?id=<?= $id_evenement ?>">
+        <?= Session::champCsrf() ?>
+        <button type="submit" name="retablir_evenement">Rétablir l'événement</button>
+    </form>
+<?php else: ?>
+    <p>L'événement reste visible avec le badge « Annulé », les inscriptions sont fermées et les participants sont prévenus par mail. Contrairement à la suppression, rien n'est perdu.</p>
+    <form method="post" action="gerer.php?id=<?= $id_evenement ?>">
+        <?= Session::champCsrf() ?>
+        <button type="submit" name="annuler_evenement"
+                onclick="return confirm('Annuler cet événement ? Les participants seront prévenus par mail.');">
+            Annuler l'événement
+        </button>
+    </form>
+<?php endif; ?>
 
 <h2>Zone dangereuse</h2>
 <form method="post" action="gerer.php?id=<?= $id_evenement ?>">
