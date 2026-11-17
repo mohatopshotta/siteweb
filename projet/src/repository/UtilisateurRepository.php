@@ -275,6 +275,16 @@ class UtilisateurRepository extends Repository
         $req->execute([$nom, $prenom, $idUtilisateur]);
     }
 
+    /**
+     * Change le mot de passe depuis la page « Mon profil ».
+     * Le mot de passe est haché ici : il n'est jamais enregistré en clair.
+     */
+    public function changerMotDePasse(int $idUtilisateur, string $motDePasse): void
+    {
+        $req = $this->pdo->prepare('UPDATE utilisateur SET mot_de_passe = ? WHERE id_utilisateur = ?');
+        $req->execute([password_hash($motDePasse, PASSWORD_DEFAULT), $idUtilisateur]);
+    }
+
     public function valider(int $idUtilisateur, int $idValidateur): void
     {
         $req = $this->pdo->prepare('UPDATE utilisateur SET valide = 1, id_validateur = ? WHERE id_utilisateur = ? AND valide = 0');
