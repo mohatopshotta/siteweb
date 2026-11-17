@@ -97,6 +97,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <p><a href="deconnexion.php">Se déconnecter</a></p>
 
+    <h2>Mes données personnelles</h2>
+    <p>
+        Tu peux télécharger une copie de toutes tes données (compte, profil, candidatures,
+        inscriptions aux événements, offres et messages du forum) dans un fichier lisible (JSON).
+    </p>
+    <p><a href="mes_donnees.php" class="btn">Télécharger mes données</a></p>
+
     <?php if (!$utilisateur instanceof NewGestionnaire): ?>
         <h2>Supprimer mon compte</h2>
         <p>
