@@ -42,8 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
     if (empty($erreurs)) {
         $nouveau = NewEvenement::depuisFormulaire($_POST, $id_evenement);
 
-        // La date ou le lieu a-t-il changé ?
-        $dateChangee = strtotime((string)$nouveau->getDateEvenement()) !== strtotime((string)$evenement->getDateEvenement());
+        // La date (début ou fin) ou le lieu a-t-il changé ?
+        $dateChangee = $nouveau->getDateAffichage() !== $evenement->getDateAffichage();
         $lieuChange  = $nouveau->getLieu() !== $evenement->getLieu();
 
         $manager->modifier($nouveau);
@@ -165,6 +165,10 @@ $message  = Session::consommerFlash();
     <label for="date_evenement">Date et heure</label>
     <input type="datetime-local" id="date_evenement" name="date_evenement"
            value="<?= htmlspecialchars($_POST['date_evenement'] ?? $evenement->getDateFormulaire()) ?>" required>
+
+    <label for="date_fin">Heure de fin (facultatif)</label>
+    <input type="datetime-local" id="date_fin" name="date_fin"
+           value="<?= htmlspecialchars($_POST['date_fin'] ?? $evenement->getDateFinFormulaire()) ?>">
 
     <label for="elements_requis">Éléments requis (facultatif)</label>
     <textarea id="elements_requis" name="elements_requis" rows="3"><?= htmlspecialchars($evenement->getElementsRequis() ?? '') ?></textarea>

@@ -11,9 +11,11 @@ if ($evenement === null || $evenement->getDateEvenement() === null || $evenement
     die('Événement introuvable, sans date ou annulé.');
 }
 
-// Pas d'heure de fin en base : on compte 2 h par défaut
+// Heure de fin choisie par l'organisateur, sinon 2 h par défaut
 $debut = new DateTime($evenement->getDateEvenement(), new DateTimeZone('Europe/Paris'));
-$fin   = (clone $debut)->modify('+2 hours');
+$fin   = $evenement->getDateFin() !== null
+    ? new DateTime($evenement->getDateFin(), new DateTimeZone('Europe/Paris'))
+    : (clone $debut)->modify('+2 hours');
 
 // Un fichier .ics veut les heures en UTC
 $debut->setTimezone(new DateTimeZone('UTC'));
