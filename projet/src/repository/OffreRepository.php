@@ -3,10 +3,10 @@
  class OffreRepository extends Repository
 {
     private const SELECT_COMPLET = "
-        SELECT o.*, e.nom AS entreprise,
+        SELECT o.*, COALESCE(e.nom, 'Groupe hospitalier GDH') AS entreprise,
                u.nom AS auteur_nom, u.prenom AS auteur_prenom, u.email AS auteur_email
         FROM offre o
-        JOIN entreprise e ON e.id_entreprise = o.id_entreprise
+        LEFT JOIN entreprise e ON e.id_entreprise = o.id_entreprise
         JOIN utilisateur u ON u.id_utilisateur = o.id_auteur
     ";
 
