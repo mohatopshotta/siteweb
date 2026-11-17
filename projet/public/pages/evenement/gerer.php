@@ -17,6 +17,7 @@ if (!$manager->estOrganisateur($id_utilisateur, $id_evenement)) {
 }
 
 $erreurs = [];
+$inscrits = $manager->listerInscrits($id_evenement);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
     $erreurs = NewEvenement::validerFormulaire($_POST);
@@ -27,7 +28,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
     }
 
     if (empty($erreurs)) {
-        $manager->modifier(NewEvenement::depuisFormulaire($_POST, $id_evenement));
+        $nouveau = NewEvenement::depuisFormulaire($_POST, $id_evenement);
+
+        // La date ou le lieu a-t-il changé ?
+        $dateChangee = strtotime((string)$nouveau->getDateEvenement()) !== strtotime((string)$evenement->getDateEvenement());
+        $lieuChange  = $nouveau->getLieu() !== $evenement->getLieu();
+
+        $manager->modifier($nouveau);
+
+        // Si oui, on prévient chaque participant par mail
+        $prevenus = 0;
+        $aPrevenir = $dateChangee || $lieuChange;
+        if ($aPrevenir) {
+            $corps = "Bonjour,\n\n"
+                . "L'événement « " . $nouveau->getTitre() . " » a été modifié par son organisateur.\n\n";
+            if ($dateChangee) {
+                $corps .= "Date : " . $evenement->getDateAffichage() . "  ->  " . $nouveau->getDateAffichage() . "\n";
+            }
+            if ($lieuChange) {
+                $corps .= "Lieu : " . $evenement->getLieu() . "  ->  " . $nouveau->getLieu() . "\n";
+            }
+            $corps .= "\nSi tu ne peux plus venir, tu peux te désinscrire depuis la page de l'événement.\n\n"
+                . "L'équipe GDH - Hôpital Sud Paris";
+
+            foreach ($inscrits as $personne) {
+                if (!$personne->estOrganisateur()
+                    && Mail::envoyer($personne->getEmail(), 'Modification : ' . $nouveau->getTitre(), $corps)) {
+                    $prevenus++;
+                }
+            }
+        }
+
+        Session::flash($prevenus > 0
+            ? 'Modifications enregistrées. ' . $prevenus . ' participant(s) prévenu(s) par mail.'
+            : 'Modifications enregistrées.');
         Session::rediriger('gerer.php?id=' . $id_evenement);
     }
 }
@@ -53,6 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['retirer_id'])) {
 }
 
 $inscrits = $manager->listerInscrits($id_evenement);
+$message  = Session::consommerFlash();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -68,6 +103,10 @@ $inscrits = $manager->listerInscrits($id_evenement);
 <a href="detail.php?id=<?= $id_evenement ?>">&larr; Retour à l'événement</a>
 
 <h1>Gérer : <?= htmlspecialchars($evenement->getTitre()) ?></h1>
+
+<?php if ($message): ?>
+    <p class="message-succes"><?= htmlspecialchars($message) ?></p>
+<?php endif; ?>
 
 <?php if (!empty($erreurs)): ?>
     <ul class="erreurs">
@@ -111,6 +150,8 @@ $inscrits = $manager->listerInscrits($id_evenement);
 </form>
 
 <h2>Inscrits (<?= count($inscrits) ?>)</h2>
+
+<p><a href="export_inscrits.php?id=<?= $id_evenement ?>">&#11015; Exporter la liste (CSV)</a></p>
 
 <table>
     <thead>
