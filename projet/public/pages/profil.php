@@ -12,11 +12,46 @@ $erreur_suppression = '';
 $compte_supprime = false;
 $erreurs_mdp = [];
 $message_mdp = '';
+$erreur_cv = '';
+$message_cv = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? 'modifier';
 
-    if ($action === 'mot_de_passe') {
+    if ($action === 'cv' && $utilisateur instanceof NewEtudiant) {
+        // Mêmes vérifications qu'à l'inscription : PDF uniquement, 2 Mo maximum
+        $fichier = $_FILES['cv'] ?? null;
+
+        if ($fichier === null || empty($fichier['name'])) {
+            $erreur_cv = 'Choisis un fichier PDF.';
+        } elseif ($fichier['error'] !== UPLOAD_ERR_OK) {
+            $erreur_cv = "Erreur lors de l'envoi du CV.";
+        } elseif (strtolower(pathinfo($fichier['name'], PATHINFO_EXTENSION)) !== 'pdf'
+            || mime_content_type($fichier['tmp_name']) !== 'application/pdf') {
+            $erreur_cv = 'Le CV doit être un fichier PDF.';
+        } elseif ($fichier['size'] > 2 * 1024 * 1024) {
+            $erreur_cv = 'Le CV ne doit pas dépasser 2 Mo.';
+        } else {
+            $dossier_cv = __DIR__ . '/../uploads/cv/';
+            if (!is_dir($dossier_cv)) {
+                mkdir($dossier_cv, 0755, true);
+            }
+            // Nom aléatoire : on ne peut pas deviner l'adresse du CV d'un autre étudiant
+            $nom_fichier = bin2hex(random_bytes(16)) . '.pdf';
+
+            if (move_uploaded_file($fichier['tmp_name'], $dossier_cv . $nom_fichier)) {
+                $manager->changerCv($id_utilisateur, 'uploads/cv/' . $nom_fichier);
+                $message_cv = 'CV mis à jour.';
+                $utilisateur = $manager->trouverParId($id_utilisateur);
+            } else {
+                $erreur_cv = "Le CV n'a pas pu être enregistré. Réessaie.";
+            }
+        }
+    } elseif ($action === 'retirer_cv' && $utilisateur instanceof NewEtudiant) {
+        $manager->changerCv($id_utilisateur, null);
+        $message_cv = 'CV retiré.';
+        $utilisateur = $manager->trouverParId($id_utilisateur);
+    } elseif ($action === 'mot_de_passe') {
         // On redemande l'ancien mot de passe : si quelqu'un utilise la session ouverte, il ne peut pas le changer
         $ancien       = $_POST['ancien_mot_de_passe'] ?? '';
         $nouveau      = $_POST['nouveau_mot_de_passe'] ?? '';
@@ -120,6 +155,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 
     <p><a href="deconnexion.php">Se déconnecter</a></p>
+
+    <?php if ($utilisateur instanceof NewEtudiant): ?>
+        <h2>Mon CV</h2>
+
+        <?php if ($message_cv): ?>
+            <p class="alerte-succes"><?= htmlspecialchars($message_cv) ?></p>
+        <?php endif; ?>
+        <?php if ($erreur_cv): ?>
+            <p class="alerte-erreur"><?= htmlspecialchars($erreur_cv) ?></p>
+        <?php endif; ?>
+
+        <?php if ($utilisateur->getCv()): ?>
+            <p>
+                <a href="../<?= htmlspecialchars($utilisateur->getCv()) ?>" target="_blank" rel="noopener">Voir mon CV actuel</a>
+            </p>
+        <?php else: ?>
+            <p>Tu n'as pas encore déposé de CV.</p>
+        <?php endif; ?>
+
+        <form method="post" enctype="multipart/form-data">
+            <?= Session::champCsrf() ?>
+            <input type="hidden" name="action" value="cv">
+            <label><?= $utilisateur->getCv() ? 'Remplacer mon CV' : 'Déposer mon CV' ?> (PDF, 2 Mo maximum)</label>
+            <input type="file" name="cv" accept="application/pdf" required><br>
+            <button type="submit">Envoyer</button>
+        </form>
+
+        <?php if ($utilisateur->getCv()): ?>
+            <form method="post" onsubmit="return confirm('Retirer ton CV ?');">
+                <?= Session::champCsrf() ?>
+                <input type="hidden" name="action" value="retirer_cv">
+                <button type="submit" class="btn-refuser">Retirer mon CV</button>
+            </form>
+        <?php endif; ?>
+    <?php endif; ?>
 
     <h2>Changer mon mot de passe</h2>
 
