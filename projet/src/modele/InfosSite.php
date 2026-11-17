@@ -91,11 +91,11 @@ class InfosSite
     public static function getDroits(): array
     {
         return [
-            'accéder à vos données et en obtenir une copie',
+            'accéder à vos données et en obtenir une copie, vous-même depuis la page « Mon profil » (bouton « Télécharger mes données »)',
             'les faire corriger si elles sont fausses',
             'supprimer votre compte et toutes vos données, vous-même depuis la page « Mon profil »',
             'vous opposer à leur utilisation ou demander à la limiter',
-            'récupérer vos données dans un format lisible (portabilité)',
+            'récupérer vos données dans un format lisible par une machine (fichier JSON, portabilité)',
         ];
     }
 
