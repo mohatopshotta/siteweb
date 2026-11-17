@@ -10,11 +10,35 @@ $utilisateur = $manager->trouverParId($id_utilisateur);
 $message = '';
 $erreur_suppression = '';
 $compte_supprime = false;
+$erreurs_mdp = [];
+$message_mdp = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? 'modifier';
 
-    if ($action === 'supprimer') {
+    if ($action === 'mot_de_passe') {
+        // On redemande l'ancien mot de passe : si quelqu'un utilise la session ouverte, il ne peut pas le changer
+        $ancien       = $_POST['ancien_mot_de_passe'] ?? '';
+        $nouveau      = $_POST['nouveau_mot_de_passe'] ?? '';
+        $confirmation = $_POST['confirmation'] ?? '';
+
+        if (!$utilisateur->verifierMotDePasse($ancien)) {
+            $erreurs_mdp[] = 'Mot de passe actuel incorrect.';
+        } elseif ($nouveau !== $confirmation) {
+            $erreurs_mdp[] = 'Les deux nouveaux mots de passe sont différents.';
+        } elseif ($nouveau === $ancien) {
+            $erreurs_mdp[] = 'Le nouveau mot de passe doit être différent de l\'ancien.';
+        } else {
+            // Mêmes règles qu'à l'inscription (longueur, majuscule, minuscule, chiffre, caractère spécial)
+            $erreurs_mdp = NewUtilisateur::controlerRobustesse($nouveau);
+        }
+
+        if (empty($erreurs_mdp)) {
+            $manager->changerMotDePasse($id_utilisateur, $nouveau);
+            $message_mdp = 'Mot de passe modifié.';
+            $utilisateur = $manager->trouverParId($id_utilisateur);
+        }
+    } elseif ($action === 'supprimer') {
         // RGPD : droit à l'effacement. On redemande le mot de passe pour être sûr que c'est bien la personne.
         if ($utilisateur instanceof NewGestionnaire) {
             $erreur_suppression = 'Un compte gestionnaire ne peut pas être supprimé depuis cette page.';
@@ -96,6 +120,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 
     <p><a href="deconnexion.php">Se déconnecter</a></p>
+
+    <h2>Changer mon mot de passe</h2>
+
+    <?php if ($message_mdp): ?>
+        <p class="alerte-succes"><?= htmlspecialchars($message_mdp) ?></p>
+    <?php endif; ?>
+
+    <?php if (!empty($erreurs_mdp)): ?>
+        <ul class="erreurs">
+            <?php foreach ($erreurs_mdp as $erreur): ?>
+                <li><?= htmlspecialchars($erreur) ?></li>
+            <?php endforeach; ?>
+        </ul>
+    <?php endif; ?>
+
+    <form method="post">
+        <?= Session::champCsrf() ?>
+        <input type="hidden" name="action" value="mot_de_passe">
+
+        <label>Mot de passe actuel</label>
+        <input type="password" name="ancien_mot_de_passe" required autocomplete="current-password"><br>
+
+        <label>Nouveau mot de passe</label>
+        <input type="password" name="nouveau_mot_de_passe" required autocomplete="new-password"><br>
+
+        <label>Confirme le nouveau mot de passe</label>
+        <input type="password" name="confirmation" required autocomplete="new-password"><br>
+
+        <button type="submit">Changer mon mot de passe</button>
+    </form>
 
     <h2>Mes données personnelles</h2>
     <p>
