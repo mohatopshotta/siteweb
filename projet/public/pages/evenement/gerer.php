@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../../includes/config.php';
+require_once __DIR__ . '/../../includes/page_erreur.php';
 
 Session::exigerConnexion('../../');
 
@@ -9,11 +10,11 @@ $id_evenement = (int)($_GET['id'] ?? 0);
 
 $evenement = $manager->trouverParId($id_evenement);
 if ($evenement === null) {
-    die("Événement introuvable.");
+    pageErreur(404, 'Événement introuvable', "Cet événement n'existe pas ou a été supprimé.");
 }
 
 if (!$manager->estOrganisateur($id_utilisateur, $id_evenement)) {
-    die("Accès réservé aux organisateurs de cet événement.");
+    pageErreur(403, 'Accès réservé', 'Seuls les organisateurs de cet événement peuvent accéder à cette page.', 'detail.php?id=' . $id_evenement, "Voir l'événement");
 }
 
 // Envoie un mail à chaque participant (pas aux organisateurs). Renvoie le nombre de mails partis.

@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../../includes/config.php';
+require_once __DIR__ . '/../../includes/page_erreur.php';
 
 // Lecture ouverte à tout utilisateur connecté, gestionnaire compris (il ne peut pas agir)
 Session::exigerConnexion('../../');
@@ -10,7 +11,7 @@ $id_evenement = (int)($_GET['id'] ?? 0);
 
 $evenement = $manager->trouverParId($id_evenement);
 if ($evenement === null) {
-    die("Événement introuvable.");
+    pageErreur(404, 'Événement introuvable', "Cet événement n'existe pas ou a été supprimé.");
 }
 
 

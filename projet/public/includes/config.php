@@ -9,6 +9,9 @@ const URL_SITE = 'http://localhost:8000';
 // Mode développement : à mettre à false à la mise en ligne
 const MODE_DEV = true;
 
+// Fuseau horaire du site : les dates saisies et affichées (événements...) sont à l'heure de Paris
+date_default_timezone_set('Europe/Paris');
+
 spl_autoload_register(function (string $classe): void {
     $dossierSrc = __DIR__ . '/../../src/';
     foreach (['modele', 'traitement', 'repository'] as $sousDossier) {

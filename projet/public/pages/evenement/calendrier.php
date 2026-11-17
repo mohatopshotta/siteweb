@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../../includes/config.php';
+require_once __DIR__ . '/../../includes/page_erreur.php';
 
 Session::exigerConnexion('../../');
 
@@ -7,8 +8,7 @@ $repo = new EvenementRepository();
 $evenement = $repo->trouverParId((int)($_GET['id'] ?? 0));
 
 if ($evenement === null || $evenement->getDateEvenement() === null || $evenement->estAnnule()) {
-    http_response_code(404);
-    die('Événement introuvable, sans date ou annulé.');
+    pageErreur(404, 'Calendrier indisponible', "Cet événement est introuvable, n'a pas de date ou est annulé : impossible de l'ajouter à ton agenda.");
 }
 
 // Heure de fin choisie par l'organisateur, sinon 2 h par défaut

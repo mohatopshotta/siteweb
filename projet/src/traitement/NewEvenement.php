@@ -1,138 +1,236 @@
 <?php
 
-class NewEvenement extends NewTraitement
+class EvenementRepository extends Repository
 {
-    private ?int $idEvenement = null;
-    private string $typeEvenement = '';
-    private string $titre = '';
-    private string $description = '';
-    private string $lieu = '';
-    private ?string $dateEvenement = null;
-    private ?string $dateFin = null;
+    private const SELECT_AVEC_PLACES = "
+        SELECT e.*, COUNT(ie.id_utilisateur) AS places_prises
+        FROM evenement e
+        LEFT JOIN inscription_evenement ie
+               ON ie.id_evenement = e.id_evenement AND ie.organiser = 0
+    ";
 
-    private bool $estOrganisateur = false;
-    private ?string $elementsRequis = null;
-    private int $nombrePlaces = 0;
-    private int $placesPrises = 0;
-    private bool $annule = false;
-
-
-    public function getPlacesRestantes(): int
+    /** Événements à venir (les plus proches d'abord). Sert à l'accueil. */
+    public function listerTous(?int $limite = null): array
     {
-        return max(0, $this->nombrePlaces - $this->placesPrises);
+        return $this->rechercher(null, null, false, $limite, 'date', false);
     }
 
-    public function estComplet(): bool
+    public function rechercher(?string $mot = null, ?string $type = null, bool $inclurePasses = false, ?int $limite = null, string $tri = 'date', bool $inclureAnnules = true): array
     {
-        return $this->getPlacesRestantes() === 0;
-    }
-    public function estPasse(): bool
-    {
-        $limite = $this->dateFin ?? $this->dateEvenement;
-        return $limite !== null && strtotime($limite) < time();
-    }
+        // Liste blanche : on ne met jamais $tri directement dans le SQL
+        $ordres = [
+            'date'   => 'e.date_evenement IS NULL, e.date_evenement ASC, e.id_evenement DESC',
+            'places' => '(e.nombre_places - COUNT(ie.id_utilisateur)) DESC, e.date_evenement ASC',
+            'titre'  => 'e.titre ASC',
+        ];
+        $ordre = $ordres[$tri] ?? $ordres['date'];
+        $conditions = [];
+        $params = [];
 
-    /** « 12/11/2026 à 14h30 », ou « Date à venir » si elle n'est pas fixée. */
-    public function getDateAffichage(): string
-    {
-        if ($this->dateEvenement === null) {
-            return 'Date à venir';
+        if ($mot !== null && trim($mot) !== '') {
+            $conditions[] = '(e.titre LIKE ? OR e.description LIKE ? OR e.lieu LIKE ?)';
+            $like = '%' . trim($mot) . '%';
+            array_push($params, $like, $like, $like);
         }
-        $t = strtotime($this->dateEvenement);
-        if ($this->dateFin === null) {
-            return date('d/m/Y', $t) . ' à ' . date('H\hi', $t);
+        if ($type !== null && $type !== '') {
+            $conditions[] = 'e.type_evenement = ?';
+            $params[] = $type;
         }
-        $f = strtotime($this->dateFin);
-        if (date('Y-m-d', $t) === date('Y-m-d', $f)) {
-            return date('d/m/Y', $t) . ' de ' . date('H\hi', $t) . ' à ' . date('H\hi', $f);
+        if (!$inclurePasses) {
+            // L'heure vient de PHP (fuseau de Paris, voir config.php), comme estPasse() : même résultat partout
+            $conditions[] = '(e.date_evenement IS NULL OR COALESCE(e.date_fin, e.date_evenement) >= ?)';
+            $params[] = date('Y-m-d H:i:s');
         }
-        return 'du ' . date('d/m/Y', $t) . ' à ' . date('H\hi', $t) . ' au ' . date('d/m/Y', $f) . ' à ' . date('H\hi', $f);
-    }
-
-    /** Valeur pour <input type="datetime-local"> */
-    public function getDateFormulaire(): string
-    {
-        return $this->dateEvenement === null ? '' : date('Y-m-d\TH:i', strtotime($this->dateEvenement));
-    }
-
-    /** Valeur pour <input type="datetime-local"> de l'heure de fin (vide s'il n'y en a pas) */
-    public function getDateFinFormulaire(): string
-    {
-        return $this->dateFin === null ? '' : date('Y-m-d\TH:i', strtotime($this->dateFin));
-    }
-
-    public function getIdEvenement(): ?int { return $this->idEvenement; }
-    public function getTypeEvenement(): string { return $this->typeEvenement; }
-    public function getTitre(): string { return $this->titre; }
-    public function getDescription(): string { return $this->description; }
-    public function getDateEvenement(): ?string { return $this->dateEvenement; }
-    public function getDateFin(): ?string { return $this->dateFin; }
-    public function getLieu(): string { return $this->lieu; }
-    public function getElementsRequis(): ?string { return $this->elementsRequis; }
-    public function estOrganisateur(): bool { return $this->estOrganisateur; }
-    public function estAnnule(): bool { return $this->annule; }
-    public function getNombrePlaces(): int { return $this->nombrePlaces; }
-    public function getPlacesPrises(): int { return $this->placesPrises; }
-
-    public function setIdEvenement(?int $id): void { $this->idEvenement = $id; }
-    public function setTypeEvenement(string $type): void { $this->typeEvenement = $type; }
-    public function setTitre(string $titre): void { $this->titre = $titre; }
-    public function setDescription(string $description): void { $this->description = $description; }
-    public function setDateEvenement(?string $date): void
-    {
-        $this->dateEvenement = ($date === null || $date === '') ? null : str_replace('T', ' ', $date);
-    }
-    public function setDateFin(?string $date): void
-    {
-        $this->dateFin = ($date === null || $date === '') ? null : str_replace('T', ' ', $date);
-    }
-    public function setLieu(string $lieu): void { $this->lieu = $lieu; }
-    public function setElementsRequis(?string $elements): void { $this->elementsRequis = ($elements === '' ? null : $elements); }
-    public function setEstOrganisateur(bool $oui): void { $this->estOrganisateur = $oui; }
-    public function setNombrePlaces(int $nombre): void { $this->nombrePlaces = $nombre; }
-    public function setPlacesPrises(int $nombre): void { $this->placesPrises = $nombre; }
-    public function setAnnule($valeur): void { $this->annule = (bool)(int)$valeur; }
-
-    public static function validerFormulaire(array $post, bool $creation = false): array
-    {
-        $erreurs = [];
-        if (trim($post['type_evenement'] ?? '') === '') $erreurs[] = "Le type d'événement est obligatoire.";
-        if (trim($post['titre'] ?? '') === '') $erreurs[] = "Le titre est obligatoire.";
-        if (trim($post['description'] ?? '') === '') $erreurs[] = "La description est obligatoire.";
-        if (trim($post['lieu'] ?? '') === '') $erreurs[] = "Le lieu est obligatoire.";
-        $places = (string)($post['nombre_places'] ?? '');
-        if (!ctype_digit($places) || (int)$places < 1) {
-            $erreurs[] = "Le nombre de places doit être un entier positif.";
+        if (!$inclureAnnules) {
+            $conditions[] = 'e.annule = 0';
         }
-        $date = trim($post['date_evenement'] ?? '');
-        if ($date === '' || strtotime($date) === false) {
-            $erreurs[] = "La date et l'heure sont obligatoires.";
-        } elseif ($creation && strtotime($date) < time()) {
-            $erreurs[] = "La date de l'événement doit être dans le futur.";
+
+        $sql = self::SELECT_AVEC_PLACES
+            . ($conditions ? ' WHERE ' . implode(' AND ', $conditions) : '')
+            . ' GROUP BY e.id_evenement'
+            . ' ORDER BY ' . $ordre;
+        if ($limite !== null) {
+            $sql .= ' LIMIT ' . (int)$limite;
         }
-        $fin = trim($post['date_fin'] ?? '');
-        if ($fin !== '') {
-            if (strtotime($fin) === false) {
-                $erreurs[] = "L'heure de fin n'est pas valide.";
-            } elseif ($date !== '' && strtotime($date) !== false && strtotime($fin) <= strtotime($date)) {
-                $erreurs[] = "L'heure de fin doit être après le début de l'événement.";
-            }
-        }
-        return $erreurs;
+
+        $req = $this->pdo->prepare($sql);
+        $req->execute($params);
+        return $this->hydraterListe($req->fetchAll(), NewEvenement::class);
     }
 
-    public static function depuisFormulaire(array $post, ?int $idEvenement = null): self
+    public function listerTypes(): array
     {
-        return new self([
-            'id_evenement'    => $idEvenement,
-            'type_evenement'  => trim($post['type_evenement']),
-            'titre'           => trim($post['titre']),
-            'date_evenement'  => trim($post['date_evenement'] ?? ''),
-            'date_fin'        => trim($post['date_fin'] ?? ''),
-            'description'     => trim($post['description']),
-            'lieu'            => trim($post['lieu']),
-            'elements_requis' => trim($post['elements_requis'] ?? ''),
-            'nombre_places'   => (int)$post['nombre_places'],
+        return $this->pdo->query('SELECT DISTINCT type_evenement FROM evenement ORDER BY type_evenement')
+            ->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    /** Événements d'un utilisateur (inscrit ou organisateur), passés compris. */
+    public function listerPourUtilisateur(int $idUtilisateur): array
+    {
+        $req = $this->pdo->prepare(
+            'SELECT e.*, ie_moi.organiser AS est_organisateur,
+                    (SELECT COUNT(*) FROM inscription_evenement x
+                      WHERE x.id_evenement = e.id_evenement AND x.organiser = 0) AS places_prises
+             FROM evenement e
+             JOIN inscription_evenement ie_moi
+               ON ie_moi.id_evenement = e.id_evenement AND ie_moi.id_utilisateur = ?
+             ORDER BY e.date_evenement IS NULL, e.date_evenement ASC, e.id_evenement DESC'
+        );
+        $req->execute([$idUtilisateur]);
+        return $this->hydraterListe($req->fetchAll(), NewEvenement::class);
+    }
+
+    public function supprimer(int $idEvenement): void
+    {
+        // Les inscriptions partent avec (clé étrangère ON DELETE CASCADE).
+        $req = $this->pdo->prepare('DELETE FROM evenement WHERE id_evenement = ?');
+        $req->execute([$idEvenement]);
+    }
+
+    public function trouverParId(int $idEvenement): ?NewEvenement
+    {
+        $req = $this->pdo->prepare(self::SELECT_AVEC_PLACES . ' WHERE e.id_evenement = ? GROUP BY e.id_evenement');
+        $req->execute([$idEvenement]);
+        $ligne = $req->fetch();
+        return $ligne ? new NewEvenement($ligne) : null;
+    }
+
+    public function creer(NewEvenement $evenement, int $idOrganisateur): int
+    {
+        $this->pdo->beginTransaction();
+        try {
+            $req = $this->pdo->prepare(
+                'INSERT INTO evenement (type_evenement, titre, description, lieu, date_evenement, date_fin, elements_requis, nombre_places)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+            );
+            $req->execute([
+                $evenement->getTypeEvenement(),
+                $evenement->getTitre(),
+                $evenement->getDescription(),
+                $evenement->getLieu(),
+                $evenement->getDateEvenement(),
+                $evenement->getDateFin(),
+                $evenement->getElementsRequis(),
+                $evenement->getNombrePlaces(),
+            ]);
+            $id = (int)$this->pdo->lastInsertId();
+
+            $req = $this->pdo->prepare(
+                'INSERT INTO inscription_evenement (id_utilisateur, id_evenement, organiser) VALUES (?, ?, 1)'
+            );
+            $req->execute([$idOrganisateur, $id]);
+
+            $this->pdo->commit();
+            return $id;
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    public function modifier(NewEvenement $evenement): void
+    {
+        $req = $this->pdo->prepare(
+            'UPDATE evenement
+             SET type_evenement = ?, titre = ?, description = ?, lieu = ?, date_evenement = ?, date_fin = ?, elements_requis = ?, nombre_places = ?
+             WHERE id_evenement = ?'
+        );
+        $req->execute([
+            $evenement->getTypeEvenement(),
+            $evenement->getTitre(),
+            $evenement->getDescription(),
+            $evenement->getLieu(),
+            $evenement->getDateEvenement(),
+            $evenement->getDateFin(),
+            $evenement->getElementsRequis(),
+            $evenement->getNombrePlaces(),
+            $evenement->getIdEvenement(),
         ]);
+    }
+
+    /** Annule (ou rétablit) un événement sans le supprimer : les inscrits le voient marqué « Annulé ». */
+    public function definirAnnule(int $idEvenement, bool $annule): void
+    {
+        $req = $this->pdo->prepare('UPDATE evenement SET annule = ? WHERE id_evenement = ?');
+        $req->execute([$annule ? 1 : 0, $idEvenement]);
+    }
+
+    public function trouverInscription(int $idUtilisateur, int $idEvenement): ?NewInscriptionEvenement
+    {
+        $req = $this->pdo->prepare('SELECT * FROM inscription_evenement WHERE id_utilisateur = ? AND id_evenement = ?');
+        $req->execute([$idUtilisateur, $idEvenement]);
+        $ligne = $req->fetch();
+        return $ligne ? new NewInscriptionEvenement($ligne) : null;
+    }
+
+    public function estOrganisateur(int $idUtilisateur, int $idEvenement): bool
+    {
+        $inscription = $this->trouverInscription($idUtilisateur, $idEvenement);
+        return $inscription !== null && $inscription->estOrganisateur();
+    }
+
+    public function inscrire(int $idUtilisateur, NewEvenement $evenement): string
+    {
+        if ($this->trouverInscription($idUtilisateur, $evenement->getIdEvenement()) !== null) {
+            return 'Tu es déjà inscrit(e) à cet événement.';
+        }
+        if ($evenement->estAnnule()) {
+            return 'Cet événement est annulé.';
+        }
+        if ($evenement->estComplet()) {
+            return 'Cet événement est complet.';
+        }
+        $req = $this->pdo->prepare('INSERT INTO inscription_evenement (id_utilisateur, id_evenement, organiser) VALUES (?, ?, 0)');
+        $req->execute([$idUtilisateur, $evenement->getIdEvenement()]);
+        return '';
+    }
+
+    /**
+     * Ajoute un organisateur (médecin ou partenaire validé) à un événement, à partir de son email.
+     * S'il était déjà inscrit comme participant, il passe organisateur. Renvoie '' ou un message d'erreur.
+     */
+    public function ajouterOrganisateur(string $email, int $idEvenement): string
+    {
+        $utilisateur = (new UtilisateurRepository())->trouverParEmail(trim($email));
+        if ($utilisateur === null || !$utilisateur->isValide()) {
+            return 'Aucun compte validé avec cet email.';
+        }
+        if (!in_array($utilisateur->getRole(), ['medecin', 'partenaire'], true)) {
+            return 'Seuls un médecin ou un partenaire peuvent organiser un événement.';
+        }
+
+        $id = $utilisateur->getIdUtilisateur();
+        $inscription = $this->trouverInscription($id, $idEvenement);
+        if ($inscription !== null && $inscription->estOrganisateur()) {
+            return 'Cette personne organise déjà cet événement.';
+        }
+        if ($inscription !== null) {
+            $req = $this->pdo->prepare('UPDATE inscription_evenement SET organiser = 1 WHERE id_utilisateur = ? AND id_evenement = ?');
+        } else {
+            $req = $this->pdo->prepare('INSERT INTO inscription_evenement (id_utilisateur, id_evenement, organiser) VALUES (?, ?, 1)');
+        }
+        $req->execute([$id, $idEvenement]);
+        return '';
+    }
+
+    public function retirerParticipant(int $idUtilisateur, int $idEvenement): void
+    {
+        $req = $this->pdo->prepare(
+            'DELETE FROM inscription_evenement WHERE id_utilisateur = ? AND id_evenement = ? AND organiser = 0'
+        );
+        $req->execute([$idUtilisateur, $idEvenement]);
+    }
+
+    public function listerInscrits(int $idEvenement): array
+    {
+        $req = $this->pdo->prepare(
+            'SELECT ie.*, u.nom, u.prenom, u.email
+             FROM inscription_evenement ie
+             JOIN utilisateur u ON u.id_utilisateur = ie.id_utilisateur
+             WHERE ie.id_evenement = ?
+             ORDER BY ie.organiser DESC, u.nom'
+        );
+        $req->execute([$idEvenement]);
+        return $this->hydraterListe($req->fetchAll(), NewInscriptionEvenement::class);
     }
 }
