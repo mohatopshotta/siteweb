@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../../includes/config.php';
+require_once __DIR__ . '/../../includes/page_erreur.php';
 
 Session::exigerConnexion('../../');
 
@@ -9,13 +10,11 @@ $id_evenement = (int)($_GET['id'] ?? 0);
 
 $evenement = $repo->trouverParId($id_evenement);
 if ($evenement === null) {
-    http_response_code(404);
-    die('Événement introuvable.');
+    pageErreur(404, 'Événement introuvable', "Cet événement n'existe pas ou a été supprimé.");
 }
 
 if (!$repo->estOrganisateur($id_utilisateur, $id_evenement)) {
-    http_response_code(403);
-    die('Accès réservé aux organisateurs de cet événement.');
+    pageErreur(403, 'Accès réservé', 'Seuls les organisateurs de cet événement peuvent exporter la liste.', 'detail.php?id=' . $id_evenement, "Voir l'événement");
 }
 
 $inscrits = $repo->listerInscrits($id_evenement);
