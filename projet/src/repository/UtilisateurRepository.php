@@ -275,6 +275,34 @@ class UtilisateurRepository extends Repository
         $req->execute([$nom, $prenom, $idUtilisateur]);
     }
 
+    /**
+     * Change le mot de passe depuis la page « Mon profil ».
+     * Le mot de passe est haché ici : il n'est jamais enregistré en clair.
+     */
+    public function changerMotDePasse(int $idUtilisateur, string $motDePasse): void
+    {
+        $req = $this->pdo->prepare('UPDATE utilisateur SET mot_de_passe = ? WHERE id_utilisateur = ?');
+        $req->execute([password_hash($motDePasse, PASSWORD_DEFAULT), $idUtilisateur]);
+    }
+
+    /**
+     * Remplace (ou retire si $nouveauCv = null) le CV d'un étudiant depuis la page « Mon profil ».
+     * L'ancien fichier PDF est supprimé du serveur : on ne garde pas de données inutiles (RGPD).
+     */
+    public function changerCv(int $idUtilisateur, ?string $nouveauCv): void
+    {
+        $req = $this->pdo->prepare('SELECT cv FROM etudiant WHERE id_utilisateur = ?');
+        $req->execute([$idUtilisateur]);
+        $ancienCv = $req->fetchColumn();
+
+        $req = $this->pdo->prepare('UPDATE etudiant SET cv = ? WHERE id_utilisateur = ?');
+        $req->execute([$nouveauCv, $idUtilisateur]);
+
+        if ($ancienCv && $ancienCv !== $nouveauCv) {
+            $this->supprimerFichierCv($ancienCv);
+        }
+    }
+
     public function valider(int $idUtilisateur, int $idValidateur): void
     {
         $req = $this->pdo->prepare('UPDATE utilisateur SET valide = 1, id_validateur = ? WHERE id_utilisateur = ? AND valide = 0');

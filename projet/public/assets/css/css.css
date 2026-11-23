@@ -1,4 +1,3 @@
-
 @import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700;800&display=swap");
 
 :root {
@@ -447,14 +446,26 @@ body > .carte-forum + .carte-forum { margin-top: 0.5rem; }
 .carte-forum h3 a:hover { text-decoration: underline; }
 .carte-forum p { margin: 0.25rem 0 0; color: var(--encre-douce); }
 .carte-forum p:last-child { color: var(--encre); }
+/* Recherche et pagination du forum */
+.recherche-forum { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin: 1rem 0; max-width: 40rem; }
+.recherche-forum input[type="search"] { flex: 1; min-width: 12rem; padding: 0.55rem 0.75rem; border: 1px solid var(--ligne); border-radius: var(--rayon-l); font: inherit; }
+.recherche-forum button { margin-top: 0 !important; }
+.pagination { display: flex; gap: 1rem; align-items: center; margin: 1.25rem 0; }
+.pagination span { color: var(--encre-douce); }
+
+/* Boutons Modifier / Supprimer d'un message du forum */
+.actions-message { margin-top: 0.6rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.actions-message form { display: inline; margin: 0; padding: 0; border: 0; background: none; }
+
 .carte-forum > a {
     display: inline-block;
     margin-top: 0.6rem;
     font-weight: 700;
 }
 
-/* Contenu d'une discussion */
-body > h1 + p + div {
+/* Contenu d'une discussion (classe dédiée : l'ancien sélecteur « h1 + p + div »
+   touchait aussi la première carte de la liste du forum) */
+.contenu-discussion {
     padding: 1.25rem 1.5rem;
     background: var(--blanc);
     border: 1px solid var(--ligne);
@@ -713,4 +724,40 @@ body > footer a { color: var(--encre-douce); }
 .message-succes { margin:1rem 0; padding:0.75rem 1rem; background:var(--succes-fond); border:1px solid #b9dcc8; border-radius:var(--rayon-l); color:var(--succes); }
 .bouton-danger { background:var(--croix); color:var(--blanc); }
 .bouton-danger:hover { background:#9d2a21; }
-.pied-page { margin-top:2.5rem; padding:1.25rem 0; border-top:1px solid var(--ligne); font-size:0.9rem; }
+.pied-page { margin-top:2.5rem; padding:1.25rem 0; border-top:1px solid var(--ligne); font-size:0.9rem; justify-content:center; text-align:center; }
+
+.pagination { display:flex; align-items:center; justify-content:center; gap:1.25rem; margin:2rem 0 0; }
+.pagination a { font-weight:700; }
+
+.carte-annulee { opacity:0.75; border-top-color: var(--croix); }
+.carte-annulee h2 { text-decoration: line-through; }
+.badge-annule { background:var(--croix-fond); color:var(--croix); font-weight:700; }
+.avis-annule { margin:1rem 0; padding:0.75rem 1rem; background:var(--croix-fond); border:1px solid var(--croix); border-radius:var(--rayon-l); color:var(--croix); }
+/* ---------- Fiche d'un événement (detail.php) ----------------------------- */
+.fiche-entete { padding:1.75rem; background:linear-gradient(135deg, var(--celadon), var(--blanc)); border:1px solid var(--ligne); border-left:6px solid var(--vert); border-radius:var(--rayon-l); }
+.fiche-entete .carte-type { margin:0; }
+.fiche-entete h1 { margin:0.25rem 0 0.9rem; }
+.fiche-statut { display:flex; flex-wrap:wrap; gap:0.5rem; margin:0; }
+.fiche-statut .badge { margin-top:0; font-size:0.9rem; }
+.fiche-annulee { border-left-color:var(--croix); background:linear-gradient(135deg, var(--croix-fond), var(--blanc)); }
+.fiche-annulee h1 { text-decoration:line-through; }
+
+.fiche-infos { display:grid; grid-template-columns:repeat(auto-fit, minmax(15rem, 1fr)); gap:1rem; }
+.fiche-info { display:flex; align-items:flex-start; gap:0.9rem; padding:1.1rem 1.25rem; background:var(--blanc); border:1px solid var(--ligne); border-radius:var(--rayon-l); transition:box-shadow 0.15s ease, transform 0.15s ease; }
+.fiche-info:hover { box-shadow:0 6px 18px rgba(27,42,40,0.12); transform:translateY(-2px); }
+.fiche-info > div { flex:1; min-width:0; }
+.fiche-icone { flex:none; display:grid; place-items:center; width:2.6rem; height:2.6rem; background:var(--celadon); border-radius:50%; font-size:1.3rem; }
+.fiche-label { margin:0; font-size:0.8rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--encre-douce); }
+.fiche-valeur { margin:0.1rem 0 0; font-size:1.1rem; font-weight:700; }
+.fiche-detail { margin:0; font-size:0.95rem; color:var(--encre-douce); }
+.fiche-info .jauge { margin:0.5rem 0 0.35rem; }
+.fiche-info a { display:inline-block; margin-top:0.4rem; font-weight:700; }
+
+.fiche-bloc { padding:1.25rem 1.5rem; background:var(--blanc); border:1px solid var(--ligne); border-radius:var(--rayon-l); }
+.fiche-bloc h2 { margin:0 0 0.5rem; font-size:1.25rem; }
+.fiche-bloc p { margin:0; }
+.fiche-requis { background:var(--alerte-fond); border-color:#ecd9a0; }
+
+.fiche-action { display:flex; flex-wrap:wrap; align-items:center; gap:0.75rem 1.25rem; padding:1.25rem 1.5rem; background:var(--celadon); border:1px solid var(--ligne); border-radius:var(--rayon-l); }
+.fiche-action p, .fiche-action form { margin:0; }
+.fiche-action p { font-weight:700; color:var(--vert-fonce); }

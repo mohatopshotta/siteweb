@@ -14,6 +14,11 @@ class NewCandidature extends NewTraitement
     private ?string $nom = null;
     private ?string $prenom = null;
     private ?string $email = null;
+    // Infos de l'offre, remplies par CandidatureRepository::listerParCandidat() (page « Mes candidatures »)
+    private ?string $titreOffre = null;
+    private ?string $typeOffre = null;
+    private ?string $etatOffre = null;
+    private ?string $entreprise = null;
 
     public function getNomCandidat(): string
     {
@@ -25,12 +30,31 @@ class NewCandidature extends NewTraitement
         return str_replace('_', ' ', $this->statut);
     }
 
+    // Classe CSS du badge selon le statut (vert = retenue, rouge = non retenue, gris = en attente)
+    public function getClasseBadge(): string
+    {
+        return match ($this->statut) {
+            self::RETENUE     => 'badge-dispo',
+            self::NON_RETENUE => 'badge-complet',
+            default           => 'badge-passe',
+        };
+    }
+
+    public function getDateCandidatureFormatee(): string
+    {
+        return $this->dateCandidature ? date('d/m/Y', strtotime($this->dateCandidature)) : '';
+    }
+
     public function getIdUtilisateur(): ?int { return $this->idUtilisateur; }
     public function getIdOffre(): ?int { return $this->idOffre; }
     public function getMotivation(): string { return $this->motivation; }
     public function getDateCandidature(): ?string { return $this->dateCandidature; }
     public function getStatut(): string { return $this->statut; }
     public function getEmail(): ?string { return $this->email; }
+    public function getTitreOffre(): ?string { return $this->titreOffre; }
+    public function getTypeOffre(): ?string { return $this->typeOffre; }
+    public function getEtatOffre(): ?string { return $this->etatOffre; }
+    public function getEntreprise(): ?string { return $this->entreprise; }
 
     public function setIdUtilisateur(?int $id): void { $this->idUtilisateur = $id; }
     public function setIdOffre(?int $id): void { $this->idOffre = $id; }
@@ -40,4 +64,8 @@ class NewCandidature extends NewTraitement
     public function setNom(?string $nom): void { $this->nom = $nom; }
     public function setPrenom(?string $prenom): void { $this->prenom = $prenom; }
     public function setEmail(?string $email): void { $this->email = $email; }
+    public function setTitreOffre(?string $titre): void { $this->titreOffre = $titre; }
+    public function setTypeOffre(?string $type): void { $this->typeOffre = $type; }
+    public function setEtatOffre(?string $etat): void { $this->etatOffre = $etat; }
+    public function setEntreprise(?string $entreprise): void { $this->entreprise = $entreprise; }
 }

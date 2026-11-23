@@ -12,10 +12,10 @@ class EvenementRepository extends Repository
     /** Événements à venir (les plus proches d'abord). Sert à l'accueil. */
     public function listerTous(?int $limite = null): array
     {
-        return $this->rechercher(null, null, false, $limite);
+        return $this->rechercher(null, null, false, $limite, 'date', false);
     }
 
-    public function rechercher(?string $mot = null, ?string $type = null, bool $inclurePasses = false, ?int $limite = null, string $tri = 'date'): array
+    public function rechercher(?string $mot = null, ?string $type = null, bool $inclurePasses = false, ?int $limite = null, string $tri = 'date', bool $inclureAnnules = true): array
     {
         // Liste blanche : on ne met jamais $tri directement dans le SQL
         $ordres = [
@@ -37,7 +37,10 @@ class EvenementRepository extends Repository
             $params[] = $type;
         }
         if (!$inclurePasses) {
-            $conditions[] = '(e.date_evenement IS NULL OR e.date_evenement >= NOW())';
+            $conditions[] = '(e.date_evenement IS NULL OR COALESCE(e.date_fin, e.date_evenement) >= NOW())';
+        }
+        if (!$inclureAnnules) {
+            $conditions[] = 'e.annule = 0';
         }
 
         $sql = self::SELECT_AVEC_PLACES
@@ -95,8 +98,8 @@ class EvenementRepository extends Repository
         $this->pdo->beginTransaction();
         try {
             $req = $this->pdo->prepare(
-                'INSERT INTO evenement (type_evenement, titre, description, lieu, date_evenement, elements_requis, nombre_places)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)'
+                'INSERT INTO evenement (type_evenement, titre, description, lieu, date_evenement, date_fin, elements_requis, nombre_places)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
             );
             $req->execute([
                 $evenement->getTypeEvenement(),
@@ -104,6 +107,7 @@ class EvenementRepository extends Repository
                 $evenement->getDescription(),
                 $evenement->getLieu(),
                 $evenement->getDateEvenement(),
+                $evenement->getDateFin(),
                 $evenement->getElementsRequis(),
                 $evenement->getNombrePlaces(),
             ]);
@@ -126,7 +130,7 @@ class EvenementRepository extends Repository
     {
         $req = $this->pdo->prepare(
             'UPDATE evenement
-             SET type_evenement = ?, titre = ?, description = ?, lieu = ?, date_evenement = ?, elements_requis = ?, nombre_places = ?
+             SET type_evenement = ?, titre = ?, description = ?, lieu = ?, date_evenement = ?, date_fin = ?, elements_requis = ?, nombre_places = ?
              WHERE id_evenement = ?'
         );
         $req->execute([
@@ -135,10 +139,18 @@ class EvenementRepository extends Repository
             $evenement->getDescription(),
             $evenement->getLieu(),
             $evenement->getDateEvenement(),
+            $evenement->getDateFin(),
             $evenement->getElementsRequis(),
             $evenement->getNombrePlaces(),
             $evenement->getIdEvenement(),
         ]);
+    }
+
+    /** Annule (ou rétablit) un événement sans le supprimer : les inscrits le voient marqué « Annulé ». */
+    public function definirAnnule(int $idEvenement, bool $annule): void
+    {
+        $req = $this->pdo->prepare('UPDATE evenement SET annule = ? WHERE id_evenement = ?');
+        $req->execute([$annule ? 1 : 0, $idEvenement]);
     }
 
     public function trouverInscription(int $idUtilisateur, int $idEvenement): ?NewInscriptionEvenement
@@ -159,6 +171,9 @@ class EvenementRepository extends Repository
     {
         if ($this->trouverInscription($idUtilisateur, $evenement->getIdEvenement()) !== null) {
             return 'Tu es déjà inscrit(e) à cet événement.';
+        }
+        if ($evenement->estAnnule()) {
+            return 'Cet événement est annulé.';
         }
         if ($evenement->estComplet()) {
             return 'Cet événement est complet.';

@@ -1,19 +1,21 @@
 <?php
 require __DIR__ . '/../../includes/config.php';
+require_once __DIR__ . '/../../includes/page_erreur.php';
 
 Session::exigerConnexion('../../');
 
 $repo = new EvenementRepository();
 $evenement = $repo->trouverParId((int)($_GET['id'] ?? 0));
 
-if ($evenement === null || $evenement->getDateEvenement() === null) {
-    http_response_code(404);
-    die('Événement introuvable ou sans date.');
+if ($evenement === null || $evenement->getDateEvenement() === null || $evenement->estAnnule()) {
+    pageErreur(404, 'Calendrier indisponible', "Cet événement est introuvable, n'a pas de date ou est annulé : impossible de l'ajouter à ton agenda.");
 }
 
-// Pas d'heure de fin en base : on compte 2 h par défaut
+// Heure de fin choisie par l'organisateur, sinon 2 h par défaut
 $debut = new DateTime($evenement->getDateEvenement(), new DateTimeZone('Europe/Paris'));
-$fin   = (clone $debut)->modify('+2 hours');
+$fin   = $evenement->getDateFin() !== null
+    ? new DateTime($evenement->getDateFin(), new DateTimeZone('Europe/Paris'))
+    : (clone $debut)->modify('+2 hours');
 
 // Un fichier .ics veut les heures en UTC
 $debut->setTimezone(new DateTimeZone('UTC'));

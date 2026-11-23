@@ -44,11 +44,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <h1>Connexion</h1>
 
 <?php if (isset($_GET['inscription'])): ?>
-    <p style="color:green;">Inscription enregistrée, en attente de validation par un gestionnaire.</p>
+    <p class="alerte-succes">Inscription enregistrée, en attente de validation par un gestionnaire.</p>
 <?php endif; ?>
 
 <?php if ($erreur): ?>
-    <p style="color:red;"><?= htmlspecialchars($erreur) ?></p>
+    <p class="alerte-erreur"><?= htmlspecialchars($erreur) ?></p>
 <?php endif; ?>
 
 <form method="post">
