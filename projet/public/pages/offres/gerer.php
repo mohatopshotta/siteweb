@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/../../includes/config.php';
 
-Session::exigerRole(['partenaire'], '../../');
+Session::exigerRole(['partenaire', 'gestionnaire'], '../../');
 
 $id_utilisateur = Session::getIdUtilisateur();
 $id_offre = (int)($_GET['id'] ?? 0);
@@ -11,14 +11,18 @@ $candidatureManager = new CandidatureRepository();
 
 $offre = $offreManager->trouverParId($id_offre);
 if ($offre === null) {
+    http_response_code(404);
     die("Offre introuvable.");
 }
 
-if ($offre->getIdAuteur() !== $id_utilisateur) {
+if ((int)$offre->getIdAuteur() !== (int)$id_utilisateur) {
+    http_response_code(403);
     die("Tu n'es pas l'auteur de cette offre.");
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    Session::verifierCsrf();
+
     $action      = $_POST['action'] ?? '';
     $id_candidat = (int)($_POST['id_candidat'] ?? 0);
 
@@ -41,6 +45,7 @@ $candidats = $candidatureManager->listerParOffre($id_offre);
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gérer l'offre</title>
     <link rel="stylesheet" href="../../assets/css/css.css">
 </head>
@@ -58,7 +63,7 @@ $candidats = $candidatureManager->listerParOffre($id_offre);
 <form method="post">
     <?= Session::champCsrf() ?>
     <?php if ($offre->estOuverte()): ?>
-        <button type="submit" name="action" value="cloturer">Clôturer l’offre</button>
+        <button type="submit" name="action" value="cloturer">Clôturer l'offre</button>
     <?php else: ?>
         <button type="submit" name="action" value="rouvrir">Rouvrir l'offre</button>
     <?php endif; ?>
@@ -86,9 +91,10 @@ $candidats = $candidatureManager->listerParOffre($id_offre);
                 <td>
                     <form method="post">
                         <?= Session::champCsrf() ?>
-                        <input type="hidden" name="id_candidat" value="<?= $c->getIdUtilisateur() ?>">
+                        <input type="hidden" name="id_candidat" value="<?= (int)$c->getIdUtilisateur() ?>">
                         <button type="submit" name="action" value="retenir">Retenir</button>
-                        <button type="submit" name="action" value="refuser">Refuser</button>
+                        <button type="submit" name="action" value="refuser"
+                                onclick="return confirm('Refuser cette candidature ? Un email de refus sera envoyé au candidat.');">Refuser</button>
                     </form>
                 </td>
             </tr>
