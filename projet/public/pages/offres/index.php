@@ -42,6 +42,10 @@ if (Session::aLeRole(['partenaire'])) {
         <p>Votre prochaine opportunité commence ici !</p>
     </header>
 
+    <?php if (Session::aLeRole(['etudiant', 'medecin'])): ?>
+        <p><a href="mes_candidatures.php" class="btn">Mes candidatures</a></p>
+    <?php endif; ?>
+
     <?php if (Session::aLeRole(['partenaire'])): ?>
         <section class="filtre">
             <h2>Offres de mon entreprise</h2>

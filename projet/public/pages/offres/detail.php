@@ -9,10 +9,11 @@ $id_offre = (int)($_GET['id'] ?? 0);
 
 $offre = (new OffreRepository())->trouverParId($id_offre);
 if ($offre === null) {
+    http_response_code(404);
     die("Offre introuvable.");
 }
 
-$estAuteur = $offre->getIdAuteur() === $id_utilisateur;
+$estAuteur = (int)$offre->getIdAuteur() === (int)$id_utilisateur;
 
 $peutPostuler = Session::aLeRole(['etudiant', 'medecin']);
 $dejaPostule = (new CandidatureRepository())->aDejaPostule($id_utilisateur, $id_offre);
@@ -23,6 +24,7 @@ $erreur = $_GET['erreur'] ?? '';
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($offre->getTitre()) ?></title>
     <link rel="stylesheet" href="../../assets/css/css.css">
 </head>
@@ -34,7 +36,7 @@ $erreur = $_GET['erreur'] ?? '';
 
 <h1><?= htmlspecialchars($offre->getTitre()) ?></h1>
 <p>
-    <?= htmlspecialchars($offre->getEntreprise()) ?> · <?= strtoupper($offre->getTypeOffre()) ?>
+    <?= htmlspecialchars($offre->getEntreprise()) ?> · <?= htmlspecialchars(strtoupper($offre->getTypeOffre())) ?>
     <?= $offre->getSalaire() !== null ? ' · ' . number_format($offre->getSalaire(), 2, ',', ' ') . ' €' : '' ?>
     · Publiée par <?= htmlspecialchars($offre->getNomAuteur()) ?>
 </p>
@@ -65,8 +67,8 @@ $erreur = $_GET['erreur'] ?? '';
     <form method="post" action="postuler.php">
         <?= Session::champCsrf() ?>
         <input type="hidden" name="id_offre" value="<?= $offre->getIdOffre() ?>">
-        <label>Lettre de motivation</label><br>
-        <textarea name="motivation" required rows="8" cols="60"></textarea><br>
+        <label for="motivation">Lettre de motivation</label><br>
+        <textarea id="motivation" name="motivation" required rows="8" cols="60"></textarea><br>
         <button type="submit">Postuler</button>
     </form>
 <?php endif; ?>

@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
         $id_offre = (new OffreRepository())->creer($offre);
 
-        Session::rediriger(($estGestionnaire ? 'detail.php?id=' : 'gerer.php?id=') . $id_offre);
+        Session::rediriger('gerer.php?id=' . $id_offre);
     }
 }
 ?>
