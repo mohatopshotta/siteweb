@@ -79,6 +79,7 @@ $candidats = $candidatureManager->listerParOffre($id_offre);
             <th>Candidat</th>
             <th>Email</th>
             <th>Lettre de motivation</th>
+            <th>CV</th>
             <th>Statut</th>
             <th>Actions</th>
         </tr>
@@ -87,6 +88,13 @@ $candidats = $candidatureManager->listerParOffre($id_offre);
                 <td><?= htmlspecialchars($c->getNomCandidat()) ?></td>
                 <td><?= htmlspecialchars($c->getEmail()) ?></td>
                 <td><?= nl2br(htmlspecialchars($c->getMotivation())) ?></td>
+                <td>
+                    <?php if ($c->getCv()): ?>
+                        <a href="../../<?= htmlspecialchars($c->getCv()) ?>" target="_blank" rel="noopener">Voir le CV</a>
+                    <?php else: ?>
+                        —
+                    <?php endif; ?>
+                </td>
                 <td><?= htmlspecialchars($c->getLibelleStatut()) ?></td>
                 <td>
                     <form method="post">

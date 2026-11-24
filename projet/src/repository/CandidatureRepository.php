@@ -37,9 +37,10 @@ class CandidatureRepository extends Repository
     public function listerParOffre(int $idOffre): array
     {
         $req = $this->pdo->prepare(
-            'SELECT c.*, u.nom, u.prenom, u.email
+            'SELECT c.*, u.nom, u.prenom, u.email, et.cv
              FROM candidature c
              JOIN utilisateur u ON u.id_utilisateur = c.id_utilisateur
+             LEFT JOIN etudiant et ON et.id_utilisateur = c.id_utilisateur
              WHERE c.id_offre = ? AND c.statut != ?
              ORDER BY c.date_candidature DESC'
         );

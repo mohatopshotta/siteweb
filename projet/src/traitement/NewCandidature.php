@@ -19,6 +19,8 @@ class NewCandidature extends NewTraitement
     private ?string $typeOffre = null;
     private ?string $etatOffre = null;
     private ?string $entreprise = null;
+    // CV du candidat (étudiant), rempli par CandidatureRepository::listerParOffre() (page « Gérer »)
+    private ?string $cv = null;
 
     public function getNomCandidat(): string
     {
@@ -55,6 +57,7 @@ class NewCandidature extends NewTraitement
     public function getTypeOffre(): ?string { return $this->typeOffre; }
     public function getEtatOffre(): ?string { return $this->etatOffre; }
     public function getEntreprise(): ?string { return $this->entreprise; }
+    public function getCv(): ?string { return $this->cv; }
 
     public function setIdUtilisateur(?int $id): void { $this->idUtilisateur = $id; }
     public function setIdOffre(?int $id): void { $this->idOffre = $id; }
@@ -68,4 +71,5 @@ class NewCandidature extends NewTraitement
     public function setTypeOffre(?string $type): void { $this->typeOffre = $type; }
     public function setEtatOffre(?string $etat): void { $this->etatOffre = $etat; }
     public function setEntreprise(?string $entreprise): void { $this->entreprise = $entreprise; }
+    public function setCv(?string $cv): void { $this->cv = $cv; }
 }
