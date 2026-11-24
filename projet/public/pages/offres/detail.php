@@ -18,6 +18,13 @@ $estAuteur = (int)$offre->getIdAuteur() === (int)$id_utilisateur;
 $peutPostuler = Session::aLeRole(['etudiant', 'medecin']);
 $dejaPostule = (new CandidatureRepository())->aDejaPostule($id_utilisateur, $id_offre);
 
+// CV actuel de l'étudiant (celui de son profil), proposé avec sa candidature
+$cv_actuel = null;
+if (Session::aLeRole(['etudiant'])) {
+    $etudiant = (new UtilisateurRepository())->trouverParId($id_utilisateur);
+    $cv_actuel = $etudiant instanceof NewEtudiant ? $etudiant->getCv() : null;
+}
+
 $erreur = $_GET['erreur'] ?? '';
 ?>
 <!DOCTYPE html>
@@ -64,11 +71,26 @@ $erreur = $_GET['erreur'] ?? '';
 
 <?php elseif ($peutPostuler): ?>
     <h2>Postuler</h2>
-    <form method="post" action="postuler.php">
+    <form method="post" action="postuler.php" enctype="multipart/form-data">
         <?= Session::champCsrf() ?>
         <input type="hidden" name="id_offre" value="<?= $offre->getIdOffre() ?>">
         <label for="motivation">Lettre de motivation</label><br>
         <textarea id="motivation" name="motivation" required rows="8" cols="60"></textarea><br>
+
+        <?php if (Session::aLeRole(['etudiant'])): ?>
+            <label for="cv">CV (PDF, 2 Mo maximum)</label>
+            <?php if ($cv_actuel): ?>
+                <p>
+                    Ton CV actuel sera envoyé avec ta candidature :
+                    <a href="../../<?= htmlspecialchars($cv_actuel) ?>" target="_blank" rel="noopener">voir mon CV</a>.
+                    Tu peux en joindre un autre ci-dessous (il remplacera celui de ton profil).
+                </p>
+            <?php else: ?>
+                <p>Tu n'as pas encore de CV : joins-le ici pour que l'entreprise puisse le consulter.</p>
+            <?php endif; ?>
+            <input type="file" id="cv" name="cv" accept="application/pdf"><br>
+        <?php endif; ?>
+
         <button type="submit">Postuler</button>
     </form>
 <?php endif; ?>
