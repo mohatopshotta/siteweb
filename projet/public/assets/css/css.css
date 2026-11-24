@@ -734,9 +734,9 @@ body > footer a { color: var(--encre-douce); }
 .badge-annule { background:var(--croix-fond); color:var(--croix); font-weight:700; }
 .avis-annule { margin:1rem 0; padding:0.75rem 1rem; background:var(--croix-fond); border:1px solid var(--croix); border-radius:var(--rayon-l); color:var(--croix); }
 /* ---------- Fiche d'un événement (detail.php) ----------------------------- */
-.fiche-entete { padding:1.75rem; background:linear-gradient(135deg, var(--celadon), var(--blanc)); border:1px solid var(--ligne); border-left:6px solid var(--vert); border-radius:var(--rayon-l); }
+.fiche-entete { grid-column:2; padding:1.75rem; background:linear-gradient(135deg, var(--celadon), var(--blanc)); border:1px solid var(--ligne); border-left:6px solid var(--vert); border-radius:var(--rayon-l); }
 .fiche-entete .carte-type { margin:0; }
-.fiche-entete h1 { margin:0.25rem 0 0.9rem; }
+.fiche-entete h1 { max-width:none; margin:0.25rem 0 0.9rem; }
 .fiche-statut { display:flex; flex-wrap:wrap; gap:0.5rem; margin:0; }
 .fiche-statut .badge { margin-top:0; font-size:0.9rem; }
 .fiche-annulee { border-left-color:var(--croix); background:linear-gradient(135deg, var(--croix-fond), var(--blanc)); }
@@ -761,3 +761,25 @@ body > footer a { color: var(--encre-douce); }
 .fiche-action { display:flex; flex-wrap:wrap; align-items:center; gap:0.75rem 1.25rem; padding:1.25rem 1.5rem; background:var(--celadon); border:1px solid var(--ligne); border-radius:var(--rayon-l); }
 .fiche-action p, .fiche-action form { margin:0; }
 .fiche-action p { font-weight:700; color:var(--vert-fonce); }
+
+/* ---------- Accessibilité : lien d'évitement et page courante ------------- */
+.lien-evitement {
+    position: absolute;
+    left: 0.5rem;
+    top: -4rem;
+    z-index: 100;
+    padding: 0.6rem 1rem;
+    background: var(--blanc);
+    color: var(--vert-fonce);
+    font-weight: 700;
+    border: 2px solid var(--vert);
+    border-radius: var(--rayon);
+}
+.lien-evitement:focus { top: 0.5rem; }
+
+.ancre-contenu { position: absolute; }
+
+.menu a[aria-current="page"] {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: inset 0 -3px 0 var(--blanc);
+}
