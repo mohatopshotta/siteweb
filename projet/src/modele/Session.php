@@ -5,6 +5,14 @@ class Session
     public static function demarrer(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
+            // Cookie de session plus sûr : invisible pour le JavaScript, non envoyé depuis un autre site,
+            // et « secure » dès que le site tourne en HTTPS. Le mode strict refuse un identifiant de session inventé.
+            session_set_cookie_params([
+                'httponly' => true,
+                'samesite' => 'Lax',
+                'secure'   => !empty($_SERVER['HTTPS']),
+            ]);
+            ini_set('session.use_strict_mode', '1');
             session_start();
         }
     }
