@@ -36,19 +36,9 @@ class MotDePasseOublie
 
         $envoye = Mail::envoyer($utilisateur->getEmail(), 'Réinitialisation de votre mot de passe', $message);
 
+        // En local (MODE_DEV), Mail::envoyer() écrit l'email complet, avec le lien, dans projet/mails_dev.txt
         if (!$envoye) {
             error_log('Mot de passe oublié : email non envoyé pour ' . $utilisateur->getEmail());
-        }
-
-        // En local, il n'y a pas de serveur de mail : le lien est écrit dans le fichier projet/mails_dev.txt
-        // (hors du dossier public, donc invisible depuis le navigateur).
-        // JAMAIS en production (MODE_DEV = false), où le lien donnerait accès au compte.
-        if (MODE_DEV) {
-            file_put_contents(
-                __DIR__ . '/../../mails_dev.txt',
-                date('Y-m-d H:i:s') . ' ' . $utilisateur->getEmail() . ' ' . $lien . PHP_EOL,
-                FILE_APPEND
-            );
         }
     }
 
